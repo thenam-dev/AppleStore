@@ -1,11 +1,15 @@
 package model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class User {
+public class User implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private int userId;
     private String fullName;
     private String email;
+    private String passwordHash;
     private String phone;
     private String role;
     private String status;
@@ -40,6 +44,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public String getPhone() {

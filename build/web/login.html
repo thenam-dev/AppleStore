@@ -89,14 +89,16 @@
                             <h2>Login</h2>
                             <p>Use email and password. Backend validation can be attached later without changing the layout.</p>
                         </div>
+                        <div class="auth-alert alert" data-auth-alert hidden></div>
                         <form action="login" method="post" name="loginForm" class="auth-form">
+                            <input type="hidden" name="redirectTo" id="login-redirect-target" value="">
                             <div>
                                 <label class="form-label" for="login-email">Email</label>
-                                <input id="login-email" class="form-control" type="email" name="email" placeholder="name@example.com">
+                                <input id="login-email" class="form-control" type="email" name="email" placeholder="name@example.com" required>
                             </div>
                             <div>
                                 <label class="form-label" for="login-password">Password</label>
-                                <input id="login-password" class="form-control" type="password" name="password" placeholder="Enter password">
+                                <input id="login-password" class="form-control" type="password" name="password" placeholder="Enter password" required>
                             </div>
                             <div class="auth-inline-row">
                                 <div class="form-check app-check">
