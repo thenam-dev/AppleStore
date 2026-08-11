@@ -8,11 +8,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class UserDAO {
+
     private static final String USER_COLUMNS = """
             user_id, full_name, email, phone, role, status, avatar_url, auth_provider,
             google_id, is_email_verified, failed_login_count, locked_until, created_at, updated_at
@@ -44,8 +46,7 @@ public class UserDAO {
 
         sql.append(" ORDER BY user_id DESC");
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             bindParams(statement, params);
             try (ResultSet resultSet = statement.executeQuery()) {
                 List<User> users = new ArrayList<>();
@@ -60,8 +61,7 @@ public class UserDAO {
     public Optional<User> findById(int userId) throws SQLException {
         String sql = "SELECT " + USER_COLUMNS + " FROM users WHERE user_id = ?";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, userId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -79,8 +79,7 @@ public class UserDAO {
                 WHERE user_id = ?
                 """;
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, user.getFullName());
             statement.setString(2, user.getEmail());
             statement.setString(3, emptyToNull(user.getPhone()));
@@ -95,19 +94,101 @@ public class UserDAO {
     public boolean updateStatus(int userId, String status) throws SQLException {
         String sql = "UPDATE users SET status = ? WHERE user_id = ?";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, status);
             statement.setInt(2, userId);
             return statement.executeUpdate() > 0;
         }
     }
 
+    public Optional<User> findByEmail(String email) throws SQLException {
+        String sql = "SELECT " + USER_COLUMNS + ", password_hash FROM users WHERE email = ?";
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, email);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    User user = mapUser(resultSet);
+                    user.setPasswordHash(resultSet.getString("password_hash"));
+                    return Optional.of(user);
+                }
+                return Optional.empty();
+            }
+        }
+    }
+
+    public boolean existsByEmail(String email) throws SQLException {
+        String sql = "SELECT 1 FROM users WHERE email = ? LIMIT 1";
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, email);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        }
+    }
+
+    public boolean existsByPhone(String phone) throws SQLException {
+        if (phone == null || phone.isBlank()) {
+            return false;
+        }
+
+        String sql = "SELECT 1 FROM users WHERE phone = ? LIMIT 1";
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, phone.trim());
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        }
+    }
+
+    public int insertCustomer(User user, String passwordHash) throws SQLException {
+        String sql = """
+                INSERT INTO users (full_name, email, password_hash, phone, role, status, is_email_verified)
+                VALUES (?, ?, ?, ?, 'CUSTOMER', 'ACTIVE', 0)
+                """;
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, user.getFullName());
+            statement.setString(2, user.getEmail());
+            statement.setString(3, passwordHash);
+            statement.setString(4, emptyToNull(user.getPhone()));
+            statement.executeUpdate();
+
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+                throw new SQLException("Failed to retrieve the generated user id.");
+            }
+        }
+    }
+
+    public void recordLoginSuccess(int userId) throws SQLException {
+        String sql = "UPDATE users SET failed_login_count = 0, locked_until = NULL WHERE user_id = ?";
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            statement.executeUpdate();
+        }
+    }
+
+    public void recordLoginFailure(int userId, int failedLoginCount, LocalDateTime lockedUntil) throws SQLException {
+        String sql = "UPDATE users SET failed_login_count = ?, locked_until = ? WHERE user_id = ?";
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, failedLoginCount);
+            statement.setTimestamp(2, lockedUntil == null ? null : Timestamp.valueOf(lockedUntil));
+            statement.setInt(3, userId);
+            statement.executeUpdate();
+        }
+    }
+
     public boolean existsByEmailForOtherUser(String email, int userId) throws SQLException {
         String sql = "SELECT 1 FROM users WHERE email = ? AND user_id <> ? LIMIT 1";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, email);
             statement.setInt(2, userId);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -123,8 +204,7 @@ public class UserDAO {
 
         String sql = "SELECT 1 FROM users WHERE phone = ? AND user_id <> ? LIMIT 1";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, phone.trim());
             statement.setInt(2, userId);
             try (ResultSet resultSet = statement.executeQuery()) {
