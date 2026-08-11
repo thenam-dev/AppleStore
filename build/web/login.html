@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Online Shop | Login</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="site-body">
+    <header class="site-header">
+        <div class="topbar">
+            <div class="container topbar-inner">
+                <p class="topbar-note">Login page stays lightweight and ready for servlet authentication later.</p>
+                <ul class="topbar-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="register.html">Create Account</a></li>
+                    <li><a href="products.html">Shop</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="container header-main">
+            <a class="brand" href="index.html" aria-label="Apple Online Shop">
+                <img src="assets/images/logo-mark.svg" alt="AOS mark">
+                <span>
+                    <strong>AOS Template</strong>
+                    <small>Customer Login</small>
+                </span>
+            </a>
+            <form class="header-search" action="products.html" method="get" name="headerSearchForm">
+                <label class="visually-hidden" for="login-search-input">Search products</label>
+                <input id="login-search-input" class="form-control" type="search" name="keyword" placeholder="Search products">
+                <button class="btn btn-app-primary" type="submit">Search</button>
+            </form>
+            <div class="header-actions">
+                <a class="btn btn-app-outline" href="register.html">Register</a>
+                <a class="cart-link" href="cart.html" aria-label="View cart">
+                    <span>Cart</span>
+                    <span class="cart-count">3</span>
+                </a>
+                <button class="mobile-menu-button" type="button" data-mobile-toggle aria-expanded="false" aria-label="Open mobile navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+        <div class="mobile-drawer" data-mobile-panel>
+            <div class="container mobile-drawer-inner">
+                <div class="mobile-links">
+                    <a href="index.html">Home</a>
+                    <a href="products.html">Shop</a>
+                    <a href="register.html">Register</a>
+                    <a href="cart.html">Cart</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="section-block auth-section">
+            <div class="container">
+                <div class="auth-layout">
+                    <div class="auth-showcase">
+                        <span class="eyebrow">Welcome back</span>
+                        <h1>Sign in and pick up where your shopping left off.</h1>
+                        <p>
+                            This layout is meant for customer authentication in a Java Web flow, with a clean split
+                            between account action and supporting storefront context.
+                        </p>
+                        <div class="auth-benefit-list">
+                            <div class="auth-benefit-item">
+                                <strong>Track orders</strong>
+                                <span>See current status, payment state, and delivery progress.</span>
+                            </div>
+                            <div class="auth-benefit-item">
+                                <strong>Save favorites</strong>
+                                <span>Keep products in your wishlist for later comparison.</span>
+                            </div>
+                            <div class="auth-benefit-item">
+                                <strong>Store addresses</strong>
+                                <span>Reuse saved delivery locations for faster checkout.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="auth-card">
+                        <div class="auth-card-head">
+                            <h2>Login</h2>
+                            <p>Use email and password. Backend validation can be attached later without changing the layout.</p>
+                        </div>
+                        <form action="login" method="post" name="loginForm" class="auth-form">
+                            <div>
+                                <label class="form-label" for="login-email">Email</label>
+                                <input id="login-email" class="form-control" type="email" name="email" placeholder="name@example.com">
+                            </div>
+                            <div>
+                                <label class="form-label" for="login-password">Password</label>
+                                <input id="login-password" class="form-control" type="password" name="password" placeholder="Enter password">
+                            </div>
+                            <div class="auth-inline-row">
+                                <div class="form-check app-check">
+                                    <input class="form-check-input" type="checkbox" value="1" id="remember-me" name="rememberMe">
+                                    <label class="form-check-label" for="remember-me">Remember me</label>
+                                </div>
+                                <a href="mailto:support@aostemplate.demo">Forgot password?</a>
+                            </div>
+                            <button class="btn btn-app-primary btn-lg w-100" type="submit">Login</button>
+                        </form>
+                        <div class="auth-footer-note">
+                            <span>New customer?</span>
+                            <a href="register.html">Create an account</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-bottom footer-bottom-single">
+            <small>&copy; <span data-current-year></span> Apple Online Shop UI Template. Login screen for customer account flow.</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Online Shop Admin | Categories</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="site-body admin-app">
+    <main class="admin-workspace">
+        <aside class="admin-sidebar">
+            <div class="admin-sidebar-brand">
+                <img src="../assets/images/logo-mark.svg" alt="AOS mark">
+                <div>
+                    <strong>AOS Admin</strong>
+                    <small>Apple Online Shop</small>
+                </div>
+            </div>
+            <div class="admin-sidebar-meta">
+                <strong>Product Owner</strong>
+                <small>Category structure and catalog grouping.</small>
+            </div>
+            <div>
+                <p class="admin-sidebar-label">Overview</p>
+                <nav class="admin-nav">
+                    <a href="dashboard.html">Dashboard</a>
+                    <a href="products.html">Products</a>
+                    <a class="active" href="categories.html">Categories</a>
+                    <a href="orders.html">Orders</a>
+                    <a href="inventory.html">Inventory</a>
+                    <a href="customers.html">Customers</a>
+                    <a href="vouchers.html">Vouchers</a>
+                    <a href="feedback.html">Feedback</a>
+                </nav>
+            </div>
+            <div>
+                <p class="admin-sidebar-label">Quick actions</p>
+                <nav class="admin-nav">
+                    <a href="product-form.html">Create Product</a>
+                    <a href="../products.html">Open Catalog</a>
+                    <a href="../components/component-demo.html">Component Demo</a>
+                </nav>
+            </div>
+            <div class="admin-sidebar-footer">
+                <strong>Category scope</strong>
+                <small>Small CRUD surface to cover add, edit, and disable actions for the shop taxonomy.</small>
+            </div>
+        </aside>
+
+        <section class="admin-main">
+            <div class="admin-topbar">
+                <form class="admin-topbar-search" action="categories.html" method="get" name="adminCategoriesSearchForm">
+                    <label class="visually-hidden" for="admin-categories-search">Search categories</label>
+                    <input id="admin-categories-search" class="form-control" type="search" name="keyword" placeholder="Search category">
+                    <button class="btn btn-app-primary" type="submit">Search</button>
+                </form>
+                <div class="admin-topbar-actions">
+                    <a class="btn btn-app-outline btn-sm" href="products.html">Product List</a>
+                    <div class="admin-user-pill">
+                        <div class="account-avatar admin-user-pill-avatar">PO</div>
+                        <div>
+                            <strong>Product Owner</strong>
+                            <small>Category admin</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <nav aria-label="Breadcrumb">
+                <ol class="breadcrumb app-breadcrumb">
+                    <li class="breadcrumb-item"><a href="dashboard.html">Admin</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Categories</li>
+                </ol>
+            </nav>
+
+            <div class="admin-page-head">
+                <div>
+                    <span class="eyebrow">Category management</span>
+                    <h1>Catalog categories</h1>
+                    <p>Keep the shop taxonomy clean, searchable, and easy to maintain for product assignment later.</p>
+                </div>
+                <div class="admin-page-actions">
+                    <button class="btn btn-app-outline" type="button">Export List</button>
+                </div>
+            </div>
+
+            <section class="admin-kpi-grid">
+                <article class="stat-card compact">
+                    <div class="stat-label">Categories</div>
+                    <div class="stat-value">6</div>
+                    <p>Core Apple families</p>
+                </article>
+                <article class="stat-card compact">
+                    <div class="stat-label">Active</div>
+                    <div class="stat-value">5</div>
+                    <p>Visible to shoppers</p>
+                </article>
+                <article class="stat-card compact">
+                    <div class="stat-label">Hidden</div>
+                    <div class="stat-value">1</div>
+                    <p>Reserved or archived</p>
+                </article>
+                <article class="stat-card compact">
+                    <div class="stat-label">Assigned Products</div>
+                    <div class="stat-value">164</div>
+                    <p>Linked catalog items</p>
+                </article>
+            </section>
+
+            <div class="admin-content-grid">
+                <section class="admin-panel">
+                    <div class="admin-panel-head">
+                        <div>
+                            <h2>Category table</h2>
+                            <p>Designed for basic CRUD operations without turning the screen into an enterprise maze.</p>
+                        </div>
+                    </div>
+                    <div class="table-toolbar">
+                        <form class="admin-filter-bar compact" action="categories.html" method="get" name="adminCategoryFilterForm">
+                            <input class="form-control" type="search" name="keyword" placeholder="Search by category name">
+                            <select class="form-select" name="status">
+                                <option value="">All status</option>
+                                <option>Active</option>
+                                <option>Hidden</option>
+                            </select>
+                            <button class="btn btn-app-primary" type="submit">Filter</button>
+                        </form>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table app-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Category Name</th>
+                                    <th scope="col">Number of Products</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col" class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>CAT-01</strong></td>
+                                    <td>iPhone</td>
+                                    <td>42</td>
+                                    <td><span class="status-badge status-in-stock">Active</span></td>
+                                    <td class="text-end table-actions">
+                                        <button class="btn btn-app-secondary btn-sm" type="button">Edit</button>
+                                        <button class="btn btn-app-danger btn-sm" type="button">Disable</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>CAT-02</strong></td>
+                                    <td>Mac</td>
+                                    <td>29</td>
+                                    <td><span class="status-badge status-in-stock">Active</span></td>
+                                    <td class="text-end table-actions">
+                                        <button class="btn btn-app-secondary btn-sm" type="button">Edit</button>
+                                        <button class="btn btn-app-danger btn-sm" type="button">Disable</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>CAT-03</strong></td>
+                                    <td>iPad</td>
+                                    <td>18</td>
+                                    <td><span class="status-badge status-in-stock">Active</span></td>
+                                    <td class="text-end table-actions">
+                                        <button class="btn btn-app-secondary btn-sm" type="button">Edit</button>
+                                        <button class="btn btn-app-danger btn-sm" type="button">Disable</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>CAT-04</strong></td>
+                                    <td>Accessories</td>
+                                    <td>35</td>
+                                    <td><span class="status-badge status-low-stock">Active</span></td>
+                                    <td class="text-end table-actions">
+                                        <button class="btn btn-app-secondary btn-sm" type="button">Edit</button>
+                                        <button class="btn btn-app-danger btn-sm" type="button">Disable</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>CAT-05</strong></td>
+                                    <td>Bundles</td>
+                                    <td>0</td>
+                                    <td><span class="status-badge status-out-stock">Hidden</span></td>
+                                    <td class="text-end table-actions">
+                                        <button class="btn btn-app-primary btn-sm" type="button">Enable</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <div class="admin-section-stack">
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <div>
+                                <h2>Add or edit category</h2>
+                                <p>Single reusable form block for the category CRUD flow.</p>
+                            </div>
+                        </div>
+                        <form action="save-category" method="post" name="adminCategoryForm" class="admin-form-grid">
+                            <div class="field-span-full">
+                                <label class="form-label" for="category-name">Category name</label>
+                                <input id="category-name" class="form-control" type="text" name="categoryName" placeholder="Enter category name">
+                            </div>
+                            <div class="field-span-full">
+                                <label class="form-label" for="category-description">Description</label>
+                                <textarea id="category-description" class="form-control" name="description" rows="4" placeholder="Short description for internal management"></textarea>
+                            </div>
+                            <div>
+                                <label class="form-label" for="category-status">Status</label>
+                                <select id="category-status" class="form-select" name="status">
+                                    <option>Active</option>
+                                    <option>Hidden</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" for="category-order">Display order</label>
+                                <input id="category-order" class="form-control" type="number" name="displayOrder" min="1" value="1">
+                            </div>
+                            <div class="field-span-full">
+                                <button class="btn btn-app-primary" type="submit">Save Category</button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <div>
+                                <h2>Guidance</h2>
+                                <p>Keep taxonomy stable so navigation and filtering stay predictable.</p>
+                            </div>
+                        </div>
+                        <ul class="admin-status-list">
+                            <li><span class="admin-status-label"><span class="admin-status-dot"></span>Use broad shopper-facing categories</span></li>
+                            <li><span class="admin-status-label"><span class="admin-status-dot warning"></span>Avoid duplicate families</span></li>
+                            <li><span class="admin-status-label"><span class="admin-status-dot success"></span>Hide unused categories instead of deleting too early</span></li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+
+            <p class="admin-footer-note">Category management stays intentionally small, which makes it easier to cover as one master-data module.</p>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Online Shop Admin | Customers</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="site-body admin-app">
+    <main class="admin-workspace">
+        <aside class="admin-sidebar">
+            <div class="admin-sidebar-brand">
+                <img src="../assets/images/logo-mark.svg" alt="AOS mark">
+                <div>
+                    <strong>AOS Admin</strong>
+                    <small>Apple Online Shop</small>
+                </div>
+            </div>
+            <div class="admin-sidebar-meta">
+                <strong>Customer view</strong>
+                <small>Basic customer search and list for the MVP admin scope.</small>
+            </div>
+            <div>
+                <p class="admin-sidebar-label">Overview</p>
+                <nav class="admin-nav">
+                    <a href="dashboard.html">Dashboard</a>
+                    <a href="products.html">Products</a>
+                    <a href="categories.html">Categories</a>
+                    <a href="orders.html">Orders</a>
+                    <a href="inventory.html">Inventory</a>
+                    <a class="active" href="customers.html">Customers</a>
+                    <a href="vouchers.html">Vouchers</a>
+                    <a href="feedback.html">Feedback</a>
+                </nav>
+            </div>
+            <div>
+                <p class="admin-sidebar-label">Quick actions</p>
+                <nav class="admin-nav">
+                    <a href="orders.html">Customer Orders</a>
+                    <a href="../profile.html">Customer Account Sample</a>
+                    <a href="../index.html">Open Storefront</a>
+                </nav>
+            </div>
+            <div class="admin-sidebar-footer">
+                <strong>Customer scope</strong>
+                <small>Table-first customer page without extra enterprise CRM behavior.</small>
+            </div>
+        </aside>
+
+        <section class="admin-main">
+            <div class="admin-topbar">
+                <form class="admin-topbar-search" action="customers.html" method="get" name="adminCustomersSearchForm">
+                    <label class="visually-hidden" for="admin-customers-search">Search customers</label>
+                    <input id="admin-customers-search" class="form-control" type="search" name="keyword" placeholder="Search customer, email, phone">
+                    <button class="btn btn-app-primary" type="submit">Search</button>
+                </form>
+                <div class="admin-topbar-actions">
+                    <a class="btn btn-app-outline btn-sm" href="orders.html">Orders</a>
+                    <div class="admin-user-pill">
+                        <div class="account-avatar admin-user-pill-avatar">CS</div>
+                        <div>
+                            <strong>Customer Service</strong>
+                            <small>Account overview</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <nav aria-label="Breadcrumb">
+                <ol class="breadcrumb app-breadcrumb">
+                    <li class="breadcrumb-item"><a href="dashboard.html">Admin</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Customers</li>
+                </ol>
+            </nav>
+
+            <div class="admin-page-head">
+                <div>
+                    <span class="eyebrow">Customer management</span>
+                    <h1>Customer list</h1>
+                    <p>Focused customer lookup page with just enough context for support and order follow-up.</p>
+                </div>
+                <div class="admin-page-actions">
+                    <button class="btn btn-app-outline" type="button">Export Customers</button>
+                </div>
+            </div>
+
+            <section class="admin-kpi-grid">
+                <article class="stat-card compact">
+                    <div class="stat-label">Customers</div>
+                    <div class="stat-value">512</div>
+                    <p>Total registered accounts</p>
+                </article>
+                <article class="stat-card compact">
+                    <div class="stat-label">Repeat Buyers</div>
+                    <div class="stat-value">186</div>
+                    <p>More than one order</p>
+                </article>
+                <article class="stat-card compact">
+                    <div class="stat-label">VIP Segment</div>
+                    <div class="stat-value">24</div>
+                    <p>High-value customers</p>
+                </article>
+                <article class="stat-card compact">
+                    <div class="stat-label">Inactive</div>
+                    <div class="stat-value">31</div>
+                    <p>No recent orders</p>
+                </article>
+            </section>
+
+            <div class="admin-content-grid">
+                <section class="admin-panel">
+                    <div class="admin-panel-head">
+                        <div>
+                            <h2>Customer list</h2>
+                            <p>Plain table with fields that map naturally into a Java Web admin page.</p>
+                        </div>
+                    </div>
+                    <div class="table-toolbar">
+                        <form class="admin-filter-bar compact" action="customers.html" method="get" name="adminCustomerFilterForm">
+                            <input class="form-control" type="search" name="keyword" placeholder="Search customer, email, phone">
+                            <select class="form-select" name="status">
+                                <option value="">All status</option>
+                                <option>Active</option>
+                                <option>VIP</option>
+                                <option>Inactive</option>
+                            </select>
+                            <button class="btn btn-app-primary" type="submit">Filter</button>
+                        </form>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table app-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Customer</th>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Phone</th>
+                                    <th scope="col">Number of Orders</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col" class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Nguyen Van A</strong></td>
+                                    <td>nguyenvana@example.com</td>
+                                    <td>0901234567</td>
+                                    <td>8</td>
+                                    <td><span class="status-badge status-processing">VIP</span></td>
+                                    <td class="text-end table-actions">
+                                        <button class="btn btn-app-outline btn-sm" type="button">View Detail</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tran Bao Chau</strong></td>
+                                    <td>tranbao@example.com</td>
+                                    <td>0907788899</td>
+                                    <td>4</td>
+                                    <td><span class="status-badge status-in-stock">Active</span></td>
+                                    <td class="text-end table-actions">
+                                        <button class="btn btn-app-outline btn-sm" type="button">View Detail</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Le Quoc Minh</strong></td>
+                                    <td>lequocminh@example.com</td>
+                                    <td>0911333555</td>
+                                    <td>2</td>
+                                    <td><span class="status-badge status-in-stock">Active</span></td>
+                                    <td class="text-end table-actions">
+                                        <button class="btn btn-app-outline btn-sm" type="button">View Detail</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Pham Gia Han</strong></td>
+                                    <td>phamhan@example.com</td>
+                                    <td>0933444555</td>
+                                    <td>1</td>
+                                    <td><span class="status-badge status-pending">New</span></td>
+                                    <td class="text-end table-actions">
+                                        <button class="btn btn-app-outline btn-sm" type="button">View Detail</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Hoang Minh Thu</strong></td>
+                                    <td>minhthu@example.com</td>
+                                    <td>0988999111</td>
+                                    <td>0</td>
+                                    <td><span class="status-badge status-out-stock">Inactive</span></td>
+                                    <td class="text-end table-actions">
+                                        <button class="btn btn-app-outline btn-sm" type="button">View Detail</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <div class="admin-section-stack">
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <div>
+                                <h2>Customer segments</h2>
+                                <p>Useful buckets for quick support context.</p>
+                            </div>
+                        </div>
+                        <ul class="admin-status-list">
+                            <li><span class="admin-status-label"><span class="admin-status-dot success"></span>VIP buyers</span><strong>24</strong></li>
+                            <li><span class="admin-status-label"><span class="admin-status-dot"></span>Repeat customers</span><strong>186</strong></li>
+                            <li><span class="admin-status-label"><span class="admin-status-dot warning"></span>New customers</span><strong>72</strong></li>
+                            <li><span class="admin-status-label"><span class="admin-status-dot danger"></span>Inactive accounts</span><strong>31</strong></li>
+                        </ul>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <div>
+                                <h2>Recent signups</h2>
+                                <p>Newest accounts that may place their first order soon.</p>
+                            </div>
+                        </div>
+                        <ul class="admin-mini-list">
+                            <li class="admin-mini-list-item">
+                                <div class="account-avatar admin-user-pill-avatar">PH</div>
+                                <div>
+                                    <strong>Pham Gia Han</strong>
+                                    <small>Joined August 10, 2026</small>
+                                </div>
+                                <span class="status-badge status-pending">New</span>
+                            </li>
+                            <li class="admin-mini-list-item">
+                                <div class="account-avatar admin-user-pill-avatar">TM</div>
+                                <div>
+                                    <strong>Tran Minh Khoa</strong>
+                                    <small>Joined August 9, 2026</small>
+                                </div>
+                                <span class="status-badge status-in-stock">Active</span>
+                            </li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+
+            <p class="admin-footer-note">Customer management stays intentionally lightweight for the MVP and focuses on search plus operational context.</p>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Online Shop Admin | Feedback</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="site-body admin-app">
+    <main class="admin-workspace">
+        <aside class="admin-sidebar">
+            <div class="admin-sidebar-brand">
+                <img src="../assets/images/logo-mark.svg" alt="AOS mark">
+                <div>
+                    <strong>AOS Admin</strong>
+                    <small>Apple Online Shop</small>
+                </div>
+            </div>
+            <div class="admin-sidebar-meta">
+                <strong>Customer experience view</strong>
+                <small>Review list and moderation shell for the MVP feedback flow.</small>
+            </div>
+            <div>
+                <p class="admin-sidebar-label">Overview</p>
+                <nav class="admin-nav">
+                    <a href="dashboard.html">Dashboard</a>
+                    <a href="products.html">Products</a>
+                    <a href="categories.html">Categories</a>
+                    <a href="orders.html">Orders</a>
+                    <a href="inventory.html">Inventory</a>
+                    <a href="customers.html">Customers</a>
+                    <a href="vouchers.html">Vouchers</a>
+                    <a class="active" href="feedback.html">Feedback</a>
+                </nav>
+            </div>
+            <div>
+                <p class="admin-sidebar-label">Quick actions</p>
+                <nav class="admin-nav">
+                    <a href="../product-detail.html">Product Detail</a>
+                    <a href="../order-history.html">Customer Orders</a>
+                    <a href="../index.html">Open Storefront</a>
+                </nav>
+            </div>
+            <div class="admin-sidebar-footer">
+                <strong>Feedback scope</strong>
+                <small>Enough coverage for listing, reviewing, hiding, and responding to customer comments later.</small>
+            </div>
+        </aside>
+
+        <section class="admin-main">
+            <div class="admin-topbar">
+                <form class="admin-topbar-search" action="feedback.html" method="get" name="adminFeedbackSearchForm">
+                    <label class="visually-hidden" for="admin-feedback-search">Search feedback</label>
+                    <input id="admin-feedback-search" class="form-control" type="search" name="keyword" placeholder="Search product, customer, review text">
+                    <button class="btn btn-app-primary" type="submit">Search</button>
+                </form>
+                <div class="admin-topbar-actions">
+                    <a class="btn btn-app-outline btn-sm" href="products.html">Products</a>
+                    <a class="btn btn-app-primary btn-sm" href="#feedback-note-form">Moderate</a>
+                </div>
+            </div>
+
+            <nav aria-label="Breadcrumb">
+                <ol class="breadcrumb app-breadcrumb">
+                    <li class="breadcrumb-item"><a href="dashboard.html">Admin</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Feedback</li>
+                </ol>
+            </nav>
+
+            <div class="admin-page-head">
+                <div>
+                    <span class="eyebrow">Post-purchase feedback</span>
+                    <h1>Customer Feedback</h1>
+                    <p>
+                        A simple moderation and reporting screen for product reviews, ready to be connected later with
+                        orders, products, and customer accounts.
+                    </p>
+                </div>
+                <div class="admin-page-actions">
+                    <a class="btn btn-app-outline" href="orders.html">Match Orders</a>
+                    <a class="btn btn-app-primary" href="#feedback-note-form">Open Moderation Form</a>
+                </div>
+            </div>
+
+            <section class="admin-kpi-grid">
+                <article class="stat-card compact">
+                    <div class="stat-label">Average rating</div>
+                    <div class="stat-value">4.7</div>
+                    <p>Across published reviews</p>
+                </article>
+                <article class="stat-card compact">
+                    <div class="stat-label">Published</div>
+                    <div class="stat-value">219</div>
+                    <p>Visible on storefront</p>
+                </article>
+                <article class="stat-card compact">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value">18</div>
+                    <p>Waiting moderation</p>
+                </article>
+                <article class="stat-card compact">
+                    <div class="stat-label">Hidden</div>
+                    <div class="stat-value">6</div>
+                    <p>Suppressed for review</p>
+                </article>
+            </section>
+
+            <div class="admin-content-grid">
+                <div class="admin-section-stack">
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <div>
+                                <h2>Feedback list</h2>
+                                <p>Table view for product owner or staff to inspect customer sentiment quickly.</p>
+                            </div>
+                            <a class="btn btn-app-outline btn-sm" href="dashboard.html">Overview</a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table app-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Review ID</th>
+                                        <th scope="col">Product</th>
+                                        <th scope="col">Customer</th>
+                                        <th scope="col">Rating</th>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Visibility</th>
+                                        <th scope="col" class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>FB-240811</strong></td>
+                                        <td>iPhone 16 Pro</td>
+                                        <td>Nguyen Minh Anh</td>
+                                        <td><span class="rating-pill">5 / 5</span></td>
+                                        <td>Aug 11, 2026</td>
+                                        <td><span class="status-badge status-in-stock">Published</span></td>
+                                        <td class="text-end table-actions">
+                                            <button class="btn btn-app-outline btn-sm" type="button">Open</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>FB-240810</strong></td>
+                                        <td>AirPods Pro 3</td>
+                                        <td>Tran Bao Chau</td>
+                                        <td><span class="rating-pill">4 / 5</span></td>
+                                        <td>Aug 10, 2026</td>
+                                        <td><span class="status-badge status-processing">Pending</span></td>
+                                        <td class="text-end table-actions">
+                                            <button class="btn btn-app-outline btn-sm" type="button">Review</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>FB-240808</strong></td>
+                                        <td>MacBook Air M4</td>
+                                        <td>Pham Gia Han</td>
+                                        <td><span class="rating-pill">3 / 5</span></td>
+                                        <td>Aug 8, 2026</td>
+                                        <td><span class="status-badge status-cancelled">Hidden</span></td>
+                                        <td class="text-end table-actions">
+                                            <button class="btn btn-app-outline btn-sm" type="button">Re-open</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>FB-240806</strong></td>
+                                        <td>Apple Watch Series 11</td>
+                                        <td>Le Quoc Minh</td>
+                                        <td><span class="rating-pill">5 / 5</span></td>
+                                        <td>Aug 6, 2026</td>
+                                        <td><span class="status-badge status-in-stock">Published</span></td>
+                                        <td class="text-end table-actions">
+                                            <button class="btn btn-app-outline btn-sm" type="button">Open</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <div>
+                                <h2>Common feedback themes</h2>
+                                <p>Useful placeholders for analytics or manual reporting.</p>
+                            </div>
+                        </div>
+                        <div class="admin-summary-grid">
+                            <article class="admin-summary-card">
+                                <span>Top praise</span>
+                                <strong>Camera quality and display</strong>
+                            </article>
+                            <article class="admin-summary-card">
+                                <span>Top complaint</span>
+                                <strong>Accessory suggestions are unclear</strong>
+                            </article>
+                            <article class="admin-summary-card">
+                                <span>Delivery mention</span>
+                                <strong>Packaging experience noted often</strong>
+                            </article>
+                            <article class="admin-summary-card">
+                                <span>Improvement hint</span>
+                                <strong>Need better compatibility guidance</strong>
+                            </article>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="admin-section-stack">
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <div>
+                                <h2>Moderation queue</h2>
+                                <p>Simple card stack for the items that need attention first.</p>
+                            </div>
+                        </div>
+                        <div class="review-list">
+                            <article class="review-card">
+                                <div class="review-card-head">
+                                    <div class="review-meta">
+                                        <strong>FB-240810</strong>
+                                        <span>AirPods Pro 3 by Tran Bao Chau</span>
+                                    </div>
+                                    <span class="rating-pill">4 / 5</span>
+                                </div>
+                                <p>The sound is great, but I expected clearer instructions about pairing modes.</p>
+                                <span class="status-badge status-processing">Pending moderation</span>
+                            </article>
+
+                            <article class="review-card">
+                                <div class="review-card-head">
+                                    <div class="review-meta">
+                                        <strong>FB-240808</strong>
+                                        <span>MacBook Air M4 by Pham Gia Han</span>
+                                    </div>
+                                    <span class="rating-pill">3 / 5</span>
+                                </div>
+                                <p>Good laptop overall, but shipping box arrived with visible dents.</p>
+                                <span class="status-badge status-cancelled">Needs confirmation</span>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section class="admin-panel" id="feedback-note-form">
+                        <div class="admin-panel-head">
+                            <div>
+                                <h2>Moderation note</h2>
+                                <p>Basic response form without workflow automation.</p>
+                            </div>
+                        </div>
+                        <form action="save-feedback-note" method="post" name="adminFeedbackNoteForm" class="admin-form-stack">
+                            <div>
+                                <label class="form-label" for="feedback-target-review">Review reference</label>
+                                <input id="feedback-target-review" class="form-control" type="text" name="reviewId" placeholder="FB-240810">
+                            </div>
+                            <div>
+                                <label class="form-label" for="feedback-visibility">Visibility</label>
+                                <select id="feedback-visibility" class="form-select" name="visibility">
+                                    <option>Published</option>
+                                    <option>Pending</option>
+                                    <option>Hidden</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" for="feedback-internal-note">Internal note</label>
+                                <textarea id="feedback-internal-note" class="form-control" name="internalNote" rows="4" placeholder="Record moderation reasoning or follow-up note for the team."></textarea>
+                            </div>
+                            <div>
+                                <label class="form-label" for="feedback-reply">Customer reply</label>
+                                <textarea id="feedback-reply" class="form-control" name="replyContent" rows="4" placeholder="Thank you for sharing your experience. We will improve the accessory guidance on the product page."></textarea>
+                            </div>
+                            <div class="admin-page-actions">
+                                <button class="btn btn-app-outline" type="button">Save Draft</button>
+                                <button class="btn btn-app-primary" type="submit">Save Response</button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+            </div>
+
+            <p class="admin-footer-note">Feedback data on this page is static sample content for UI demonstration only.</p>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>

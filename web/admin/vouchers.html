@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Online Shop Admin | Vouchers</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="site-body admin-app">
+    <main class="admin-workspace">
+        <aside class="admin-sidebar">
+            <div class="admin-sidebar-brand">
+                <img src="../assets/images/logo-mark.svg" alt="AOS mark">
+                <div>
+                    <strong>AOS Admin</strong>
+                    <small>Apple Online Shop</small>
+                </div>
+            </div>
+            <div class="admin-sidebar-meta">
+                <strong>Promotion view</strong>
+                <small>Simple voucher management for a lightweight online shop MVP.</small>
+            </div>
+            <div>
+                <p class="admin-sidebar-label">Overview</p>
+                <nav class="admin-nav">
+                    <a href="dashboard.html">Dashboard</a>
+                    <a href="products.html">Products</a>
+                    <a href="categories.html">Categories</a>
+                    <a href="orders.html">Orders</a>
+                    <a href="inventory.html">Inventory</a>
+                    <a href="customers.html">Customers</a>
+                    <a class="active" href="vouchers.html">Vouchers</a>
+                    <a href="feedback.html">Feedback</a>
+                </nav>
+            </div>
+            <div>
+                <p class="admin-sidebar-label">Quick actions</p>
+                <nav class="admin-nav">
+                    <a href="#voucher-form">Create Voucher</a>
+                    <a href="../cart.html">Customer Cart</a>
+                    <a href="../index.html">Open Storefront</a>
+                </nav>
+            </div>
+            <div class="admin-sidebar-footer">
+                <strong>Voucher scope</strong>
+                <small>Enough UI to cover code creation, activation, search, and tracking later in backend.</small>
+            </div>
+        </aside>
+
+        <section class="admin-main">
+            <div class="admin-topbar">
+                <form class="admin-topbar-search" action="vouchers.html" method="get" name="adminVoucherSearchForm">
+                    <label class="visually-hidden" for="admin-vouchers-search">Search vouchers</label>
+                    <input id="admin-vouchers-search" class="form-control" type="search" name="keyword" placeholder="Search code or campaign">
+                    <button class="btn btn-app-primary" type="submit">Search</button>
+                </form>
+                <div class="admin-topbar-actions">
+                    <a class="btn btn-app-outline btn-sm" href="dashboard.html">Dashboard</a>
+                    <a class="btn btn-app-primary btn-sm" href="#voucher-form">New Voucher</a>
+                </div>
+            </div>
+
+            <nav aria-label="Breadcrumb">
+                <ol class="breadcrumb app-breadcrumb">
+                    <li class="breadcrumb-item"><a href="dashboard.html">Admin</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Vouchers</li>
+                </ol>
+            </nav>
+
+            <div class="admin-page-head">
+                <div>
+                    <span class="eyebrow">Promotion master data</span>
+                    <h1>Voucher Management</h1>
+                    <p>
+                        This page gives the team a clean placeholder for voucher CRUD, campaign tracking, and redemption
+                        monitoring without adding complex frontend logic.
+                    </p>
+                </div>
+                <div class="admin-page-actions">
+                    <a class="btn btn-app-outline" href="orders.html">Order Impact</a>
+                    <a class="btn btn-app-primary" href="#voucher-form">Create Voucher</a>
+                </div>
+            </div>
+
+            <section class="admin-kpi-grid">
+                <article class="stat-card compact">
+                    <div class="stat-label">Active</div>
+                    <div class="stat-value">12</div>
+                    <p>Running voucher campaigns</p>
+                </article>
+                <article class="stat-card compact">
+                    <div class="stat-label">Scheduled</div>
+                    <div class="stat-value">4</div>
+                    <p>Prepared for future launch</p>
+                </article>
+                <article class="stat-card compact">
+                    <div class="stat-label">Redeemed</div>
+                    <div class="stat-value">186</div>
+                    <p>Total uses this month</p>
+                </article>
+                <article class="stat-card compact">
+                    <div class="stat-label">Expiring</div>
+                    <div class="stat-value">3</div>
+                    <p>Need review this week</p>
+                </article>
+            </section>
+
+            <div class="admin-content-grid">
+                <div class="admin-section-stack">
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <div>
+                                <h2>Voucher list</h2>
+                                <p>Table-first layout that can later be backed by a voucher master data module.</p>
+                            </div>
+                            <a class="btn btn-app-outline btn-sm" href="dashboard.html">Back to overview</a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table app-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Code</th>
+                                        <th scope="col">Scope</th>
+                                        <th scope="col">Discount</th>
+                                        <th scope="col">Condition</th>
+                                        <th scope="col">Period</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col" class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>APPLE40</strong></td>
+                                        <td>Order total</td>
+                                        <td>$40 off</td>
+                                        <td>Min $2,500</td>
+                                        <td>Aug 1 - Aug 31, 2026</td>
+                                        <td><span class="status-badge status-in-stock">Active</span></td>
+                                        <td class="text-end table-actions">
+                                            <button class="btn btn-app-outline btn-sm" type="button">Edit</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>MACSAVE120</strong></td>
+                                        <td>Mac category</td>
+                                        <td>$120 off</td>
+                                        <td>Min 1 MacBook</td>
+                                        <td>Aug 15 - Sep 15, 2026</td>
+                                        <td><span class="status-badge status-pending">Scheduled</span></td>
+                                        <td class="text-end table-actions">
+                                            <button class="btn btn-app-outline btn-sm" type="button">Preview</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>WELCOME10</strong></td>
+                                        <td>New member</td>
+                                        <td>10% off</td>
+                                        <td>First order only</td>
+                                        <td>Always on</td>
+                                        <td><span class="status-badge status-processing">Running</span></td>
+                                        <td class="text-end table-actions">
+                                            <button class="btn btn-app-outline btn-sm" type="button">View</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>AIRPODS15</strong></td>
+                                        <td>Accessory bundle</td>
+                                        <td>15% off</td>
+                                        <td>2 accessories</td>
+                                        <td>Jul 1 - Jul 31, 2026</td>
+                                        <td><span class="status-badge status-cancelled">Expired</span></td>
+                                        <td class="text-end table-actions">
+                                            <button class="btn btn-app-outline btn-sm" type="button">Clone</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <div>
+                                <h2>Voucher setup notes</h2>
+                                <p>Small cards that help the team map future database fields cleanly.</p>
+                            </div>
+                        </div>
+                        <div class="admin-summary-grid">
+                            <article class="admin-summary-card">
+                                <span>Discount type</span>
+                                <strong>Percent or fixed amount</strong>
+                            </article>
+                            <article class="admin-summary-card">
+                                <span>Apply scope</span>
+                                <strong>Order, category, or variant</strong>
+                            </article>
+                            <article class="admin-summary-card">
+                                <span>Usage rule</span>
+                                <strong>Single use or limited quantity</strong>
+                            </article>
+                            <article class="admin-summary-card">
+                                <span>Activation</span>
+                                <strong>Start date, end date, enabled flag</strong>
+                            </article>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="admin-section-stack">
+                    <section class="admin-panel" id="voucher-form">
+                        <div class="admin-panel-head">
+                            <div>
+                                <h2>Create or edit voucher</h2>
+                                <p>Static form only, ready for servlet request mapping later.</p>
+                            </div>
+                        </div>
+                        <form action="save-voucher" method="post" name="adminVoucherForm" class="admin-form-stack">
+                            <div class="admin-form-grid">
+                                <div>
+                                    <label class="form-label" for="voucher-code">Voucher code</label>
+                                    <input id="voucher-code" class="form-control" type="text" name="code" placeholder="APPLE40">
+                                </div>
+                                <div>
+                                    <label class="form-label" for="voucher-type">Discount type</label>
+                                    <select id="voucher-type" class="form-select" name="discountType">
+                                        <option>Fixed amount</option>
+                                        <option>Percentage</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label" for="voucher-value">Discount value</label>
+                                    <input id="voucher-value" class="form-control" type="text" name="discountValue" placeholder="40">
+                                </div>
+                                <div>
+                                    <label class="form-label" for="voucher-scope">Apply scope</label>
+                                    <select id="voucher-scope" class="form-select" name="scope">
+                                        <option>Order total</option>
+                                        <option>Category</option>
+                                        <option>Product variant</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label" for="voucher-min-order">Minimum order</label>
+                                    <input id="voucher-min-order" class="form-control" type="text" name="minOrderValue" placeholder="2500">
+                                </div>
+                                <div>
+                                    <label class="form-label" for="voucher-usage-limit">Usage limit</label>
+                                    <input id="voucher-usage-limit" class="form-control" type="number" name="maxUses" placeholder="100">
+                                </div>
+                                <div>
+                                    <label class="form-label" for="voucher-start-date">Start date</label>
+                                    <input id="voucher-start-date" class="form-control" type="date" name="startDate">
+                                </div>
+                                <div>
+                                    <label class="form-label" for="voucher-end-date">End date</label>
+                                    <input id="voucher-end-date" class="form-control" type="date" name="endDate">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label" for="voucher-note">Internal note</label>
+                                <textarea id="voucher-note" class="form-control" name="note" rows="4" placeholder="Campaign note, excluded products, or internal approval remark."></textarea>
+                            </div>
+                            <div class="admin-page-actions">
+                                <button class="btn btn-app-outline" type="button">Save Draft</button>
+                                <button class="btn btn-app-primary" type="submit">Publish Voucher</button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <div>
+                                <h2>Upcoming campaigns</h2>
+                                <p>Lightweight reminder block for coordination and reporting.</p>
+                            </div>
+                        </div>
+                        <ul class="admin-mini-list">
+                            <li class="admin-mini-list-item">
+                                <img src="../assets/images/mac-card.svg" alt="MacBook campaign">
+                                <div>
+                                    <strong>Back to school Mac</strong>
+                                    <small>Launch on Aug 15, 2026 with code MACSAVE120</small>
+                                </div>
+                                <span class="status-badge status-pending">Queued</span>
+                            </li>
+                            <li class="admin-mini-list-item">
+                                <img src="../assets/images/watch-card.svg" alt="Apple Watch campaign">
+                                <div>
+                                    <strong>Apple Watch weekend deal</strong>
+                                    <small>Planned flash voucher for weekend traffic boost</small>
+                                </div>
+                                <span class="status-badge status-processing">Planning</span>
+                            </li>
+                            <li class="admin-mini-list-item">
+                                <img src="../assets/images/iphone-card.svg" alt="iPhone campaign">
+                                <div>
+                                    <strong>Trade-up iPhone campaign</strong>
+                                    <small>Needs legal text and final discount approval</small>
+                                </div>
+                                <span class="status-badge status-low-stock">Waiting</span>
+                            </li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+
+            <p class="admin-footer-note">Voucher data on this page is static sample content for UI demonstration only.</p>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>

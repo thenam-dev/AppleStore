@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Online Shop | Profile</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="site-body">
+    <header class="site-header">
+        <div class="topbar">
+            <div class="container topbar-inner">
+                <p class="topbar-note">Account pages reuse a single sidebar pattern so later screens can be added without redesigning the shell.</p>
+                <ul class="topbar-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="order-history.html">My Orders</a></li>
+                    <li><a href="wishlist.html">Wishlist</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="container header-main">
+            <a class="brand" href="index.html" aria-label="Apple Online Shop">
+                <img src="assets/images/logo-mark.svg" alt="AOS mark">
+                <span>
+                    <strong>AOS Template</strong>
+                    <small>Customer Profile</small>
+                </span>
+            </a>
+            <form class="header-search" action="products.html" method="get" name="headerSearchForm">
+                <label class="visually-hidden" for="profile-search-input">Search products</label>
+                <input id="profile-search-input" class="form-control" type="search" name="keyword" placeholder="Search products">
+                <button class="btn btn-app-primary" type="submit">Search</button>
+            </form>
+            <div class="header-actions">
+                <div class="dropdown">
+                    <button class="btn btn-app-ghost dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        My Account
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end app-dropdown-menu">
+                        <li><a class="dropdown-item" href="profile.html">Profile</a></li>
+                        <li><a class="dropdown-item" href="addresses.html">Addresses</a></li>
+                        <li><a class="dropdown-item" href="order-history.html">Orders</a></li>
+                        <li><a class="dropdown-item" href="wishlist.html">Wishlist</a></li>
+                    </ul>
+                </div>
+                <a class="cart-link" href="cart.html" aria-label="View cart">
+                    <span>Cart</span>
+                    <span class="cart-count">3</span>
+                </a>
+                <button class="mobile-menu-button" type="button" data-mobile-toggle aria-expanded="false" aria-label="Open mobile navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+        <div class="mobile-drawer" data-mobile-panel>
+            <div class="container mobile-drawer-inner">
+                <div class="mobile-links">
+                    <a href="profile.html">Profile</a>
+                    <a href="addresses.html">Addresses</a>
+                    <a href="order-history.html">Orders</a>
+                    <a href="wishlist.html">Wishlist</a>
+                    <a href="cart.html">Cart</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="section-block">
+            <div class="container">
+                <nav aria-label="Breadcrumb">
+                    <ol class="breadcrumb app-breadcrumb">
+                        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Profile</li>
+                    </ol>
+                </nav>
+                <div class="account-layout">
+                    <aside class="account-sidebar">
+                        <div class="account-user-card">
+                            <div class="account-avatar">NA</div>
+                            <div>
+                                <strong>Nguyen Van A</strong>
+                                <span>Premium shopper profile</span>
+                            </div>
+                        </div>
+                        <nav class="account-nav">
+                            <a class="account-nav-link active" href="profile.html">Profile</a>
+                            <a class="account-nav-link" href="addresses.html">Addresses</a>
+                            <a class="account-nav-link" href="order-history.html">Orders</a>
+                            <a class="account-nav-link" href="wishlist.html">Wishlist</a>
+                            <button class="account-nav-link account-nav-button" type="button">Change Password</button>
+                            <button class="account-nav-link account-nav-button" type="button">Logout</button>
+                        </nav>
+                    </aside>
+
+                    <div class="account-content">
+                        <section class="account-panel">
+                            <div class="account-panel-head">
+                                <div>
+                                    <span class="eyebrow">Profile</span>
+                                    <h1>Personal information</h1>
+                                </div>
+                                <button class="btn btn-app-outline" type="button">Edit Profile</button>
+                            </div>
+                            <div class="profile-hero-card">
+                                <div class="profile-hero-avatar">NA</div>
+                                <div>
+                                    <h2>Nguyen Van A</h2>
+                                    <p>Main customer identity block for the account area.</p>
+                                </div>
+                            </div>
+                            <form action="update-profile" method="post" name="profileForm" class="field-grid two-columns">
+                                <div>
+                                    <label class="form-label" for="profile-fullname">Full name</label>
+                                    <input id="profile-fullname" class="form-control" type="text" name="fullName" value="Nguyen Van A">
+                                </div>
+                                <div>
+                                    <label class="form-label" for="profile-email">Email</label>
+                                    <input id="profile-email" class="form-control" type="email" name="email" value="nguyenvana@example.com">
+                                </div>
+                                <div>
+                                    <label class="form-label" for="profile-phone">Phone</label>
+                                    <input id="profile-phone" class="form-control" type="tel" name="phone" value="0901234567">
+                                </div>
+                                <div>
+                                    <label class="form-label" for="profile-dob">Date of birth</label>
+                                    <input id="profile-dob" class="form-control" type="date" name="dateOfBirth" value="2001-08-15">
+                                </div>
+                                <div class="field-span-full">
+                                    <button class="btn btn-app-primary" type="submit">Save Changes</button>
+                                </div>
+                            </form>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-bottom footer-bottom-single">
+            <small>&copy; <span data-current-year></span> Apple Online Shop UI Template. Profile screen for customer account flow.</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
