@@ -47,36 +47,13 @@
 </head>
 <body class="site-body admin-app">
     <main class="admin-workspace">
-        <aside class="admin-sidebar">
-            <div class="admin-sidebar-brand">
-                <img src="<%= appPath %>/assets/images/logo-mark.svg" alt="AOS mark">
-                <div>
-                    <strong>AOS Admin</strong>
-                    <small>Apple Online Shop</small>
-                </div>
-            </div>
-            <div class="admin-sidebar-meta">
-                <strong>Edit User</strong>
-                <small>Validate in service, persist through DAO.</small>
-            </div>
-            <div>
-                <p class="admin-sidebar-label">Overview</p>
-                <nav class="admin-nav">
-                    <a href="<%= appPath %>/admin/dashboard.html">Dashboard</a>
-                    <a href="<%= appPath %>/admin/products.html">Products</a>
-                    <a href="<%= appPath %>/admin/categories.html">Categories</a>
-                    <a href="<%= appPath %>/admin/orders.html">Orders</a>
-                    <a href="<%= appPath %>/admin/inventory.html">Inventory</a>
-                    <a class="active" href="<%= appPath %>/admin/users">Users</a>
-                    <a href="<%= appPath %>/admin/vouchers.html">Vouchers</a>
-                    <a href="<%= appPath %>/admin/feedback.html">Feedback</a>
-                </nav>
-            </div>
-            <div class="admin-sidebar-footer">
-                <strong>Form sample</strong>
-                <small>This form intentionally avoids password changes until auth is implemented.</small>
-            </div>
-        </aside>
+        <%
+            request.setAttribute("adminSidebarTitle", "Edit User");
+            request.setAttribute("adminSidebarDescription", "Validate in service, persist through DAO.");
+            request.setAttribute("adminSidebarFooterTitle", "Form sample");
+            request.setAttribute("adminSidebarFooterDescription", "This form intentionally avoids password changes until auth is implemented.");
+        %>
+        <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
 
         <section class="admin-main">
             <div class="admin-topbar">

@@ -97,44 +97,14 @@
 </head>
 <body class="site-body admin-app">
     <main class="admin-workspace">
-        <aside class="admin-sidebar">
-            <div class="admin-sidebar-brand">
-                <img src="<%= appPath %>/assets/images/logo-mark.svg" alt="AOS mark">
-                <div>
-                    <strong>AOS Admin</strong>
-                    <small>Apple Online Shop</small>
-                </div>
-            </div>
-            <div class="admin-sidebar-meta">
-                <strong>User Management</strong>
-                <small>Servlet, service, DAO and JDBC sample flow.</small>
-            </div>
-            <div>
-                <p class="admin-sidebar-label">Overview</p>
-                <nav class="admin-nav">
-                    <a href="<%= appPath %>/admin/dashboard.html">Dashboard</a>
-                    <a href="<%= appPath %>/admin/products.html">Products</a>
-                    <a href="<%= appPath %>/admin/categories.html">Categories</a>
-                    <a href="<%= appPath %>/admin/orders.html">Orders</a>
-                    <a href="<%= appPath %>/admin/inventory.html">Inventory</a>
-                    <a class="active" href="<%= appPath %>/admin/users">Users</a>
-                    <a href="<%= appPath %>/admin/vouchers.html">Vouchers</a>
-                    <a href="<%= appPath %>/admin/feedback.html">Feedback</a>
-                </nav>
-            </div>
-            <div>
-                <p class="admin-sidebar-label">Quick actions</p>
-                <nav class="admin-nav">
-                    <a href="<%= appPath %>/admin/users?role=CUSTOMER">Customers</a>
-                    <a href="<%= appPath %>/admin/users?role=ADMIN">Admins</a>
-                    <a href="<%= appPath %>/index.html">Open Storefront</a>
-                </nav>
-            </div>
-            <div class="admin-sidebar-footer">
-                <strong>Backend sample</strong>
-                <small>Use this page as the pattern for product, order and category modules.</small>
-            </div>
-        </aside>
+        <%
+            request.setAttribute("adminSidebarTitle", "User Management");
+            request.setAttribute("adminSidebarDescription", "Servlet, service, DAO and JDBC sample flow.");
+            request.setAttribute("adminSidebarFooterTitle", "Backend sample");
+            request.setAttribute("adminSidebarFooterDescription", "Use this page as the pattern for product, order and category modules.");
+            request.setAttribute("adminSidebarShowUserQuickLinks", Boolean.TRUE);
+        %>
+        <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
 
         <section class="admin-main">
             <div class="admin-topbar">

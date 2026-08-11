@@ -12,8 +12,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 public abstract class UserServletSupport extends HttpServlet {
-    protected static final String LIST_VIEW = "/admin/users.jsp";
-    protected static final String FORM_VIEW = "/admin/user-form.jsp";
+    protected static final String LIST_VIEW = "/WEB-INF/views/admin/users/list.jsp";
+    protected static final String FORM_VIEW = "/WEB-INF/views/admin/users/form.jsp";
     protected static final String USER_LIST_PATH = "/admin/users";
 
     protected final UserService userService = new UserService();

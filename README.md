@@ -26,9 +26,15 @@ src/java/
   service/
   util/
 web/
-  admin/
   assets/
+    css/
+    js/
+    images/
   WEB-INF/
+    views/
+      admin/
+        users/
+      common/
 ```
 
 Layer convention:
@@ -43,12 +49,43 @@ Util       shared helpers such as DBConnection
 Filter     authentication/authorization checks
 ```
 
+## Frontend structure
+
+Static assets stay public:
+
+```text
+web/assets/css
+web/assets/js
+web/assets/images
+```
+
+Protected JSP views must stay under `WEB-INF/views` so users cannot open them directly by URL:
+
+```text
+web/WEB-INF/views/
+  common/
+    admin-sidebar.jsp
+  admin/
+    users/
+      list.jsp
+      form.jsp
+```
+
+Existing `.html` pages under `web/` and `web/admin/` are still UI prototypes. When a module is connected to real backend data, move its JSP views into `WEB-INF/views` and expose it through a servlet route.
+
+Common layout rule:
+
+```jsp
+<jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
+```
+
 ## User Management sample flow
 
 The first backend sample is Admin User Management:
 
 ```text
-web/admin/users.jsp
+web/WEB-INF/views/admin/users/list.jsp
+web/WEB-INF/views/admin/users/form.jsp
 -> controller.admin.user.UserListServlet
 -> controller.admin.user.UserEditServlet
 -> controller.admin.user.UserUpdateServlet
