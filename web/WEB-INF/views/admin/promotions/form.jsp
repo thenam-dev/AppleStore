@@ -58,7 +58,7 @@
             </div>
             <nav aria-label="Breadcrumb">
                 <ol class="breadcrumb app-breadcrumb">
-                    <li class="breadcrumb-item"><a href="<%= appPath %>/admin/dashboard.html">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="<%= appPath %>/admin/dashboard">Admin</a></li>
                     <li class="breadcrumb-item"><a href="<%= appPath %>/admin/promotions">Promotions</a></li>
                     <li class="breadcrumb-item active" aria-current="page"><%= isEdit ? "Edit" : "Create" %></li>
                 </ol>

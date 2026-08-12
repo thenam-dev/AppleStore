@@ -48,7 +48,7 @@
     <div>
         <p class="admin-sidebar-label">Overview</p>
         <nav class="admin-nav">
-            <a href="<%= appPath %>/admin/dashboard.html">Dashboard</a>
+            <a href="<%= appPath %>/admin/dashboard">Dashboard</a>
             <a href="<%= appPath %>/admin/products.html">Products</a>
             <a href="<%= appPath %>/admin/categories.html">Categories</a>
             <a href="<%= appPath %>/admin/orders.html">Orders</a>
