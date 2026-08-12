@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="appPath" value="${pageContext.request.contextPath}" />
 <c:set var="isEdit" value="${not empty category and category.categoryId gt 0}" />
 <c:set var="formModeLabel" value="${isEdit ? 'Edit' : 'Create'}" />
@@ -43,7 +43,7 @@
 
             <nav aria-label="Breadcrumb">
                 <ol class="breadcrumb app-breadcrumb">
-                    <li class="breadcrumb-item"><a href="${appPath}/admin/dashboard.html">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="${appPath}/admin/dashboard">Admin</a></li>
                     <li class="breadcrumb-item"><a href="${appPath}/admin/categories">Categories</a></li>
                     <li class="breadcrumb-item active" aria-current="page">${formModeLabel}</li>
                 </ol>

@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="appPath" value="${pageContext.request.contextPath}" />
 <c:set var="adminSidebarTitle" scope="request" value="Category Management" />
 <c:set var="adminSidebarDescription" scope="request" value="Category taxonomy, visibility, and search organization." />
@@ -31,13 +31,13 @@
                 </form>
                 <div class="admin-topbar-actions">
                     <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/categories">Reset</a>
-                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products.html">Product List</a>
+                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products">Product List</a>
                 </div>
             </div>
 
             <nav aria-label="Breadcrumb">
                 <ol class="breadcrumb app-breadcrumb">
-                    <li class="breadcrumb-item"><a href="${appPath}/admin/dashboard.html">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="${appPath}/admin/dashboard">Admin</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Categories</li>
                 </ol>
             </nav>

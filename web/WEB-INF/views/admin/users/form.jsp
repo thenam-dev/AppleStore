@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="appPath" value="${pageContext.request.contextPath}" />
 <c:set var="adminSidebarTitle" scope="request" value="Edit User" />
 <c:set var="adminSidebarDescription" scope="request" value="Validate in service, persist through DAO." />
