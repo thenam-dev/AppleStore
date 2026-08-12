@@ -2,11 +2,47 @@
 -- schema.sql
 -- AppleStore database schema for MySQL 8.0+.
 -- This file contains tables, keys, checks, unique constraints, and indexes only.
--- It intentionally does not DROP DATABASE, so reruns do not delete local data.
+-- Rerunning this file resets all AppleStore tables so team members can rebuild
+-- the local database after pulling schema changes.
 -- ==========================================================================
 
 CREATE DATABASE IF NOT EXISTS AppleStore CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE AppleStore;
+
+-- Reset current schema. This deletes local AppleStore data, then recreates it
+-- from the definitions below. Run seed.sql after this file when sample data is needed.
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS audit_logs;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS deliveries;
+DROP TABLE IF EXISTS delivery_trips;
+DROP TABLE IF EXISTS sepay_webhook_dedup;
+DROP TABLE IF EXISTS payment_transactions;
+DROP TABLE IF EXISTS return_requests;
+DROP TABLE IF EXISTS order_promotions;
+DROP TABLE IF EXISTS order_status_history;
+DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS cart_items;
+DROP TABLE IF EXISTS cart;
+DROP TABLE IF EXISTS promotions;
+DROP TABLE IF EXISTS inventory_logs;
+DROP TABLE IF EXISTS product_addon_services;
+DROP TABLE IF EXISTS product_serials;
+DROP TABLE IF EXISTS product_variants;
+DROP TABLE IF EXISTS product_specifications;
+DROP TABLE IF EXISTS product_images;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS store_settings;
+DROP TABLE IF EXISTS system_config;
+DROP TABLE IF EXISTS user_addresses;
+DROP TABLE IF EXISTS user_sessions;
+DROP TABLE IF EXISTS users;
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- PHẦN 1: TẠO SCHEMA
 -- ==========================================================================
@@ -249,10 +285,16 @@ CREATE TABLE promotions (
     discount_max DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (discount_max >= 0),
     discount_value DECIMAL(10,2) NOT NULL,
     min_order_value DECIMAL(14,2) NOT NULL DEFAULT 0 CHECK (min_order_value >= 0),
-    scope VARCHAR(15) NOT NULL CHECK (scope IN ('ORDER','PRODUCT')),
+    
+    -- 1. Thêm CATEGORY vào danh sách cho phép của scope
+    scope VARCHAR(15) NOT NULL CHECK (scope IN ('ORDER','PRODUCT','CATEGORY')), 
+    
     benefit_target VARCHAR(20) NOT NULL DEFAULT 'MERCHANDISE'
         CHECK (benefit_target IN ('MERCHANDISE','SHIPPING','PRODUCT','PAYMENT_METHOD')),
+    
     product_id INT NULL,
+    category_id INT NULL, -- 2. Thêm cột category_id
+    
     max_uses INT NULL CHECK (max_uses IS NULL OR max_uses >= 0),
     used_count INT NOT NULL DEFAULT 0 CHECK (used_count >= 0),
     can_stack TINYINT(1) NOT NULL DEFAULT 0,
@@ -269,11 +311,15 @@ CREATE TABLE promotions (
         OR (discount_type = 'FIXED' AND discount_value > 0)
     ),
     CONSTRAINT CK_promotions_used_count CHECK (max_uses IS NULL OR used_count <= max_uses),
-    CONSTRAINT CK_promotions_scope_product CHECK (
-        (scope = 'PRODUCT' AND product_id IS NOT NULL)
-        OR (scope = 'ORDER' AND product_id IS NULL)
+    
+    -- 3. Cập nhật lại logic Check Constraint cho 3 trường hợp
+    CONSTRAINT CK_promotions_scope_logic CHECK (
+        (scope = 'ORDER' AND product_id IS NULL AND category_id IS NULL)
+        OR (scope = 'PRODUCT' AND product_id IS NOT NULL AND category_id IS NULL)
+        OR (scope = 'CATEGORY' AND category_id IS NOT NULL AND product_id IS NULL)
     ),
     FOREIGN KEY (product_id) REFERENCES products(product_id),
+    FOREIGN KEY (category_id) REFERENCES categories(category_id), -- 4. Thêm khoá ngoại
     FOREIGN KEY (created_by) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

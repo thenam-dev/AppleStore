@@ -11,6 +11,11 @@ database/seed.sql
 
 The database name is `AppleStore`.
 
+`database/schema.sql` starts by running `DROP TABLE IF EXISTS` for all project
+tables, so rerunning it will delete and recreate the local database schema.
+After pulling database changes from Git, run `schema.sql` first, then `seed.sql`
+to reload sample data without duplicate rows.
+
 ## Backend structure
 
 This project uses a simple Java Web Servlet + JSP + JDBC structure without a `com.*` base package:
