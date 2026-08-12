@@ -69,7 +69,7 @@
 
             <nav aria-label="Breadcrumb">
                 <ol class="breadcrumb app-breadcrumb">
-                    <li class="breadcrumb-item"><a href="<%= appPath %>/admin/dashboard.html">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="<%= appPath %>/admin/dashboard">Admin</a></li>
                     <li class="breadcrumb-item"><a href="<%= appPath %>/admin/users">Users</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Edit</li>
                 </ol>
