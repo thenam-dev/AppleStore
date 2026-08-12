@@ -1,6 +1,8 @@
 -- ==========================================================================
 -- seed.sql
 -- AppleStore seed data. Run this after schema.sql.
+-- schema.sql resets the tables first; running this file alone on an already
+-- seeded database can still hit duplicate keys because demo IDs are fixed.
 -- ==========================================================================
 
 USE AppleStore;
