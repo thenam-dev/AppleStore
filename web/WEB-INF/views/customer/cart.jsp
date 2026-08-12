@@ -1,9 +1,3 @@
-<%-- 
-    Document   : cart
-    Created on : Aug 12, 2026, 12:07:17 AM
-    Author     : ACER
---%>
-
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%-- If using Tomcat 10+/Jakarta EE, change uri "http://java.sun.com/jsp/jstl/..." -> "jakarta.tags.core" / "jakarta.tags.fmt" --%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -24,7 +18,7 @@
             <div class="container topbar-inner">
                 <p class="topbar-note">Your cart - update quantities or remove items right here.</p>
                 <ul class="topbar-links">
-                    <li><a href="${pageContext.request.contextPath}/index.html">Home</a></li>
+                    <li><a href="${pageContext.request.contextPath}/home">Home</a></li>
                     <li><a href="${pageContext.request.contextPath}/products.html">Continue Shopping</a></li>
                     <li><a href="${pageContext.request.contextPath}/checkout.html">Checkout</a></li>
                 </ul>
