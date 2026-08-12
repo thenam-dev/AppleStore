@@ -54,7 +54,7 @@
             <a href="<%= appPath %>/admin/orders.html">Orders</a>
             <a href="<%= appPath %>/admin/inventory.html">Inventory</a>
             <a class="active" href="<%= appPath %>/admin/users">Users</a>
-            <a href="<%= appPath %>/admin/vouchers.html">Vouchers</a>
+            <a href="<%= appPath %>/admin/promotions">Promotions</a>
             <a href="<%= appPath %>/admin/feedback.html">Feedback</a>
         </nav>
     </div>

@@ -42,6 +42,14 @@ public class PromotionUpdateServlet extends HttpServlet {
             }
             
             p.setScope(req.getParameter("scope"));
+            
+            // Lấy ID sản phẩm nếu có
+            String productIdStr = req.getParameter("productId");
+            if (productIdStr != null && !productIdStr.trim().isEmpty()) {
+                p.setProductId(Integer.parseInt(productIdStr));
+            } else {
+                p.setProductId(null);
+            }
             p.setBenefitTarget(req.getParameter("benefitTarget"));
             
             String maxUses = req.getParameter("maxUses");
@@ -50,7 +58,7 @@ public class PromotionUpdateServlet extends HttpServlet {
             }
             
             p.setCanStack(req.getParameter("canStack") != null);
-            p.setActive(req.getParameter("isActive") != null);
+            p.setIsActive(req.getParameter("isActive") != null);
             
             p.setValidFrom(LocalDateTime.parse(req.getParameter("validFrom"), FORMATTER));
             p.setValidUntil(LocalDateTime.parse(req.getParameter("validUntil"), FORMATTER));
