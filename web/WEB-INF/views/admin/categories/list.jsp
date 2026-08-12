@@ -1,59 +1,12 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.Collections" %>
-<%@ page import="java.util.List" %>
-<%@ page import="controller.admin.category.CategoryServletSupport.SortOption" %>
-<%@ page import="model.entity.catalog.Category" %>
-<%!
-    private String h(Object value) {
-        if (value == null) {
-            return "";
-        }
-        return String.valueOf(value)
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&#39;");
-    }
-
-    private String selected(Object current, String option) {
-        if (current == null) {
-            return "";
-        }
-        return option.equalsIgnoreCase(String.valueOf(current)) ? "selected" : "";
-    }
-
-    private String statusClass(boolean isActive) {
-        return isActive ? "status-in-stock" : "status-out-stock";
-    }
-%>
-<%
-    List<Category> categories = (List<Category>) request.getAttribute("categories");
-    if (categories == null) {
-        categories = Collections.emptyList();
-    }
-
-    String keyword = (String) request.getAttribute("keyword");
-    String selectedStatus = (String) request.getAttribute("selectedStatus");
-    Object totalCategories = request.getAttribute("totalCategories");
-    Object activeCategories = request.getAttribute("activeCategories");
-    Object inactiveCategories = request.getAttribute("inactiveCategories");
-    Object filteredCategories = request.getAttribute("filteredCategories");
-    List<SortOption> sortOptions = (List<SortOption>) request.getAttribute("sortOptions");
-    if (sortOptions == null) {
-        sortOptions = Collections.emptyList();
-    }
-    String selectedSort = (String) request.getAttribute("selectedSort");
-    String successMsg = (String) request.getAttribute("successMsg");
-    String errorMsg = (String) request.getAttribute("errorMsg");
-    int currentPage = request.getAttribute("currentPage") instanceof Integer ? (Integer) request.getAttribute("currentPage") : 1;
-    int totalPages = request.getAttribute("totalPages") instanceof Integer ? (Integer) request.getAttribute("totalPages") : 1;
-    String listQuery = (String) request.getAttribute("listQuery");
-    if (listQuery == null) {
-        listQuery = "";
-    }
-    String appPath = request.getContextPath();
-%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<c:set var="appPath" value="${pageContext.request.contextPath}" />
+<c:set var="adminSidebarTitle" scope="request" value="Category Management" />
+<c:set var="adminSidebarDescription" scope="request" value="Category taxonomy, visibility, and search organization." />
+<c:set var="adminSidebarFooterTitle" scope="request" value="Catalog module" />
+<c:set var="adminSidebarFooterDescription" scope="request" value="List flow is ready; create, edit, and toggle actions come next." />
+<c:set var="adminSidebarActive" scope="request" value="categories" />
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -61,37 +14,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Apple Online Shop Admin | Categories</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="<%= appPath %>/assets/css/style.css">
+    <link rel="stylesheet" href="${appPath}/assets/css/style.css">
 </head>
 <body class="site-body admin-app">
     <main class="admin-workspace">
-        <%
-            request.setAttribute("adminSidebarTitle", "Category Management");
-            request.setAttribute("adminSidebarDescription", "Category taxonomy, visibility, and search organization.");
-            request.setAttribute("adminSidebarFooterTitle", "Catalog module");
-            request.setAttribute("adminSidebarFooterDescription", "List flow is ready; create, edit, and toggle actions come next.");
-            request.setAttribute("adminSidebarActive", "categories");
-        %>
         <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
 
         <section class="admin-main">
             <div class="admin-topbar">
-                <form class="admin-topbar-search" action="<%= appPath %>/admin/categories" method="get" name="adminCategoriesSearchForm">
+                <form class="admin-topbar-search" action="${appPath}/admin/categories" method="get" name="adminCategoriesSearchForm">
                     <label class="visually-hidden" for="admin-categories-search">Search categories</label>
-                    <input id="admin-categories-search" class="form-control" type="search" name="keyword" value="<%= h(keyword) %>" placeholder="Search category name or slug">
-                    <input type="hidden" name="status" value="<%= h(selectedStatus) %>">
-                    <input type="hidden" name="sort" value="<%= h(selectedSort) %>">
+                    <input id="admin-categories-search" class="form-control" type="search" name="keyword" value="${fn:escapeXml(keyword)}" placeholder="Search category name or slug">
+                    <input type="hidden" name="status" value="${fn:escapeXml(selectedStatus)}">
+                    <input type="hidden" name="sort" value="${fn:escapeXml(selectedSort)}">
                     <button class="btn btn-app-primary" type="submit">Search</button>
                 </form>
                 <div class="admin-topbar-actions">
-                    <a class="btn btn-app-outline btn-sm" href="<%= appPath %>/admin/categories">Reset</a>
-                    <a class="btn btn-app-outline btn-sm" href="<%= appPath %>/admin/products.html">Product List</a>
+                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/categories">Reset</a>
+                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products.html">Product List</a>
                 </div>
             </div>
 
             <nav aria-label="Breadcrumb">
                 <ol class="breadcrumb app-breadcrumb">
-                    <li class="breadcrumb-item"><a href="<%= appPath %>/admin/dashboard.html">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="${appPath}/admin/dashboard.html">Admin</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Categories</li>
                 </ol>
             </nav>
@@ -102,35 +48,35 @@
                     <h1>Catalog categories</h1>
                     <p>First backend route for the catalog module. This page already reads real category data from MySQL.</p>
                 </div>
-                <a class="btn btn-app-primary" href="<%= appPath %>/admin/categories/edit">Create Category</a>
+                <a class="btn btn-app-primary" href="${appPath}/admin/categories/edit">Create Category</a>
             </div>
 
-            <% if (successMsg != null && !successMsg.isBlank()) { %>
-                <div class="alert alert-success" role="alert"><%= h(successMsg) %></div>
-            <% } %>
-            <% if (errorMsg != null && !errorMsg.isBlank()) { %>
-                <div class="alert alert-danger" role="alert"><%= h(errorMsg) %></div>
-            <% } %>
+            <c:if test="${not empty successMsg}">
+                <div class="alert alert-success" role="alert"><c:out value="${successMsg}" /></div>
+            </c:if>
+            <c:if test="${not empty errorMsg}">
+                <div class="alert alert-danger" role="alert"><c:out value="${errorMsg}" /></div>
+            </c:if>
 
             <section class="admin-kpi-grid">
                 <article class="stat-card compact">
                     <div class="stat-label">Categories</div>
-                    <div class="stat-value"><%= h(totalCategories) %></div>
+                    <div class="stat-value">${totalCategories}</div>
                     <p>Total categories in database</p>
                 </article>
                 <article class="stat-card compact">
                     <div class="stat-label">Active</div>
-                    <div class="stat-value"><%= h(activeCategories) %></div>
+                    <div class="stat-value">${activeCategories}</div>
                     <p>Visible to product assignment</p>
                 </article>
                 <article class="stat-card compact">
                     <div class="stat-label">Inactive</div>
-                    <div class="stat-value"><%= h(inactiveCategories) %></div>
+                    <div class="stat-value">${inactiveCategories}</div>
                     <p>Hidden or reserved categories</p>
                 </article>
                 <article class="stat-card compact">
                     <div class="stat-label">Filtered</div>
-                    <div class="stat-value"><%= h(filteredCategories) %></div>
+                    <div class="stat-value">${filteredCategories}</div>
                     <p>Current result after search/filter</p>
                 </article>
             </section>
@@ -141,20 +87,41 @@
                         <h2>Category table</h2>
                         <p>DAO reads from the categories table and the servlet forwards the current filtered page to JSP.</p>
                     </div>
-                    <span class="text-muted small">Filtered result: <%= h(filteredCategories) %></span>
+                    <span class="text-muted small">Filtered result: ${filteredCategories}</span>
                 </div>
                 <div class="table-toolbar">
-                    <form class="admin-filter-bar compact" action="<%= appPath %>/admin/categories" method="get" name="adminCategoryFilterForm">
-                        <input class="form-control" type="search" name="keyword" value="<%= h(keyword) %>" placeholder="Search by category name or slug">
+                    <form class="admin-filter-bar compact" action="${appPath}/admin/categories" method="get" name="adminCategoryFilterForm">
+                        <input class="form-control" type="search" name="keyword" value="${fn:escapeXml(keyword)}" placeholder="Search by category name or slug">
                         <select class="form-select" name="status">
-                            <option value="">All status</option>
-                            <option value="ACTIVE" <%= selected(selectedStatus, "ACTIVE") %>>Active</option>
-                            <option value="INACTIVE" <%= selected(selectedStatus, "INACTIVE") %>>Inactive</option>
+                            <c:choose>
+                                <c:when test="${selectedStatus eq 'ACTIVE'}">
+                                    <option value="">All status</option>
+                                    <option value="ACTIVE" selected>Active</option>
+                                    <option value="INACTIVE">Inactive</option>
+                                </c:when>
+                                <c:when test="${selectedStatus eq 'INACTIVE'}">
+                                    <option value="">All status</option>
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="INACTIVE" selected>Inactive</option>
+                                </c:when>
+                                <c:otherwise>
+                                    <option value="" selected>All status</option>
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="INACTIVE">Inactive</option>
+                                </c:otherwise>
+                            </c:choose>
                         </select>
                         <select class="form-select" name="sort">
-                            <% for (SortOption sortOption : sortOptions) { %>
-                                <option value="<%= h(sortOption.getValue()) %>" <%= selected(selectedSort, sortOption.getValue()) %>><%= h(sortOption.getLabel()) %></option>
-                            <% } %>
+                            <c:forEach var="sortOption" items="${sortOptions}">
+                                <c:choose>
+                                    <c:when test="${selectedSort eq sortOption.value}">
+                                        <option value="${fn:escapeXml(sortOption.value)}" selected><c:out value="${sortOption.label}" /></option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${fn:escapeXml(sortOption.value)}"><c:out value="${sortOption.label}" /></option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
                         </select>
                         <button class="btn btn-app-primary" type="submit">Filter</button>
                     </form>
@@ -172,60 +139,73 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <% if (categories.isEmpty()) { %>
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">No categories found.</td>
-                                </tr>
-                            <% } %>
-                            <% for (Category category : categories) { %>
-                                <tr>
-                                    <td><strong>#<%= category.getCategoryId() %></strong></td>
-                                    <td><strong><%= h(category.getName()) %></strong></td>
-                                    <td><code><%= h(category.getSlug()) %></code></td>
-                                    <td><%= category.getDisplayOrder() %></td>
-                                    <td>
-                                        <span class="status-badge <%= statusClass(category.getIsActive()) %>">
-                                            <%= category.getIsActive() ? "ACTIVE" : "INACTIVE" %>
-                                        </span>
-                                    </td>
-                                    <td class="text-end table-actions">
-                                        <a class="btn btn-app-outline btn-sm" href="<%= appPath %>/admin/categories/edit?id=<%= category.getCategoryId() %>">Edit</a>
-                                        <form class="d-inline" action="<%= appPath %>/admin/categories/status" method="post">
-                                            <input type="hidden" name="categoryId" value="<%= category.getCategoryId() %>">
-                                            <button class="btn <%= category.getIsActive() ? "btn-app-outline" : "btn-app-primary" %> btn-sm" type="submit">
-                                                <%= category.getIsActive() ? "Deactivate" : "Activate" %>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <% } %>
+                            <c:choose>
+                                <c:when test="${empty categories}">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">No categories found.</td>
+                                    </tr>
+                                </c:when>
+                                <c:otherwise>
+                                    <c:forEach var="category" items="${categories}">
+                                        <tr>
+                                            <td><strong>#${category.categoryId}</strong></td>
+                                            <td><strong><c:out value="${category.name}" /></strong></td>
+                                            <td><code><c:out value="${category.slug}" /></code></td>
+                                            <td>${category.displayOrder}</td>
+                                            <td>
+                                                <span class="status-badge ${category.isActive ? 'status-in-stock' : 'status-out-stock'}">
+                                                    ${category.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                                </span>
+                                            </td>
+                                            <td class="text-end table-actions">
+                                                <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/categories/edit?id=${category.categoryId}">Edit</a>
+                                                <form class="d-inline" action="${appPath}/admin/categories/status" method="post">
+                                                    <input type="hidden" name="categoryId" value="${category.categoryId}">
+                                                    <button class="btn ${category.isActive ? 'btn-app-outline' : 'btn-app-primary'} btn-sm" type="submit">
+                                                        ${category.isActive ? 'Deactivate' : 'Activate'}
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </c:otherwise>
+                            </c:choose>
                         </tbody>
                     </table>
                 </div>
                 <nav aria-label="Category pagination" class="mt-3">
                     <ul class="pagination app-pagination justify-content-end mb-0">
-                        <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
-                            <% if (currentPage <= 1) { %>
-                                <span class="page-link">Prev</span>
-                            <% } else { %>
-                                <a class="page-link" href="<%= appPath %>/admin/categories?page=<%= currentPage - 1 %><%= listQuery.isBlank() ? "" : "&" + listQuery %>">Prev</a>
-                            <% } %>
+                        <li class="page-item ${currentPage le 1 ? 'disabled' : ''}">
+                            <c:choose>
+                                <c:when test="${currentPage le 1}">
+                                    <span class="page-link">Prev</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <a class="page-link" href="${appPath}/admin/categories?page=${currentPage - 1}${listQuerySuffix}">Prev</a>
+                                </c:otherwise>
+                            </c:choose>
                         </li>
-                        <% for (int pageNumber = 1; pageNumber <= totalPages; pageNumber++) { %>
-                            <li class="page-item <%= pageNumber == currentPage ? "active" : "" %>">
-                                <% if (pageNumber == currentPage) { %>
-                                    <span class="page-link"><%= pageNumber %></span>
-                                <% } else { %>
-                                    <a class="page-link" href="<%= appPath %>/admin/categories?page=<%= pageNumber %><%= listQuery.isBlank() ? "" : "&" + listQuery %>"><%= pageNumber %></a>
-                                <% } %>
+                        <c:forEach var="pageNumber" begin="1" end="${totalPages}">
+                            <li class="page-item ${pageNumber eq currentPage ? 'active' : ''}">
+                                <c:choose>
+                                    <c:when test="${pageNumber eq currentPage}">
+                                        <span class="page-link">${pageNumber}</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <a class="page-link" href="${appPath}/admin/categories?page=${pageNumber}${listQuerySuffix}">${pageNumber}</a>
+                                    </c:otherwise>
+                                </c:choose>
                             </li>
-                        <% } %>
-                        <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
-                            <% if (currentPage >= totalPages) { %>
-                                <span class="page-link">Next</span>
-                            <% } else { %>
-                                <a class="page-link" href="<%= appPath %>/admin/categories?page=<%= currentPage + 1 %><%= listQuery.isBlank() ? "" : "&" + listQuery %>">Next</a>
-                            <% } %>
+                        </c:forEach>
+                        <li class="page-item ${currentPage ge totalPages ? 'disabled' : ''}">
+                            <c:choose>
+                                <c:when test="${currentPage ge totalPages}">
+                                    <span class="page-link">Next</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <a class="page-link" href="${appPath}/admin/categories?page=${currentPage + 1}${listQuerySuffix}">Next</a>
+                                </c:otherwise>
+                            </c:choose>
                         </li>
                     </ul>
                 </nav>

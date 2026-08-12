@@ -39,9 +39,11 @@ public class UserListServlet extends UserServletSupport {
         }
 
         List<User> users = userService.getUsers(keyword, role, status, sort, currentPage, pageSize);
+        String listQuery = buildUserListQueryString(keyword, role, status, sort);
 
         request.setAttribute("users", users);
         setUserReferenceData(request);
+        setUserListViewData(request, users);
         request.setAttribute("keyword", keyword);
         request.setAttribute("selectedRole", role);
         request.setAttribute("selectedStatus", status);
@@ -49,7 +51,8 @@ public class UserListServlet extends UserServletSupport {
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalUsers", totalUsers);
-        request.setAttribute("listQuery", buildUserListQueryString(keyword, role, status, sort));
+        request.setAttribute("listQuery", listQuery);
+        request.setAttribute("listQuerySuffix", listQuery.isBlank() ? "" : "&" + listQuery);
         moveFlashMessagesToRequest(request);
 
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
@@ -60,11 +63,13 @@ public class UserListServlet extends UserServletSupport {
         request.setAttribute("users", Collections.emptyList());
         request.setAttribute(FLASH_ERROR_KEY, message);
         setUserReferenceData(request);
+        setUserListViewData(request, Collections.emptyList());
         request.setAttribute("selectedSort", "created_desc");
         request.setAttribute("currentPage", 1);
         request.setAttribute("totalPages", 1);
         request.setAttribute("totalUsers", 0);
         request.setAttribute("listQuery", "");
+        request.setAttribute("listQuerySuffix", "");
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }
 }

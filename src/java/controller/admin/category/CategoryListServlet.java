@@ -38,6 +38,7 @@ public class CategoryListServlet extends CategoryServletSupport {
             currentPage = totalPages;
         }
         List<Category> categories = categoryService.getCategories(keyword, status, sort, currentPage, pageSize);
+        String listQuery = buildCategoryListQueryString(keyword, status, sort);
 
         request.setAttribute("categories", categories);
         request.setAttribute("keyword", keyword);
@@ -45,7 +46,8 @@ public class CategoryListServlet extends CategoryServletSupport {
         request.setAttribute("selectedSort", sort);
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPages", totalPages);
-        request.setAttribute("listQuery", buildCategoryListQueryString(keyword, status, sort));
+        request.setAttribute("listQuery", listQuery);
+        request.setAttribute("listQuerySuffix", listQuery.isBlank() ? "" : "&" + listQuery);
         moveFlashMessagesToRequest(request);
         setCategoryMetrics(request, allCategories, filteredCount);
 
@@ -64,6 +66,7 @@ public class CategoryListServlet extends CategoryServletSupport {
         request.setAttribute("currentPage", 1);
         request.setAttribute("totalPages", 1);
         request.setAttribute("listQuery", "");
+        request.setAttribute("listQuerySuffix", "");
         request.setAttribute("sortOptions", java.util.List.of());
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }

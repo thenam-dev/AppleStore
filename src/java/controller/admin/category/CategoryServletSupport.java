@@ -61,6 +61,13 @@ public abstract class CategoryServletSupport extends HttpServlet {
         request.setAttribute("sortOptions", buildSortOptions());
     }
 
+    protected Category createDefaultCategory() {
+        Category category = new Category();
+        category.setDisplayOrder(0);
+        category.setIsActive(true);
+        return category;
+    }
+
     protected void redirectToCategoryList(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         response.sendRedirect(request.getContextPath() + CATEGORY_LIST_PATH);

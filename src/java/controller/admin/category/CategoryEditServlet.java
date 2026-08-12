@@ -17,12 +17,13 @@ public class CategoryEditServlet extends CategoryServletSupport {
             throws ServletException, IOException {
         try {
             String categoryId = request.getParameter("id");
+            Category category = createDefaultCategory();
 
             if (categoryId != null && !categoryId.isBlank()) {
-                Category category = categoryService.getCategoryById(parseInt(categoryId, "Category id is invalid."));
-                request.setAttribute("category", category);
+                category = categoryService.getCategoryById(parseInt(categoryId, "Category id is invalid."));
             }
 
+            request.setAttribute("category", category);
             moveFlashMessagesToRequest(request);
             request.getRequestDispatcher(FORM_VIEW).forward(request, response);
         } catch (SQLException | IllegalArgumentException ex) {

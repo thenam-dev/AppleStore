@@ -11,7 +11,11 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class UserServletSupport extends HttpServlet {
     protected static final String LIST_VIEW = "/WEB-INF/views/admin/users/list.jsp";
@@ -19,6 +23,7 @@ public abstract class UserServletSupport extends HttpServlet {
     protected static final String USER_LIST_PATH = "/admin/users";
     protected static final String FLASH_SUCCESS_KEY = "successMsg";
     protected static final String FLASH_ERROR_KEY = "errorMsg";
+    private static final DateTimeFormatter USER_CREATED_AT_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     protected final UserService userService = new UserService();
 
@@ -70,6 +75,19 @@ public abstract class UserServletSupport extends HttpServlet {
     protected void moveFlashMessagesToRequest(HttpServletRequest request) {
         moveFlashMessageToRequest(request, FLASH_SUCCESS_KEY);
         moveFlashMessageToRequest(request, FLASH_ERROR_KEY);
+    }
+
+    protected void setUserListViewData(HttpServletRequest request, List<User> users) {
+        Map<Integer, String> userInitialsMap = new LinkedHashMap<>();
+        Map<Integer, String> userCreatedAtMap = new LinkedHashMap<>();
+
+        for (User user : users) {
+            userInitialsMap.put(user.getUserId(), buildInitials(user.getFullName()));
+            userCreatedAtMap.put(user.getUserId(), formatDateTime(user.getCreatedAt()));
+        }
+
+        request.setAttribute("userInitialsMap", userInitialsMap);
+        request.setAttribute("userCreatedAtMap", userCreatedAtMap);
     }
 
     protected int parsePage(String value) {
@@ -137,6 +155,26 @@ public abstract class UserServletSupport extends HttpServlet {
         query.append(key)
                 .append('=')
                 .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+    }
+
+    private String formatDateTime(LocalDateTime value) {
+        if (value == null) {
+            return "";
+        }
+        return USER_CREATED_AT_FORMATTER.format(value);
+    }
+
+    private String buildInitials(String fullName) {
+        if (fullName == null || fullName.isBlank()) {
+            return "US";
+        }
+
+        String[] parts = fullName.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        }
+
+        return (parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1)).toUpperCase();
     }
 
     private List<SortOption> buildSortOptions() {
