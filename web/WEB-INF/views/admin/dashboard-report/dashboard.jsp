@@ -56,34 +56,10 @@
             %>
             <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
 
-            <section class="admin-main">
-                <div class="admin-topbar">
-                    <div class="admin-topbar-actions ms-auto">
-                        <a class="btn btn-app-outline btn-sm" href="<%= appPath %>/">Storefront</a>
-                        <div class="admin-user-pill">
-                            <div class="account-avatar admin-user-pill-avatar">AD</div>
-                            <div>
-                                <strong>Admin</strong>
-                                <small>Dashboard View</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <nav aria-label="Breadcrumb">
-                    <ol class="breadcrumb app-breadcrumb">
-                        <li class="breadcrumb-item"><a href="<%= appPath %>/admin/dashboard">Admin</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
-                    </ol>
-                </nav>
-
+            <section class="admin-main">    
                 <div class="admin-page-head">
                     <div>
                         <h1>Dashboard summary</h1>
-                        <p>
-                            A clean snapshot of shop performance, operational status, and high-priority items for the
-                            product owner or admin role.
-                        </p>
                     </div>
                 </div>
                 <form action="<%= appPath %>/admin/dashboard" method="GET" class="d-flex gap-2 align-items-center">
@@ -93,22 +69,6 @@
                     <input type="date" name="endDate" class="form-control" value="${param.endDate}">
                     <button type="submit" class="btn btn-primary">Lọc</button>
                 </form>
-                <div class="mt-3 mb-4">
-                    <button class="btn btn-app-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChart">
-                        <i class="fas fa-chart-bar"></i> Toggle Biểu đồ Doanh thu
-                    </button>
-                </div>
-                <!-- Khối ẩn/hiện biểu đồ -->
-                <div class="collapse" id="collapseChart">
-                    <div class="admin-panel mb-4">
-                        <div class="admin-panel-head">
-                            <h2>Biểu đồ doanh thu theo ngày</h2>
-                        </div>
-                        <div class="admin-chart-placeholder" style="padding: 20px;">
-                            <canvas id="revenueChart" style="max-height: 400px; width: 100%;"></canvas>
-                        </div>
-                    </div>
-                </div>
                 <section class="admin-kpi-grid">
                     <article class="stat-card compact">
                         <div class="stat-label">Revenue</div>
@@ -133,7 +93,14 @@
                         <p>Registered accounts</p>
                     </article>
                 </section>
-
+                <div class="admin-panel mt-4 mb-4">
+                    <div class="admin-panel-head">
+                        <h2>Biểu đồ doanh thu theo ngày</h2>
+                    </div>
+                    <div class="admin-chart-placeholder" style="padding: 20px;">
+                        <canvas id="revenueChart" style="max-height: 400px; width: 100%;"></canvas>
+                    </div>
+                </div>
                 <div class="admin-content-grid">
                     <div class="admin-section-stack">
                         <!-- Sales overview removed -->
@@ -272,6 +239,7 @@
         <script>
                                     const labels = ${chartLabels != null ? chartLabels : '[]'};
                                     const dataValues = ${chartData != null ? chartData : '[]'};
+
                                     if (labels.length > 0) {
                                         const ctx = document.getElementById('revenueChart').getContext('2d');
                                         new Chart(ctx, {
