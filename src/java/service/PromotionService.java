@@ -67,6 +67,14 @@ public class PromotionService {
         }
         promo.setCode(promo.getCode().trim().toUpperCase());
     }
+    
+    public long getTotalRedeemedCount() throws SQLException {
+        return promotionDAO.sumTotalRedeemed();
+    }
+
+    public int getExpiringSoonCount() throws SQLException {
+        return promotionDAO.countExpiringSoon();
+    }
 
     // =========================================================================
     // TODO: PHẦN DÀNH CHO CHECKOUT/CART SẼ CODE SAU

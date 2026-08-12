@@ -56,7 +56,7 @@ public class PromotionDAO {
             ps.setTimestamp(11, Timestamp.valueOf(p.getValidFrom()));
             ps.setTimestamp(12, Timestamp.valueOf(p.getValidUntil()));
             ps.setInt(13, p.getCreatedBy());
-            ps.setBoolean(14, p.isActive());
+            ps.setBoolean(14, p.IsActive());
             ps.executeUpdate();
         }
     }
@@ -69,7 +69,7 @@ public class PromotionDAO {
             setPromotionParams(ps, p);
             ps.setTimestamp(11, Timestamp.valueOf(p.getValidFrom()));
             ps.setTimestamp(12, Timestamp.valueOf(p.getValidUntil()));
-            ps.setBoolean(13, p.isActive());
+            ps.setBoolean(13, p.IsActive());
             ps.setInt(14, p.getPromoId());
             ps.executeUpdate();
         }
@@ -130,6 +130,9 @@ public class PromotionDAO {
         int pId = rs.getInt("product_id");
         p.setProductId(rs.wasNull() ? null : pId);
 
+        int cId = rs.getInt("category_id");
+        p.setCategoryId(rs.wasNull() ? null : cId);
+
         int mUses = rs.getInt("max_uses");
         p.setMaxUses(rs.wasNull() ? null : mUses);
 
@@ -138,8 +141,32 @@ public class PromotionDAO {
         p.setValidFrom(rs.getTimestamp("valid_from").toLocalDateTime());
         p.setValidUntil(rs.getTimestamp("valid_until").toLocalDateTime());
         p.setCreatedBy(rs.getInt("created_by"));
-        p.setDeleted(rs.getBoolean("is_deleted"));
-        p.setActive(rs.getBoolean("is_active"));
+        p.setIsDeleted(rs.getBoolean("is_deleted"));
+        p.setIsActive(rs.getBoolean("is_active"));
         return p;
+    }
+
+    // Tính tổng số lượt đã sử dụng của tất cả các mã (Redeemed)
+    public long sumTotalRedeemed() throws SQLException {
+        String sql = "SELECT SUM(used_count) FROM promotions WHERE is_deleted = 0";
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+        }
+        return 0;
+    }
+
+    // Đếm số lượng mã đang bật và sẽ hết hạn trong 7 ngày tới (Expiring)
+    public int countExpiringSoon() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM promotions "
+                + "WHERE is_deleted = 0 AND is_active = 1 "
+                + "AND valid_until BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 7 DAY)";
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
     }
 }
