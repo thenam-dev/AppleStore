@@ -3,6 +3,7 @@
 <%@ page import="java.util.List" %>
 <%@ page import="model.Promotion" %>
 <%@ page import="model.Category" %>
+<%@ page import="model.Product" %>
 <%! 
     private String h(Object value) {
         if (value == null) return "";
@@ -126,10 +127,23 @@
                                 <small class="text-muted d-block mt-1">Bắt buộc khi phạm vi là Category.</small>
                             </div>
                             
-                            <!-- KHỐI CHỌN SẢN PHẨM (PRODUCT) -->
+                            <!-- KHỐI CHỌN SẢN PHẨM (Đã đổi thành Dropdown) -->
                             <div id="product-selection-group" style="display: none;">
                                 <label class="form-label" for="voucher-product">Sản phẩm áp dụng</label>
-                                <input id="voucher-product" class="form-control" type="number" name="productId" value="<%= isEdit && p.getProductId() != null ? p.getProductId() : "" %>" placeholder="Nhập ID sản phẩm">
+                                <select id="voucher-product" class="form-select" name="productId">
+                                    <option value="">-- Chọn sản phẩm --</option>
+                                    <% 
+                                        List<Product> products = (List<Product>) request.getAttribute("products");
+                                        if (products != null) {
+                                            for (Product prod : products) {
+                                    %>
+                                        <option value="<%= prod.getProductId() %>" <%= (isEdit && p.getProductId() != null && p.getProductId() == prod.getProductId()) ? "selected" : "" %>>
+                                            <%= h(prod.getName()) %>
+                                        </option>
+                                    <%      } 
+                                        } 
+                                    %>
+                                </select>
                                 <small class="text-muted d-block mt-1">Bắt buộc khi phạm vi là Product.</small>
                             </div>
                             
@@ -163,7 +177,7 @@
                                 <label class="form-check-label" for="canStack">Can Stack (Cộng dồn)</label>
                             </div>
                             <div class="form-check align-self-end mt-3">
-                                <input id="isActive" class="form-check-input" type="checkbox" name="isActive" <%= !isEdit || p.isActive() ? "checked" : "" %>>
+                                <input id="IsActive" class="form-check-input" type="checkbox" name="IsActive" <%= !isEdit || p.IsActive() ? "checked" : "" %>>
                                 <label class="form-check-label" for="isActive">Active (Kích hoạt)</label>
                             </div>
                         </div>
@@ -217,13 +231,12 @@
                     targetSelect.style.pointerEvents = 'auto';
                     targetSelect.style.opacity = '1';
                     
-                    if (scopeSelect.value === 'PRODUCT') {
-                        productGroup.style.display = 'block'; 
-                        categoryInput.value = ''; // Xóa data category cũ
-                        targetSelect.value = 'PRODUCT';
-                        targetSelect.style.pointerEvents = 'none'; 
-                        targetSelect.style.opacity = '0.6';
-                    } else if (scopeSelect.value === 'CATEGORY') {
+                    // Validate cho PRODUCT (Sửa từ input.value sang select)
+                    if (scopeSelect.value === 'PRODUCT' && productInput.value === '') {
+                        alert('Lỗi: Bạn phải chọn Sản phẩm áp dụng khi phạm vi là Product.');
+                        event.preventDefault();
+                        return;
+                    }else if (scopeSelect.value === 'CATEGORY') {
                         categoryGroup.style.display = 'block';
                         productInput.value = ''; // Xóa data product cũ
                         if(targetSelect.value === 'PRODUCT') targetSelect.value = 'MERCHANDISE';
