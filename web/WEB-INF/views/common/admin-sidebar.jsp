@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="appPath" value="${pageContext.request.contextPath}" />
 <c:set var="sidebarTitle" value="${empty requestScope.adminSidebarTitle ? 'Admin' : requestScope.adminSidebarTitle}" />
 <c:set var="sidebarDescription" value="${empty requestScope.adminSidebarDescription ? 'Admin workspace.' : requestScope.adminSidebarDescription}" />
@@ -24,7 +24,7 @@
         <p class="admin-sidebar-label">Overview</p>
         <nav class="admin-nav">
             <a class="${activeItem eq 'dashboard' ? 'active' : ''}" href="${appPath}/admin/dashboard">Dashboard</a>
-            <a class="${activeItem eq 'products' ? 'active' : ''}" href="${appPath}/admin/products.html">Products</a>
+            <a class="${activeItem eq 'products' ? 'active' : ''}" href="${appPath}/admin/products">Products</a>
             <a class="${activeItem eq 'categories' ? 'active' : ''}" href="${appPath}/admin/categories">Categories</a>
             <a class="${activeItem eq 'orders' ? 'active' : ''}" href="${appPath}/admin/orders.html">Orders</a>
             <a class="${activeItem eq 'inventory' ? 'active' : ''}" href="${appPath}/admin/inventory.html">Inventory</a>
