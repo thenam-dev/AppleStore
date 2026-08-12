@@ -33,7 +33,7 @@
         statuses = List.of("ACTIVE", "INACTIVE", "LOCKED", "SUSPENDED");
     }
 
-    String errorMessage = (String) request.getAttribute("errorMessage");
+    String errorMsg = (String) request.getAttribute("errorMsg");
     String appPath = request.getContextPath();
 %>
 <!DOCTYPE html>
@@ -84,8 +84,8 @@
                 </div>
             </div>
 
-            <% if (errorMessage != null && !errorMessage.isBlank()) { %>
-                <div class="alert alert-danger" role="alert"><%= h(errorMessage) %></div>
+            <% if (errorMsg != null && !errorMsg.isBlank()) { %>
+                <div class="alert alert-danger" role="alert"><%= h(errorMsg) %></div>
             <% } %>
 
             <% if (user == null) { %>
@@ -115,7 +115,7 @@
                             </div>
                             <div>
                                 <label class="form-label" for="phone">Phone</label>
-                                <input id="phone" class="form-control" type="tel" name="phone" maxlength="15" value="<%= h(user.getPhone()) %>">
+                                <input id="phone" class="form-control" type="tel" name="phone" maxlength="15" pattern="[0-9]{9,15}" title="Phone must contain 9 to 15 digits." value="<%= h(user.getPhone()) %>">
                             </div>
                             <div>
                                 <label class="form-label" for="role">Role</label>

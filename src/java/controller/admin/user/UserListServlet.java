@@ -29,17 +29,28 @@ public class UserListServlet extends UserServletSupport {
         String keyword = request.getParameter("keyword");
         String role = request.getParameter("role");
         String status = request.getParameter("status");
-        List<User> users = userService.getUsers(keyword, role, status);
+        String sort = normalizeUserSort(request.getParameter("sort"));
+        int currentPage = parsePage(request.getParameter("page"));
+        int pageSize = config.AppConfig.PAGE_SIZE_ADMIN;
+        int totalUsers = userService.countUsers(keyword, role, status);
+        int totalPages = calculateTotalPages(totalUsers, pageSize);
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        List<User> users = userService.getUsers(keyword, role, status, sort, currentPage, pageSize);
 
         request.setAttribute("users", users);
         setUserReferenceData(request);
         request.setAttribute("keyword", keyword);
         request.setAttribute("selectedRole", role);
         request.setAttribute("selectedStatus", status);
-        request.setAttribute("successMessage", request.getParameter("success"));
-        request.setAttribute("errorMessage", firstNonBlank(
-                (String) request.getAttribute("errorMessage"),
-                request.getParameter("error")));
+        request.setAttribute("selectedSort", sort);
+        request.setAttribute("currentPage", currentPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalUsers", totalUsers);
+        request.setAttribute("listQuery", buildUserListQueryString(keyword, role, status, sort));
+        moveFlashMessagesToRequest(request);
 
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }
@@ -47,8 +58,13 @@ public class UserListServlet extends UserServletSupport {
     private void showUserListFallback(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {
         request.setAttribute("users", Collections.emptyList());
-        request.setAttribute("errorMessage", message);
+        request.setAttribute(FLASH_ERROR_KEY, message);
         setUserReferenceData(request);
+        request.setAttribute("selectedSort", "created_desc");
+        request.setAttribute("currentPage", 1);
+        request.setAttribute("totalPages", 1);
+        request.setAttribute("totalUsers", 0);
+        request.setAttribute("listQuery", "");
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }
 }

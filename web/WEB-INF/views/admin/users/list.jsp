@@ -3,6 +3,7 @@
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <%@ page import="java.util.Collections" %>
 <%@ page import="java.util.List" %>
+<%@ page import="controller.admin.user.UserServletSupport.SortOption" %>
 <%@ page import="model.entity.user.User" %>
 <%!
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -73,11 +74,24 @@
         statuses = List.of("ACTIVE", "INACTIVE", "LOCKED", "SUSPENDED");
     }
 
+    List<SortOption> sortOptions = (List<SortOption>) request.getAttribute("sortOptions");
+    if (sortOptions == null) {
+        sortOptions = Collections.emptyList();
+    }
+
     String keyword = (String) request.getAttribute("keyword");
     String selectedRole = (String) request.getAttribute("selectedRole");
     String selectedStatus = (String) request.getAttribute("selectedStatus");
-    String successMessage = (String) request.getAttribute("successMessage");
-    String errorMessage = (String) request.getAttribute("errorMessage");
+    String selectedSort = (String) request.getAttribute("selectedSort");
+    String successMsg = (String) request.getAttribute("successMsg");
+    String errorMsg = (String) request.getAttribute("errorMsg");
+    int currentPage = request.getAttribute("currentPage") instanceof Integer ? (Integer) request.getAttribute("currentPage") : 1;
+    int totalPages = request.getAttribute("totalPages") instanceof Integer ? (Integer) request.getAttribute("totalPages") : 1;
+    int totalUsers = request.getAttribute("totalUsers") instanceof Integer ? (Integer) request.getAttribute("totalUsers") : users.size();
+    String listQuery = (String) request.getAttribute("listQuery");
+    if (listQuery == null) {
+        listQuery = "";
+    }
     String appPath = request.getContextPath();
 %>
 <!DOCTYPE html>
@@ -106,6 +120,9 @@
                 <form class="admin-topbar-search" action="<%= appPath %>/admin/users" method="get" name="adminUsersSearchForm">
                     <label class="visually-hidden" for="admin-users-search">Search users</label>
                     <input id="admin-users-search" class="form-control" type="search" name="keyword" value="<%= h(keyword) %>" placeholder="Search name, email, phone">
+                    <input type="hidden" name="role" value="<%= h(selectedRole) %>">
+                    <input type="hidden" name="status" value="<%= h(selectedStatus) %>">
+                    <input type="hidden" name="sort" value="<%= h(selectedSort) %>">
                     <button class="btn btn-app-primary" type="submit">Search</button>
                 </form>
                 <div class="admin-topbar-actions">
@@ -135,19 +152,20 @@
                 </div>
             </div>
 
-            <% if (successMessage != null && !successMessage.isBlank()) { %>
-                <div class="alert alert-success" role="alert"><%= h(successMessage) %></div>
+            <% if (successMsg != null && !successMsg.isBlank()) { %>
+                <div class="alert alert-success" role="alert"><%= h(successMsg) %></div>
             <% } %>
-            <% if (errorMessage != null && !errorMessage.isBlank()) { %>
-                <div class="alert alert-danger" role="alert"><%= h(errorMessage) %></div>
+            <% if (errorMsg != null && !errorMsg.isBlank()) { %>
+                <div class="alert alert-danger" role="alert"><%= h(errorMsg) %></div>
             <% } %>
 
             <section class="admin-panel">
                 <div class="admin-panel-head">
                     <div>
                         <h2>Users</h2>
-                        <p>DAO reads from the users table and the servlet forwards this collection to JSP.</p>
+                        <p>DAO reads from the users table and the servlet forwards the current filtered page to JSP.</p>
                     </div>
+                    <span class="text-muted small">Total matching users: <%= totalUsers %></span>
                 </div>
                 <div class="table-toolbar">
                     <form class="admin-filter-bar compact" action="<%= appPath %>/admin/users" method="get" name="adminUserFilterForm">
@@ -162,6 +180,11 @@
                             <option value="">All status</option>
                             <% for (String status : statuses) { %>
                                 <option value="<%= h(status) %>" <%= selected(selectedStatus, status) %>><%= h(status) %></option>
+                            <% } %>
+                        </select>
+                        <select class="form-select" name="sort">
+                            <% for (SortOption sortOption : sortOptions) { %>
+                                <option value="<%= h(sortOption.getValue()) %>" <%= selected(selectedSort, sortOption.getValue()) %>><%= h(sortOption.getLabel()) %></option>
                             <% } %>
                         </select>
                         <button class="btn btn-app-primary" type="submit">Filter</button>
@@ -223,6 +246,33 @@
                         </tbody>
                     </table>
                 </div>
+                <nav aria-label="User pagination" class="mt-3">
+                    <ul class="pagination app-pagination justify-content-end mb-0">
+                        <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
+                            <% if (currentPage <= 1) { %>
+                                <span class="page-link">Prev</span>
+                            <% } else { %>
+                                <a class="page-link" href="<%= appPath %>/admin/users?page=<%= currentPage - 1 %><%= listQuery.isBlank() ? "" : "&" + listQuery %>">Prev</a>
+                            <% } %>
+                        </li>
+                        <% for (int pageNumber = 1; pageNumber <= totalPages; pageNumber++) { %>
+                            <li class="page-item <%= pageNumber == currentPage ? "active" : "" %>">
+                                <% if (pageNumber == currentPage) { %>
+                                    <span class="page-link"><%= pageNumber %></span>
+                                <% } else { %>
+                                    <a class="page-link" href="<%= appPath %>/admin/users?page=<%= pageNumber %><%= listQuery.isBlank() ? "" : "&" + listQuery %>"><%= pageNumber %></a>
+                                <% } %>
+                            </li>
+                        <% } %>
+                        <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
+                            <% if (currentPage >= totalPages) { %>
+                                <span class="page-link">Next</span>
+                            <% } else { %>
+                                <a class="page-link" href="<%= appPath %>/admin/users?page=<%= currentPage + 1 %><%= listQuery.isBlank() ? "" : "&" + listQuery %>">Next</a>
+                            <% } %>
+                        </li>
+                    </ul>
+                </nav>
             </section>
 
             <p class="admin-footer-note">Route sample: GET /admin/users, GET /admin/users/edit?id=1, POST /admin/users/update, POST /admin/users/status.</p>

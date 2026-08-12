@@ -20,10 +20,11 @@ public class UserEditServlet extends UserServletSupport {
             User user = userService.getUserById(userId);
 
             request.setAttribute("user", user);
+            moveFlashMessagesToRequest(request);
             setUserReferenceData(request);
             request.getRequestDispatcher(FORM_VIEW).forward(request, response);
         } catch (SQLException | IllegalArgumentException ex) {
-            redirectToUserListWithMessage(request, response, "error", ex.getMessage());
+            redirectToUserListWithMessage(request, response, FLASH_ERROR_KEY, ex.getMessage());
         }
     }
 }

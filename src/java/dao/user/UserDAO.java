@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,33 +21,19 @@ public class UserDAO {
             google_id, is_email_verified, failed_login_count, locked_until, created_at, updated_at
             """;
 
-    public List<User> findAll(String keyword, String role, String status) throws SQLException {
+    public List<User> findAll(String keyword, String role, String status, String sort, int page, int pageSize)
+            throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT ")
                 .append(USER_COLUMNS)
                 .append(" FROM users WHERE 1 = 1");
         List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, keyword, role, status);
+        sql.append(" ORDER BY ").append(resolveOrderBy(sort)).append(" LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add(Math.max(0, (page - 1) * pageSize));
 
-        if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (LOWER(full_name) LIKE ? OR LOWER(email) LIKE ? OR phone LIKE ?)");
-            String likeKeyword = "%" + keyword.trim().toLowerCase() + "%";
-            params.add(likeKeyword);
-            params.add(likeKeyword);
-            params.add("%" + keyword.trim() + "%");
-        }
-
-        if (role != null && !role.isBlank()) {
-            sql.append(" AND role = ?");
-            params.add(role.trim().toUpperCase());
-        }
-
-        if (status != null && !status.isBlank()) {
-            sql.append(" AND status = ?");
-            params.add(status.trim().toUpperCase());
-        }
-
-        sql.append(" ORDER BY user_id DESC");
-
-        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             bindParams(statement, params);
             try (ResultSet resultSet = statement.executeQuery()) {
                 List<User> users = new ArrayList<>();
@@ -54,6 +41,23 @@ public class UserDAO {
                     users.add(mapUser(resultSet));
                 }
                 return users;
+            }
+        }
+    }
+
+    public int countAll(String keyword, String role, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users WHERE 1 = 1");
+        List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, keyword, role, status);
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            bindParams(statement, params);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+                return 0;
             }
         }
     }
@@ -149,7 +153,8 @@ public class UserDAO {
                 VALUES (?, ?, ?, ?, 'CUSTOMER', 'ACTIVE', 0)
                 """;
 
-        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, user.getFullName());
             statement.setString(2, user.getEmail());
             statement.setString(3, passwordHash);
@@ -217,6 +222,46 @@ public class UserDAO {
         for (int i = 0; i < params.size(); i++) {
             statement.setObject(i + 1, params.get(i));
         }
+    }
+
+    private void appendFilters(StringBuilder sql, List<Object> params, String keyword, String role, String status) {
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (LOWER(full_name) LIKE ? OR LOWER(email) LIKE ? OR phone LIKE ?)");
+            String normalizedKeyword = keyword.trim();
+            String likeKeyword = "%" + normalizedKeyword.toLowerCase() + "%";
+            params.add(likeKeyword);
+            params.add(likeKeyword);
+            params.add("%" + normalizedKeyword + "%");
+        }
+
+        if (role != null && !role.isBlank()) {
+            sql.append(" AND role = ?");
+            params.add(role.trim().toUpperCase());
+        }
+
+        if (status != null && !status.isBlank()) {
+            sql.append(" AND status = ?");
+            params.add(status.trim().toUpperCase());
+        }
+    }
+
+    private String resolveOrderBy(String sort) {
+        if ("name_asc".equals(sort)) {
+            return "full_name ASC, user_id ASC";
+        }
+        if ("email_asc".equals(sort)) {
+            return "email ASC, user_id ASC";
+        }
+        if ("role_asc".equals(sort)) {
+            return "role ASC, full_name ASC";
+        }
+        if ("status_asc".equals(sort)) {
+            return "status ASC, full_name ASC";
+        }
+        if ("created_asc".equals(sort)) {
+            return "created_at ASC, user_id ASC";
+        }
+        return "created_at DESC, user_id DESC";
     }
 
     private User mapUser(ResultSet resultSet) throws SQLException {

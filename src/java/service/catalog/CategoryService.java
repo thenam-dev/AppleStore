@@ -8,11 +8,18 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class CategoryService {
-
     private static final int DEFAULT_PAGE = 1;
-    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int DEFAULT_PAGE_SIZE = config.AppConfig.PAGE_SIZE_ADMIN;
     private static final int MAX_PAGE_SIZE = 100;
     private static final Pattern SLUG_PATTERN = Pattern.compile("^[a-z0-9]+(?:-[a-z0-9]+)*$");
+    private static final List<String> ALLOWED_SORTS = List.of(
+            "display_asc",
+            "display_desc",
+            "name_asc",
+            "name_desc",
+            "newest",
+            "oldest"
+    );
 
     private final CategoryDAO categoryDAO;
 
@@ -28,12 +35,19 @@ public class CategoryService {
         return categoryDAO.findAll();
     }
 
-    public List<Category> getCategories(int page, int pageSize) throws SQLException {
-        return categoryDAO.findAll(normalizePage(page), normalizePageSize(pageSize));
+    public List<Category> getCategories(String keyword, String status, String sort, int page, int pageSize)
+            throws SQLException {
+        return categoryDAO.findAll(
+                keyword,
+                normalizeStatus(status),
+                normalizeSort(sort),
+                normalizePage(page),
+                normalizePageSize(pageSize)
+        );
     }
 
-    public int countCategories() throws SQLException {
-        return categoryDAO.countAll();
+    public int countCategories(String keyword, String status) throws SQLException {
+        return categoryDAO.countAll(keyword, normalizeStatus(status));
     }
 
     public List<Category> getActiveCategories() throws SQLException {
@@ -127,6 +141,28 @@ public class CategoryService {
             return DEFAULT_PAGE_SIZE;
         }
         return Math.min(pageSize, MAX_PAGE_SIZE);
+    }
+
+    private String normalizeStatus(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String normalized = value.trim().toUpperCase();
+        if (!"ACTIVE".equals(normalized) && !"INACTIVE".equals(normalized)) {
+            throw new IllegalArgumentException("Category status filter is invalid.");
+        }
+        return normalized;
+    }
+
+    private String normalizeSort(String value) {
+        if (value == null || value.isBlank()) {
+            return "display_asc";
+        }
+        String normalized = value.trim().toLowerCase();
+        if (!ALLOWED_SORTS.contains(normalized)) {
+            throw new IllegalArgumentException("Category sort option is invalid.");
+        }
+        return normalized;
     }
 
     private String trimRequired(String value) {

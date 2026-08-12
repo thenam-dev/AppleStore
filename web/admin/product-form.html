@@ -87,7 +87,7 @@
                 </div>
             </div>
 
-            <form action="save-product" method="post" name="adminProductForm" class="admin-form-layout">
+            <form action="save-product" method="post" enctype="multipart/form-data" name="adminProductForm" class="admin-form-layout">
                 <div class="admin-form-stack">
                     <section class="admin-panel">
                         <div class="admin-panel-head">
@@ -99,11 +99,11 @@
                         <div class="admin-form-grid">
                             <div class="field-span-full">
                                 <label class="form-label" for="product-name">Product name</label>
-                                <input id="product-name" class="form-control" type="text" name="productName" value="iPhone 16 Pro">
+                                <input id="product-name" class="form-control" type="text" name="productName" value="iPhone 16 Pro" maxlength="120" required>
                             </div>
                             <div>
                                 <label class="form-label" for="product-category">Category</label>
-                                <select id="product-category" class="form-select" name="categoryId">
+                                <select id="product-category" class="form-select" name="categoryId" required>
                                     <option>iPhone</option>
                                     <option>Mac</option>
                                     <option>iPad</option>
@@ -114,7 +114,7 @@
                             </div>
                             <div>
                                 <label class="form-label" for="product-status">Status</label>
-                                <select id="product-status" class="form-select" name="status">
+                                <select id="product-status" class="form-select" name="status" required>
                                     <option>Active</option>
                                     <option>Draft</option>
                                     <option>Hidden</option>
@@ -122,15 +122,15 @@
                             </div>
                             <div>
                                 <label class="form-label" for="product-price">Base price</label>
-                                <input id="product-price" class="form-control" type="number" name="basePrice" value="1149" min="0">
+                                <input id="product-price" class="form-control" type="number" name="basePrice" value="1149" min="0" step="0.01" required>
                             </div>
                             <div>
                                 <label class="form-label" for="product-old-price">Old price</label>
-                                <input id="product-old-price" class="form-control" type="number" name="oldPrice" value="1249" min="0">
+                                <input id="product-old-price" class="form-control" type="number" name="oldPrice" value="1249" min="0" step="0.01">
                             </div>
                             <div>
                                 <label class="form-label" for="product-launch-date">Launch date</label>
-                                <input id="product-launch-date" class="form-control" type="date" name="launchDate" value="2026-08-01">
+                                <input id="product-launch-date" class="form-control" type="date" name="launchDate" value="2026-08-01" required>
                             </div>
                             <div>
                                 <label class="form-label" for="product-featured-flag">Feature on home</label>
@@ -152,11 +152,11 @@
                         <div class="admin-form-grid">
                             <div class="field-span-full">
                                 <label class="form-label" for="product-description">Description</label>
-                                <textarea id="product-description" class="form-control" name="description" rows="5">Premium titanium iPhone configuration with a clean product summary and enough space for storefront selling points.</textarea>
+                                <textarea id="product-description" class="form-control" name="description" rows="5" maxlength="2000" required>Premium titanium iPhone configuration with a clean product summary and enough space for storefront selling points.</textarea>
                             </div>
                             <div class="field-span-full">
                                 <label class="form-label" for="product-image">Product image</label>
-                                <input id="product-image" class="form-control" type="file" name="productImage">
+                                <input id="product-image" class="form-control" type="file" name="productImage" accept=".jpg,.jpeg,.png,.webp">
                             </div>
                             <div class="field-span-full">
                                 <div class="admin-summary-card">
@@ -199,15 +199,15 @@
                         <div class="admin-form-grid mt-4">
                             <div>
                                 <label class="form-label" for="variant-color">Color</label>
-                                <input id="variant-color" class="form-control" type="text" name="variantColor" placeholder="Black Titanium">
+                                <input id="variant-color" class="form-control" type="text" name="variantColor" placeholder="Black Titanium" maxlength="50">
                             </div>
                             <div>
                                 <label class="form-label" for="variant-storage">Storage</label>
-                                <input id="variant-storage" class="form-control" type="text" name="variantStorage" placeholder="256GB">
+                                <input id="variant-storage" class="form-control" type="text" name="variantStorage" placeholder="256GB" maxlength="30">
                             </div>
                             <div>
                                 <label class="form-label" for="variant-price">Variant price</label>
-                                <input id="variant-price" class="form-control" type="number" name="variantPrice" placeholder="1149" min="0">
+                                <input id="variant-price" class="form-control" type="number" name="variantPrice" placeholder="1149" min="0" step="0.01">
                             </div>
                             <div>
                                 <label class="form-label" for="variant-stock">Stock</label>
@@ -215,7 +215,7 @@
                             </div>
                             <div class="field-span-full">
                                 <label class="form-label" for="variant-sku">SKU</label>
-                                <input id="variant-sku" class="form-control" type="text" name="variantSku" placeholder="IP16-PRO-256-BLK">
+                                <input id="variant-sku" class="form-control" type="text" name="variantSku" placeholder="IP16-PRO-256-BLK" maxlength="40" pattern="[A-Z0-9-]+">
                             </div>
                         </div>
                     </section>

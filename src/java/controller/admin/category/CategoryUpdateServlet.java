@@ -22,12 +22,12 @@ public class CategoryUpdateServlet extends CategoryServletSupport {
 
             if (category.getCategoryId() > 0) {
                 categoryService.updateCategory(category);
-                redirectToCategoryListWithMessage(request, response, "success", "Category updated successfully.");
+                redirectToCategoryListWithMessage(request, response, FLASH_SUCCESS_KEY, "Category updated successfully.");
                 return;
             }
 
             categoryService.createCategory(category);
-            redirectToCategoryListWithMessage(request, response, "success", "Category created successfully.");
+            redirectToCategoryListWithMessage(request, response, FLASH_SUCCESS_KEY, "Category created successfully.");
         } catch (SQLException | IllegalArgumentException ex) {
             forwardBackToForm(request, response, ex.getMessage());
         }
@@ -43,7 +43,7 @@ public class CategoryUpdateServlet extends CategoryServletSupport {
         category.setIsActive("on".equals(request.getParameter("isActive")));
 
         request.setAttribute("category", category);
-        request.setAttribute("errorMessage", message);
+        request.setAttribute(FLASH_ERROR_KEY, message);
         request.getRequestDispatcher(FORM_VIEW).forward(request, response);
     }
 }

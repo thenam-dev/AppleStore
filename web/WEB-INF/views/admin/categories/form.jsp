@@ -16,7 +16,7 @@
 <%
     Category category = (Category) request.getAttribute("category");
     boolean isEdit = category != null && category.getCategoryId() > 0;
-    String errorMessage = (String) request.getAttribute("errorMessage");
+    String errorMsg = (String) request.getAttribute("errorMsg");
     String appPath = request.getContextPath();
 
     if (category == null) {
@@ -73,8 +73,8 @@
                 </div>
             </div>
 
-            <% if (errorMessage != null && !errorMessage.isBlank()) { %>
-                <div class="alert alert-danger" role="alert"><%= h(errorMessage) %></div>
+            <% if (errorMsg != null && !errorMsg.isBlank()) { %>
+                <div class="alert alert-danger" role="alert"><%= h(errorMsg) %></div>
             <% } %>
 
             <section class="admin-panel">
@@ -97,7 +97,7 @@
                         </div>
                         <div>
                             <label class="form-label" for="slug">Slug</label>
-                            <input id="slug" class="form-control" type="text" name="slug" maxlength="100" value="<%= h(category.getSlug()) %>" placeholder="iphone" required>
+                            <input id="slug" class="form-control" type="text" name="slug" maxlength="100" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" title="Use lowercase letters, numbers, and hyphens only." value="<%= h(category.getSlug()) %>" placeholder="iphone" required>
                         </div>
                         <div>
                             <label class="form-label" for="displayOrder">Display order</label>

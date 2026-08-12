@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.Collections" %>
 <%@ page import="java.util.List" %>
+<%@ page import="controller.admin.category.CategoryServletSupport.SortOption" %>
 <%@ page import="model.entity.catalog.Category" %>
 <%!
     private String h(Object value) {
@@ -34,12 +35,23 @@
 
     String keyword = (String) request.getAttribute("keyword");
     String selectedStatus = (String) request.getAttribute("selectedStatus");
-    String successMessage = (String) request.getAttribute("successMessage");
-    String errorMessage = (String) request.getAttribute("errorMessage");
     Object totalCategories = request.getAttribute("totalCategories");
     Object activeCategories = request.getAttribute("activeCategories");
     Object inactiveCategories = request.getAttribute("inactiveCategories");
     Object filteredCategories = request.getAttribute("filteredCategories");
+    List<SortOption> sortOptions = (List<SortOption>) request.getAttribute("sortOptions");
+    if (sortOptions == null) {
+        sortOptions = Collections.emptyList();
+    }
+    String selectedSort = (String) request.getAttribute("selectedSort");
+    String successMsg = (String) request.getAttribute("successMsg");
+    String errorMsg = (String) request.getAttribute("errorMsg");
+    int currentPage = request.getAttribute("currentPage") instanceof Integer ? (Integer) request.getAttribute("currentPage") : 1;
+    int totalPages = request.getAttribute("totalPages") instanceof Integer ? (Integer) request.getAttribute("totalPages") : 1;
+    String listQuery = (String) request.getAttribute("listQuery");
+    if (listQuery == null) {
+        listQuery = "";
+    }
     String appPath = request.getContextPath();
 %>
 <!DOCTYPE html>
@@ -67,6 +79,8 @@
                 <form class="admin-topbar-search" action="<%= appPath %>/admin/categories" method="get" name="adminCategoriesSearchForm">
                     <label class="visually-hidden" for="admin-categories-search">Search categories</label>
                     <input id="admin-categories-search" class="form-control" type="search" name="keyword" value="<%= h(keyword) %>" placeholder="Search category name or slug">
+                    <input type="hidden" name="status" value="<%= h(selectedStatus) %>">
+                    <input type="hidden" name="sort" value="<%= h(selectedSort) %>">
                     <button class="btn btn-app-primary" type="submit">Search</button>
                 </form>
                 <div class="admin-topbar-actions">
@@ -91,11 +105,11 @@
                 <a class="btn btn-app-primary" href="<%= appPath %>/admin/categories/edit">Create Category</a>
             </div>
 
-            <% if (successMessage != null && !successMessage.isBlank()) { %>
-                <div class="alert alert-success" role="alert"><%= h(successMessage) %></div>
+            <% if (successMsg != null && !successMsg.isBlank()) { %>
+                <div class="alert alert-success" role="alert"><%= h(successMsg) %></div>
             <% } %>
-            <% if (errorMessage != null && !errorMessage.isBlank()) { %>
-                <div class="alert alert-danger" role="alert"><%= h(errorMessage) %></div>
+            <% if (errorMsg != null && !errorMsg.isBlank()) { %>
+                <div class="alert alert-danger" role="alert"><%= h(errorMsg) %></div>
             <% } %>
 
             <section class="admin-kpi-grid">
@@ -125,8 +139,9 @@
                 <div class="admin-panel-head">
                     <div>
                         <h2>Category table</h2>
-                        <p>DAO reads from the categories table and the servlet forwards the filtered collection to JSP.</p>
+                        <p>DAO reads from the categories table and the servlet forwards the current filtered page to JSP.</p>
                     </div>
+                    <span class="text-muted small">Filtered result: <%= h(filteredCategories) %></span>
                 </div>
                 <div class="table-toolbar">
                     <form class="admin-filter-bar compact" action="<%= appPath %>/admin/categories" method="get" name="adminCategoryFilterForm">
@@ -135,6 +150,11 @@
                             <option value="">All status</option>
                             <option value="ACTIVE" <%= selected(selectedStatus, "ACTIVE") %>>Active</option>
                             <option value="INACTIVE" <%= selected(selectedStatus, "INACTIVE") %>>Inactive</option>
+                        </select>
+                        <select class="form-select" name="sort">
+                            <% for (SortOption sortOption : sortOptions) { %>
+                                <option value="<%= h(sortOption.getValue()) %>" <%= selected(selectedSort, sortOption.getValue()) %>><%= h(sortOption.getLabel()) %></option>
+                            <% } %>
                         </select>
                         <button class="btn btn-app-primary" type="submit">Filter</button>
                     </form>
@@ -182,6 +202,33 @@
                         </tbody>
                     </table>
                 </div>
+                <nav aria-label="Category pagination" class="mt-3">
+                    <ul class="pagination app-pagination justify-content-end mb-0">
+                        <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
+                            <% if (currentPage <= 1) { %>
+                                <span class="page-link">Prev</span>
+                            <% } else { %>
+                                <a class="page-link" href="<%= appPath %>/admin/categories?page=<%= currentPage - 1 %><%= listQuery.isBlank() ? "" : "&" + listQuery %>">Prev</a>
+                            <% } %>
+                        </li>
+                        <% for (int pageNumber = 1; pageNumber <= totalPages; pageNumber++) { %>
+                            <li class="page-item <%= pageNumber == currentPage ? "active" : "" %>">
+                                <% if (pageNumber == currentPage) { %>
+                                    <span class="page-link"><%= pageNumber %></span>
+                                <% } else { %>
+                                    <a class="page-link" href="<%= appPath %>/admin/categories?page=<%= pageNumber %><%= listQuery.isBlank() ? "" : "&" + listQuery %>"><%= pageNumber %></a>
+                                <% } %>
+                            </li>
+                        <% } %>
+                        <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
+                            <% if (currentPage >= totalPages) { %>
+                                <span class="page-link">Next</span>
+                            <% } else { %>
+                                <a class="page-link" href="<%= appPath %>/admin/categories?page=<%= currentPage + 1 %><%= listQuery.isBlank() ? "" : "&" + listQuery %>">Next</a>
+                            <% } %>
+                        </li>
+                    </ul>
+                </nav>
             </section>
 
             <p class="admin-footer-note">Create, edit, activate, and deactivate actions now route through real category servlets.</p>

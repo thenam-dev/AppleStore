@@ -58,6 +58,30 @@ public class CategoryDAO {
         }
     }
 
+    public List<Category> findAll(String keyword, String status, String sort, int page, int pageSize)
+            throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT ")
+                .append(CATEGORY_COLUMNS)
+                .append(" FROM categories WHERE 1 = 1");
+        List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, keyword, status);
+        sql.append(" ORDER BY ").append(resolveOrderBy(sort)).append(" LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add(Math.max(0, (page - 1) * pageSize));
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            bindParams(statement, params);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                List<Category> categories = new ArrayList<>();
+                while (resultSet.next()) {
+                    categories.add(mapCategory(resultSet));
+                }
+                return categories;
+            }
+        }
+    }
+
     public int countAll() throws SQLException {
         String sql = "SELECT COUNT(*) FROM categories";
 
@@ -68,6 +92,23 @@ public class CategoryDAO {
                 return resultSet.getInt(1);
             }
             return 0;
+        }
+    }
+
+    public int countAll(String keyword, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM categories WHERE 1 = 1");
+        List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, keyword, status);
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            bindParams(statement, params);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+                return 0;
+            }
         }
     }
 
@@ -206,5 +247,47 @@ public class CategoryDAO {
         category.setDisplayOrder(resultSet.getInt("display_order"));
         category.setIsActive(resultSet.getBoolean("is_active"));
         return category;
+    }
+
+    private void appendFilters(StringBuilder sql, List<Object> params, String keyword, String status) {
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (LOWER(name) LIKE ? OR LOWER(slug) LIKE ?)");
+            String likeKeyword = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(likeKeyword);
+            params.add(likeKeyword);
+        }
+
+        if ("ACTIVE".equals(status)) {
+            sql.append(" AND is_active = ?");
+            params.add(Boolean.TRUE);
+        } else if ("INACTIVE".equals(status)) {
+            sql.append(" AND is_active = ?");
+            params.add(Boolean.FALSE);
+        }
+    }
+
+    private String resolveOrderBy(String sort) {
+        if ("display_desc".equals(sort)) {
+            return "display_order DESC, category_id DESC";
+        }
+        if ("name_asc".equals(sort)) {
+            return "name ASC, category_id ASC";
+        }
+        if ("name_desc".equals(sort)) {
+            return "name DESC, category_id DESC";
+        }
+        if ("newest".equals(sort)) {
+            return "category_id DESC";
+        }
+        if ("oldest".equals(sort)) {
+            return "category_id ASC";
+        }
+        return "display_order ASC, category_id ASC";
+    }
+
+    private void bindParams(PreparedStatement statement, List<Object> params) throws SQLException {
+        for (int i = 0; i < params.size(); i++) {
+            statement.setObject(i + 1, params.get(i));
+        }
     }
 }

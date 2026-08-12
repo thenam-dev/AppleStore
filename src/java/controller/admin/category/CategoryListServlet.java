@@ -28,18 +28,26 @@ public class CategoryListServlet extends CategoryServletSupport {
             throws SQLException, ServletException, IOException {
         String keyword = request.getParameter("keyword");
         String status = normalizeStatusFilter(request.getParameter("status"));
-
+        String sort = normalizeCategorySort(request.getParameter("sort"));
+        int currentPage = parsePage(request.getParameter("page"));
+        int pageSize = config.AppConfig.PAGE_SIZE_ADMIN;
         List<Category> allCategories = categoryService.getAllCategories();
-        List<Category> filteredCategories = filterCategories(allCategories, keyword, status);
+        int filteredCount = categoryService.countCategories(keyword, status);
+        int totalPages = calculateTotalPages(filteredCount, pageSize);
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+        List<Category> categories = categoryService.getCategories(keyword, status, sort, currentPage, pageSize);
 
-        request.setAttribute("categories", filteredCategories);
+        request.setAttribute("categories", categories);
         request.setAttribute("keyword", keyword);
         request.setAttribute("selectedStatus", status);
-        request.setAttribute("successMessage", request.getParameter("success"));
-        request.setAttribute("errorMessage", firstNonBlank(
-                (String) request.getAttribute("errorMessage"),
-                request.getParameter("error")));
-        setCategoryMetrics(request, allCategories, filteredCategories);
+        request.setAttribute("selectedSort", sort);
+        request.setAttribute("currentPage", currentPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("listQuery", buildCategoryListQueryString(keyword, status, sort));
+        moveFlashMessagesToRequest(request);
+        setCategoryMetrics(request, allCategories, filteredCount);
 
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }
@@ -47,11 +55,16 @@ public class CategoryListServlet extends CategoryServletSupport {
     private void showCategoryListFallback(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {
         request.setAttribute("categories", Collections.emptyList());
-        request.setAttribute("errorMessage", message);
+        request.setAttribute(FLASH_ERROR_KEY, message);
         request.setAttribute("totalCategories", 0);
         request.setAttribute("activeCategories", 0L);
         request.setAttribute("inactiveCategories", 0L);
         request.setAttribute("filteredCategories", 0);
+        request.setAttribute("selectedSort", "display_asc");
+        request.setAttribute("currentPage", 1);
+        request.setAttribute("totalPages", 1);
+        request.setAttribute("listQuery", "");
+        request.setAttribute("sortOptions", java.util.List.of());
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }
 }
