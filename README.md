@@ -119,7 +119,8 @@ edit full name, email, phone, role, status
 change user status
 ```
 
-Password changes and login/session logic are intentionally not included in this flow.
+Password changes are not included in this flow. Login/session logic now lives in its own
+flow — see "Register / Login flow" below.
 
 ## JDBC configuration
 
@@ -165,9 +166,51 @@ or:
 TOMCAT_HOME/lib
 ```
 
+## Register / Login flow
+
+```text
+web/login.html
+web/register.html
+-> controller.auth.LoginServlet      (POST /login)
+-> controller.auth.RegisterServlet   (POST /register)
+-> controller.auth.LogoutServlet     (GET  /logout)
+-> service.AuthService
+-> dao.UserDAO
+-> util.PasswordUtil
+-> util.DBConnection
+-> MySQL users table
+```
+
+`login.html` and `register.html` stay plain `.html` (not JSP): the servlets validate input, then redirect back
+to the same page with `?error=...` (plus non-sensitive field values, never the password) or to a success
+destination. `web/assets/js/main.js` (`initAuthFlashMessages`) reads these from `location.search` on page load
+and renders them into the `[data-auth-alert]` box already present in both pages.
+
+Behavior:
+
+```text
+Register: validates full name, email, phone, password length/confirmation;
+          rejects duplicate email/phone; hashes password with PasswordUtil; inserts as CUSTOMER/ACTIVE.
+Login:    looks up by email, checks lock/status, verifies password hash;
+          5 wrong attempts locks the account for 15 minutes (failed_login_count / locked_until columns);
+          on success stores the User in the HttpSession under key "user" and honors an in-app-only
+          redirectTo param (rejects absolute/protocol-relative URLs to avoid open redirects).
+Logout:   invalidates the session and redirects to login.html.
+```
+
+Session lifetime: 30 minutes by default, 14 days if "Remember me" is checked.
+
+The session key `"user"` (`LoginServlet.SESSION_USER`) is shared with `filter.CustomerFilter` and the
+`controller.customer.cart.*` servlets — keep them in sync if this key ever changes.
+
 ## Filter status
 
-`AuthFilter` and `AdminFilter` are included as skeleton classes only. They are not enabled yet because the login/session flow has not been implemented.
+`AuthFilter` (`@WebFilter` on `/profile.html`, `/addresses.html`, `/wishlist.html`, `/order-history.html`,
+`/order-detail.html`, `/checkout.html`) and `AdminFilter` (`@WebFilter` on `/admin/*`) are enabled. Both read
+session attribute `"user"`; `AdminFilter` additionally requires role `ADMIN` or `SALE_STAFF` and returns 403
+otherwise. Anonymous requests are redirected to `login.html?redirectTo=...`, and both filters also copy the
+authenticated user into request attribute `authenticatedUser` for convenience in downstream JSPs/servlets.
+`filter.CustomerFilter` (`/cart`, `/cart/*`) follows the same pattern independently for the cart feature.
 
 ## Git notes
 
