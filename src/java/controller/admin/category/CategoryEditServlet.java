@@ -1,0 +1,31 @@
+package controller.admin.category;
+
+import model.entity.catalog.Category;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.sql.SQLException;
+
+@WebServlet(name = "CategoryEditServlet", urlPatterns = {"/admin/categories/edit"})
+public class CategoryEditServlet extends CategoryServletSupport {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String categoryId = request.getParameter("id");
+
+            if (categoryId != null && !categoryId.isBlank()) {
+                Category category = categoryService.getCategoryById(parseInt(categoryId, "Category id is invalid."));
+                request.setAttribute("category", category);
+            }
+
+            request.getRequestDispatcher(FORM_VIEW).forward(request, response);
+        } catch (SQLException | IllegalArgumentException ex) {
+            redirectToCategoryListWithMessage(request, response, "error", ex.getMessage());
+        }
+    }
+}

@@ -11,6 +11,10 @@
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
     }
+
+    private String activeClass(String itemKey, String activeItem) {
+        return itemKey != null && itemKey.equals(activeItem) ? "active" : "";
+    }
 %>
 <%
     String appPath = request.getContextPath();
@@ -18,6 +22,7 @@
     String sidebarDescription = (String) request.getAttribute("adminSidebarDescription");
     String sidebarFooterTitle = (String) request.getAttribute("adminSidebarFooterTitle");
     String sidebarFooterDescription = (String) request.getAttribute("adminSidebarFooterDescription");
+    String activeItem = (String) request.getAttribute("adminSidebarActive");
     boolean showUserQuickLinks = Boolean.TRUE.equals(request.getAttribute("adminSidebarShowUserQuickLinks"));
 
     if (sidebarTitle == null || sidebarTitle.isBlank()) {
@@ -48,14 +53,14 @@
     <div>
         <p class="admin-sidebar-label">Overview</p>
         <nav class="admin-nav">
-            <a href="<%= appPath %>/admin/dashboard.html">Dashboard</a>
-            <a href="<%= appPath %>/admin/products.html">Products</a>
-            <a href="<%= appPath %>/admin/categories.html">Categories</a>
-            <a href="<%= appPath %>/admin/orders.html">Orders</a>
-            <a href="<%= appPath %>/admin/inventory.html">Inventory</a>
-            <a class="active" href="<%= appPath %>/admin/users">Users</a>
-            <a href="<%= appPath %>/admin/vouchers.html">Vouchers</a>
-            <a href="<%= appPath %>/admin/feedback.html">Feedback</a>
+            <a class="<%= activeClass("dashboard", activeItem) %>" href="<%= appPath %>/admin/dashboard">Dashboard</a>
+            <a class="<%= activeClass("products", activeItem) %>" href="<%= appPath %>/admin/products.html">Products</a>
+            <a class="<%= activeClass("categories", activeItem) %>" href="<%= appPath %>/admin/categories">Categories</a>
+            <a class="<%= activeClass("orders", activeItem) %>" href="<%= appPath %>/admin/orders.html">Orders</a>
+            <a class="<%= activeClass("inventory", activeItem) %>" href="<%= appPath %>/admin/inventory.html">Inventory</a>
+            <a class="<%= activeClass("users", activeItem) %>" href="<%= appPath %>/admin/users">Users</a>
+            <a class="<%= activeClass("vouchers", activeItem) %>" href="<%= appPath %>/admin/promotions">Vouchers</a>
+            <a class="<%= activeClass("feedback", activeItem) %>" href="<%= appPath %>/admin/feedback.html">Feedback</a>
         </nav>
     </div>
     <% if (showUserQuickLinks) { %>
