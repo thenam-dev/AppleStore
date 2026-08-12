@@ -1,5 +1,6 @@
 package service;
 
+import config.AppConfig;
 import dao.UserDAO;
 import model.User;
 import model.UserStats;
@@ -9,7 +10,13 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class UserService {
-    private static final List<String> ALLOWED_ROLES = List.of("CUSTOMER", "ADMIN", "SALE_STAFF", "DELIVERY");
+
+    private static final List<String> ALLOWED_ROLES = List.of(
+            AppConfig.ROLE_CUSTOMER,
+            AppConfig.ROLE_ADMIN,
+            AppConfig.ROLE_SALE_STAFF,
+            AppConfig.ROLE_DELIVERY
+    );
     private static final List<String> ALLOWED_STATUSES = List.of("ACTIVE", "INACTIVE", "LOCKED", "SUSPENDED");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{9,15}$");
@@ -77,9 +84,9 @@ public class UserService {
         stats.setActiveUsers(countByStatus(users, "ACTIVE"));
         stats.setInactiveUsers(countByStatus(users, "INACTIVE"));
         stats.setStaffUsers((int) users.stream()
-                .filter(user -> "ADMIN".equals(user.getRole())
-                        || "SALE_STAFF".equals(user.getRole())
-                        || "DELIVERY".equals(user.getRole()))
+                .filter(user -> AppConfig.ROLE_ADMIN.equals(user.getRole())
+                || AppConfig.ROLE_SALE_STAFF.equals(user.getRole())
+                || AppConfig.ROLE_DELIVERY.equals(user.getRole()))
                 .count());
         return stats;
     }
