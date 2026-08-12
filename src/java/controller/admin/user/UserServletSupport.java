@@ -1,7 +1,7 @@
 package controller.admin.user;
 
-import model.User;
-import service.UserService;
+import model.entity.user.User;
+import service.user.UserService;
 
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;

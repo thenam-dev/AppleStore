@@ -1,9 +1,8 @@
-package service;
+package service.user;
 
 import config.AppConfig;
-import dao.UserDAO;
-import model.User;
-import model.UserStats;
+import dao.user.UserDAO;
+import model.entity.user.User;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -78,31 +77,12 @@ public class UserService {
         }
     }
 
-    public UserStats buildStats(List<User> users) {
-        UserStats stats = new UserStats();
-        stats.setTotalUsers(users.size());
-        stats.setActiveUsers(countByStatus(users, "ACTIVE"));
-        stats.setInactiveUsers(countByStatus(users, "INACTIVE"));
-        stats.setStaffUsers((int) users.stream()
-                .filter(user -> AppConfig.ROLE_ADMIN.equals(user.getRole())
-                || AppConfig.ROLE_SALE_STAFF.equals(user.getRole())
-                || AppConfig.ROLE_DELIVERY.equals(user.getRole()))
-                .count());
-        return stats;
-    }
-
     public List<String> getAllowedRoles() {
         return ALLOWED_ROLES;
     }
 
     public List<String> getAllowedStatuses() {
         return ALLOWED_STATUSES;
-    }
-
-    private int countByStatus(List<User> users, String status) {
-        return (int) users.stream()
-                .filter(user -> status.equals(user.getStatus()))
-                .count();
     }
 
     private void normalizeUser(User user) {

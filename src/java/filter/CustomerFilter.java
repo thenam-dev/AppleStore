@@ -7,7 +7,7 @@ package filter;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import model.CartItemView;
-import model.User;
+import model.entity.user.User;
 import service.CartService;
  
 import jakarta.servlet.ServletException;

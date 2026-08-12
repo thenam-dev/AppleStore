@@ -16,7 +16,7 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.CartItem;
-import model.User;
+import model.entity.user.User;
 import service.CartService;
 
 /**

@@ -1,6 +1,6 @@
-package dao;
+package dao.user;
 
-import model.User;
+import model.entity.user.User;
 import util.DBConnection;
 
 import java.sql.Connection;

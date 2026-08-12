@@ -1,7 +1,6 @@
 package controller.admin.user;
 
-import model.User;
-import model.UserStats;
+import model.entity.user.User;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -33,7 +32,6 @@ public class UserListServlet extends UserServletSupport {
         List<User> users = userService.getUsers(keyword, role, status);
 
         request.setAttribute("users", users);
-        request.setAttribute("stats", userService.buildStats(users));
         setUserReferenceData(request);
         request.setAttribute("keyword", keyword);
         request.setAttribute("selectedRole", role);
@@ -49,7 +47,6 @@ public class UserListServlet extends UserServletSupport {
     private void showUserListFallback(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {
         request.setAttribute("users", Collections.emptyList());
-        request.setAttribute("stats", new UserStats());
         request.setAttribute("errorMessage", message);
         setUserReferenceData(request);
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);

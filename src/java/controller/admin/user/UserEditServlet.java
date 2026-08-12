@@ -1,6 +1,6 @@
 package controller.admin.user;
 
-import model.User;
+import model.entity.user.User;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;

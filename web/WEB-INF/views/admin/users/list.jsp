@@ -3,8 +3,7 @@
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <%@ page import="java.util.Collections" %>
 <%@ page import="java.util.List" %>
-<%@ page import="model.User" %>
-<%@ page import="model.UserStats" %>
+<%@ page import="model.entity.user.User" %>
 <%!
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -64,11 +63,6 @@
         users = Collections.emptyList();
     }
 
-    UserStats stats = (UserStats) request.getAttribute("stats");
-    if (stats == null) {
-        stats = new UserStats();
-    }
-
     List<String> roles = (List<String>) request.getAttribute("roles");
     if (roles == null) {
         roles = List.of("CUSTOMER", "ADMIN", "SALE_STAFF", "DELIVERY");
@@ -102,6 +96,7 @@
             request.setAttribute("adminSidebarDescription", "Servlet, service, DAO and JDBC sample flow.");
             request.setAttribute("adminSidebarFooterTitle", "Backend sample");
             request.setAttribute("adminSidebarFooterDescription", "Use this page as the pattern for product, order and category modules.");
+            request.setAttribute("adminSidebarActive", "users");
             request.setAttribute("adminSidebarShowUserQuickLinks", Boolean.TRUE);
         %>
         <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
@@ -146,29 +141,6 @@
             <% if (errorMessage != null && !errorMessage.isBlank()) { %>
                 <div class="alert alert-danger" role="alert"><%= h(errorMessage) %></div>
             <% } %>
-
-            <section class="admin-kpi-grid">
-                <article class="stat-card compact">
-                    <div class="stat-label">Users</div>
-                    <div class="stat-value"><%= stats.getTotalUsers() %></div>
-                    <p>Current filtered result</p>
-                </article>
-                <article class="stat-card compact">
-                    <div class="stat-label">Active</div>
-                    <div class="stat-value"><%= stats.getActiveUsers() %></div>
-                    <p>Can access the system</p>
-                </article>
-                <article class="stat-card compact">
-                    <div class="stat-label">Inactive</div>
-                    <div class="stat-value"><%= stats.getInactiveUsers() %></div>
-                    <p>Need activation or verification</p>
-                </article>
-                <article class="stat-card compact">
-                    <div class="stat-label">Staff</div>
-                    <div class="stat-value"><%= stats.getStaffUsers() %></div>
-                    <p>Admin, sale and delivery roles</p>
-                </article>
-            </section>
 
             <section class="admin-panel">
                 <div class="admin-panel-head">

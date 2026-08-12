@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.CartItemView;
-import model.User;
+import model.entity.user.User;
 import service.CartService;
 
 /**

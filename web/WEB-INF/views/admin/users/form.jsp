@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
-<%@ page import="model.User" %>
+<%@ page import="model.entity.user.User" %>
 <%!
     private String h(Object value) {
         if (value == null) {
@@ -52,6 +52,7 @@
             request.setAttribute("adminSidebarDescription", "Validate in service, persist through DAO.");
             request.setAttribute("adminSidebarFooterTitle", "Form sample");
             request.setAttribute("adminSidebarFooterDescription", "This form intentionally avoids password changes until auth is implemented.");
+            request.setAttribute("adminSidebarActive", "users");
         %>
         <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
 
