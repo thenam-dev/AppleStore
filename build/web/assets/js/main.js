@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initLoadingButtons();
     initToastTriggers();
     initCurrentYear();
+    initAuthFlashMessages();
 });
 
 function initMobileDrawer() {
@@ -73,14 +74,14 @@ function initQuantityControls() {
             var currentValue = Number(input.value || 0);
             var minimum = Number(input.min || 1);
             input.value = Math.max(currentValue - 1, minimum);
-            input.dispatchEvent(new Event("input", { bubbles: true }));
+            input.dispatchEvent(new Event("input", {bubbles: true}));
         });
 
         increaseButton.addEventListener("click", function () {
             var currentValue = Number(input.value || 0);
             var maximum = Number(input.max || 9999);
             input.value = Math.min(currentValue + 1, maximum);
-            input.dispatchEvent(new Event("input", { bubbles: true }));
+            input.dispatchEvent(new Event("input", {bubbles: true}));
         });
     });
 }
@@ -394,3 +395,85 @@ function initCurrentYear() {
         node.textContent = String(currentYear);
     });
 }
+
+/**
+ * Shared login.html / register.html flash-message handling.
+ *
+ * Both pages are plain .html (not JSP), so the auth servlets communicate
+ * success/error state back to them through the query string instead of
+ * request attributes:
+ *   - error=<message>            shown as a red alert
+ *   - registered=1               shown as a green "account created" alert
+ *   - email / fullName / phone   re-filled into the form after a failed submit
+ *   - redirectTo=<in-app path>   copied into the hidden #login-redirect-target
+ *                                 field so login.html?redirectTo=/checkout.html
+ *                                 (set by AuthFilter/AdminFilter/CustomerFilter)
+ *                                 sends the customer back where they started.
+ */
+function initAuthFlashMessages() {
+    var alertBox = document.querySelector("[data-auth-alert]");
+    var params = new URLSearchParams(window.location.search);
+
+    if (alertBox) {
+        var errorMessage = params.get("error");
+        var registered = params.get("registered");
+
+        if (errorMessage) {
+            alertBox.textContent = errorMessage;
+            alertBox.classList.remove("alert-success");
+            alertBox.classList.add("alert-danger");
+            alertBox.hidden = false;
+        } else if (registered) {
+            alertBox.textContent = "Account created successfully. Please sign in.";
+            alertBox.classList.remove("alert-danger");
+            alertBox.classList.add("alert-success");
+            alertBox.hidden = false;
+        }
+    }
+
+    refillField("login-email", params.get("email"));
+    refillField("register-fullname", params.get("fullName"));
+    refillField("register-email", params.get("email"));
+    refillField("register-phone", params.get("phone"));
+
+    var redirectField = document.getElementById("login-redirect-target");
+    var redirectTo = params.get("redirectTo");
+    if (redirectField && redirectTo) {
+        redirectField.value = redirectTo;
+    }
+}
+
+function refillField(elementId, value) {
+    var field = document.getElementById(elementId);
+    if (field && value) {
+        field.value = value;
+    }
+}
+
+/**
+ * Client-side "passwords match" nudge for register.html. The server
+ * (service.AuthService) is still the source of truth for this check.
+ */
+(function initRegisterPasswordMatchHint() {
+    document.addEventListener("DOMContentLoaded", function () {
+        var form = document.forms.registerForm;
+        if (!form) {
+            return;
+        }
+
+        var password = form.querySelector("#register-password");
+        var confirm = form.querySelector("#register-confirm-password");
+        if (!password || !confirm) {
+            return;
+        }
+
+        function validateMatch() {
+            confirm.setCustomValidity(
+                    confirm.value && confirm.value !== password.value ? "Passwords do not match." : ""
+                    );
+        }
+
+        password.addEventListener("input", validateMatch);
+        confirm.addEventListener("input", validateMatch);
+    });
+})();

@@ -29,17 +29,19 @@ INSERT INTO categories (category_id, name, slug, display_order) VALUES
     (7, 'Phụ kiện',     'phu-kien',     7);
 
 -- ---------- 2.3 users ----------
--- Mật khẩu đã hash (placeholder demo, KHÔNG dùng thật): 'password123'
+-- Mật khẩu demo cho MỌI user bên dưới: 'Password123'
+-- Hash sinh bằng PBKDF2WithHmacSHA256 (util.PasswordUtil), format: iterations:saltBase64:hashBase64 — KHÔNG phải bcrypt.
+-- Nếu đổi thuật toán/số vòng lặp trong PasswordUtil thì phải sinh lại các hash này.
 INSERT INTO users (user_id, full_name, email, password_hash, phone, role, status, is_email_verified) VALUES
-    (1, 'Quản trị hệ thống (Chủ shop)', 'admin@applestore.vn', '$2a$10$eJtSBoFU9dxFcylt020R/.ZGPp7ngnFUZJ6haG9bHNCzGPzPyzryK', '0900000001', 'ADMIN', 'ACTIVE', 1),
-    (2, 'Phạm Văn Sơn', 'shipper1@applestore.vn', '$2a$10$eJtSBoFU9dxFcylt020R/.ZGPp7ngnFUZJ6haG9bHNCzGPzPyzryK', '0900000005', 'DELIVERY', 'ACTIVE', 1),
-    (3, 'Đỗ Thanh Hải', 'shipper2@applestore.vn', '$2a$10$eJtSBoFU9dxFcylt020R/.ZGPp7ngnFUZJ6haG9bHNCzGPzPyzryK', '0900000006', 'DELIVERY', 'ACTIVE', 1),
-    (4, 'Nguyễn Văn An', 'customer1@gmail.com', '$2a$10$eJtSBoFU9dxFcylt020R/.ZGPp7ngnFUZJ6haG9bHNCzGPzPyzryK', '0900000007', 'CUSTOMER', 'ACTIVE', 1),
-    (5, 'Trần Thị Bích', 'customer2@gmail.com', '$2a$10$eJtSBoFU9dxFcylt020R/.ZGPp7ngnFUZJ6haG9bHNCzGPzPyzryK', '0900000008', 'CUSTOMER', 'ACTIVE', 1),
-    (6, 'Lê Văn Chiến', 'customer3@gmail.com', '$2a$10$eJtSBoFU9dxFcylt020R/.ZGPp7ngnFUZJ6haG9bHNCzGPzPyzryK', '0900000009', 'CUSTOMER', 'ACTIVE', 1),
-    (7, 'Phạm Thị Duyên', 'customer4@gmail.com', '$2a$10$eJtSBoFU9dxFcylt020R/.ZGPp7ngnFUZJ6haG9bHNCzGPzPyzryK', '0900000010', 'CUSTOMER', 'ACTIVE', 1),
-    (8, 'Hoàng Văn Em', 'customer5@gmail.com', '$2a$10$eJtSBoFU9dxFcylt020R/.ZGPp7ngnFUZJ6haG9bHNCzGPzPyzryK', '0900000011', 'CUSTOMER', 'INACTIVE', 0),
-    (9, 'Nguyễn Minh Sale', 'sale@applestore.vn', '$2a$10$eJtSBoFU9dxFcylt020R/.ZGPp7ngnFUZJ6haG9bHNCzGPzPyzryK', '0900000012', 'SALE_STAFF', 'ACTIVE', 1);
+    (1, 'Quản trị hệ thống (Chủ shop)', 'admin@applestore.vn', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000001', 'ADMIN', 'ACTIVE', 1),
+    (2, 'Phạm Văn Sơn', 'shipper1@applestore.vn', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000005', 'DELIVERY', 'ACTIVE', 1),
+    (3, 'Đỗ Thanh Hải', 'shipper2@applestore.vn', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000006', 'DELIVERY', 'ACTIVE', 1),
+    (4, 'Nguyễn Văn An', 'customer1@gmail.com', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000007', 'CUSTOMER', 'ACTIVE', 1),
+    (5, 'Trần Thị Bích', 'customer2@gmail.com', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000008', 'CUSTOMER', 'ACTIVE', 1),
+    (6, 'Lê Văn Chiến', 'customer3@gmail.com', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000009', 'CUSTOMER', 'ACTIVE', 1),
+    (7, 'Phạm Thị Duyên', 'customer4@gmail.com', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000010', 'CUSTOMER', 'ACTIVE', 1),
+    (8, 'Hoàng Văn Em', 'customer5@gmail.com', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000011', 'CUSTOMER', 'INACTIVE', 0),
+    (9, 'Nguyễn Minh Sale', 'sale@applestore.vn', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000012', 'SALE_STAFF', 'ACTIVE', 1);
 
 -- ---------- 2.4 user_addresses ----------
 INSERT INTO user_addresses (user_id, recipient_name, recipient_phone, address_detail, is_default) VALUES
