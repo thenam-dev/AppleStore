@@ -46,8 +46,11 @@
                 <div>
                     <span class="eyebrow">Product management</span>
                     <h1>${formModeLabel} product</h1>
-                    <p>Product master data first. Variant-level pricing, stock, and media will be added after this core flow is stable.</p>
+                    <p>Product master data stays here, while variant-level pricing and stock are managed from the dedicated variant module.</p>
                 </div>
+                <c:if test="${isEdit}">
+                    <a class="btn btn-app-outline" href="${appPath}/admin/products/variants?productId=${product.productId}">Manage Variants</a>
+                </c:if>
             </div>
 
             <c:if test="${not empty errorMsg}">
@@ -169,7 +172,7 @@
                     <div class="admin-summary-card">
                         <span>Next phase</span>
                         <strong>Variant / image / specification management</strong>
-                        <small class="admin-note">This skeleton intentionally keeps the first product form focused on master data so the CRUD flow stays clean and reviewable.</small>
+                        <small class="admin-note">Variants now have a dedicated CRUD module. This product form stays focused on master data so the flow remains clean and reviewable.</small>
                     </div>
 
                     <div class="admin-form-actions mt-4">

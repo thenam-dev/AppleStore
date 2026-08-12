@@ -3,17 +3,17 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <c:set var="appPath" value="${pageContext.request.contextPath}" />
-<c:set var="adminSidebarTitle" scope="request" value="Product Management" />
-<c:set var="adminSidebarDescription" scope="request" value="Product master data, status control, and category assignment." />
-<c:set var="adminSidebarFooterTitle" scope="request" value="Catalog module" />
-<c:set var="adminSidebarFooterDescription" scope="request" value="Variants, images, and specifications will be plugged in after the product master-data flow is stable." />
+<c:set var="adminSidebarTitle" scope="request" value="Variant Management" />
+<c:set var="adminSidebarDescription" scope="request" value="SKU, stock, pricing, and activation state for one product." />
+<c:set var="adminSidebarFooterTitle" scope="request" value="Product variants" />
+<c:set var="adminSidebarFooterDescription" scope="request" value="This module feeds cart and checkout data through variant-level stock and price." />
 <c:set var="adminSidebarActive" scope="request" value="products" />
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Online Shop Admin | Products</title>
+    <title>Apple Online Shop Admin | Variants</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="${appPath}/assets/css/style.css">
 </head>
@@ -23,34 +23,35 @@
 
         <section class="admin-main">
             <div class="admin-topbar">
-                <form class="admin-topbar-search" action="${appPath}/admin/products" method="get" name="adminProductsSearchForm">
-                    <label class="visually-hidden" for="admin-products-search">Search products</label>
-                    <input id="admin-products-search" class="form-control" type="search" name="keyword" value="${fn:escapeXml(keyword)}" placeholder="Search by product name or model code">
-                    <input type="hidden" name="categoryId" value="${selectedCategoryId}">
+                <form class="admin-topbar-search" action="${appPath}/admin/products/variants" method="get" name="adminVariantSearchForm">
+                    <label class="visually-hidden" for="admin-variant-search">Search variants</label>
+                    <input type="hidden" name="productId" value="${managedProduct.productId}">
                     <input type="hidden" name="status" value="${fn:escapeXml(selectedStatus)}">
                     <input type="hidden" name="sort" value="${fn:escapeXml(selectedSort)}">
+                    <input id="admin-variant-search" class="form-control" type="search" name="keyword" value="${fn:escapeXml(keyword)}" placeholder="Search by SKU, label, color, or chip">
                     <button class="btn btn-app-primary" type="submit">Search</button>
                 </form>
                 <div class="admin-topbar-actions">
-                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/categories">Categories</a>
-                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products">Reset</a>
+                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products/edit?id=${managedProduct.productId}">Edit Product</a>
+                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products">Back to Products</a>
                 </div>
             </div>
 
             <nav aria-label="Breadcrumb">
                 <ol class="breadcrumb app-breadcrumb">
                     <li class="breadcrumb-item"><a href="${appPath}/admin/dashboard">Admin</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Products</li>
+                    <li class="breadcrumb-item"><a href="${appPath}/admin/products">Products</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Variants</li>
                 </ol>
             </nav>
 
             <div class="admin-page-head">
                 <div>
-                    <span class="eyebrow">Product management</span>
-                    <h1>Catalog products</h1>
-                    <p>This backend version manages product master data and now links directly into variant-level SKU, stock, and pricing management.</p>
+                    <span class="eyebrow">Variant management</span>
+                    <h1><c:out value="${managedProduct.name}" /></h1>
+                    <p>Product status: <strong><c:out value="${managedProduct.status}" /></strong>. Variants here provide SKU, stock, and price for cart and checkout tests.</p>
                 </div>
-                <a class="btn btn-app-primary" href="${appPath}/admin/products/edit">Add Product</a>
+                <a class="btn btn-app-primary" href="${appPath}/admin/products/variants/edit?productId=${managedProduct.productId}">Add Variant</a>
             </div>
 
             <c:if test="${not empty successMsg}">
@@ -62,54 +63,43 @@
 
             <section class="admin-kpi-grid">
                 <article class="stat-card compact">
-                    <div class="stat-label">Total Products</div>
-                    <div class="stat-value">${totalProducts}</div>
-                    <p>All records in product master data</p>
+                    <div class="stat-label">Total Variants</div>
+                    <div class="stat-value">${totalVariants}</div>
+                    <p>All SKUs under this product</p>
                 </article>
                 <article class="stat-card compact">
                     <div class="stat-label">Active</div>
-                    <div class="stat-value">${activeProducts}</div>
-                    <p>Visible for selling</p>
+                    <div class="stat-value">${activeVariants}</div>
+                    <p>Sellable variants</p>
                 </article>
                 <article class="stat-card compact">
                     <div class="stat-label">Inactive</div>
-                    <div class="stat-value">${inactiveProducts}</div>
-                    <p>Temporarily hidden</p>
+                    <div class="stat-value">${inactiveVariants}</div>
+                    <p>Hidden from selling flow</p>
                 </article>
                 <article class="stat-card compact">
-                    <div class="stat-label">Discontinued</div>
-                    <div class="stat-value">${discontinuedProducts}</div>
-                    <p>Kept for history and audit</p>
+                    <div class="stat-label">Filtered</div>
+                    <div class="stat-value">${filteredVariants}</div>
+                    <p>Current result set</p>
                 </article>
             </section>
 
             <section class="admin-panel">
                 <div class="admin-panel-head">
                     <div>
-                        <h2>Product list</h2>
-                        <p>List, search, filter, sort, paging, create, update, and status toggle now route through servlet, service, and DAO.</p>
+                        <h2>Variant list</h2>
+                        <p>Search, filter, sort, paging, create, update, and status toggle are scoped to the current product.</p>
                     </div>
-                    <span class="text-muted small">Filtered result: ${filteredProducts}</span>
+                    <span class="text-muted small">Product ID: #${managedProduct.productId}</span>
                 </div>
+
                 <div class="table-toolbar">
-                    <form class="admin-filter-bar compact" action="${appPath}/admin/products" method="get" name="adminProductFilterForm">
-                        <input class="form-control" type="search" name="keyword" value="${fn:escapeXml(keyword)}" placeholder="Search product name or model code">
-                        <select class="form-select" name="categoryId">
-                            <option value="">All categories</option>
-                            <c:forEach var="category" items="${categories}">
-                                <c:choose>
-                                    <c:when test="${selectedCategoryId eq category.categoryId}">
-                                        <option value="${category.categoryId}" selected><c:out value="${category.name}" /></option>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <option value="${category.categoryId}"><c:out value="${category.name}" /></option>
-                                    </c:otherwise>
-                                </c:choose>
-                            </c:forEach>
-                        </select>
+                    <form class="admin-filter-bar compact" action="${appPath}/admin/products/variants" method="get" name="adminVariantFilterForm">
+                        <input type="hidden" name="productId" value="${managedProduct.productId}">
+                        <input class="form-control" type="search" name="keyword" value="${fn:escapeXml(keyword)}" placeholder="Search SKU, label, color, chip">
                         <select class="form-select" name="status">
                             <option value="">All status</option>
-                            <c:forEach var="status" items="${productStatusOptions}">
+                            <c:forEach var="status" items="${variantStatusOptions}">
                                 <c:choose>
                                     <c:when test="${selectedStatus eq status}">
                                         <option value="${fn:escapeXml(status)}" selected><c:out value="${status}" /></option>
@@ -135,12 +125,13 @@
                         <button class="btn btn-app-primary" type="submit">Filter</button>
                     </form>
                 </div>
+
                 <div class="table-responsive">
                     <table class="table app-table">
                         <thead>
                             <tr>
-                                <th scope="col">Product</th>
-                                <th scope="col">Category</th>
+                                <th scope="col">SKU / Label</th>
+                                <th scope="col">Specs</th>
                                 <th scope="col">Price</th>
                                 <th scope="col">Stock</th>
                                 <th scope="col">Status</th>
@@ -149,66 +140,63 @@
                         </thead>
                         <tbody>
                             <c:choose>
-                                <c:when test="${empty products}">
+                                <c:when test="${empty variants}">
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">No products found.</td>
+                                        <td colspan="6" class="text-center text-muted py-4">No variants found for this product.</td>
                                     </tr>
                                 </c:when>
                                 <c:otherwise>
-                                    <c:forEach var="product" items="${products}">
+                                    <c:forEach var="variant" items="${variants}">
                                         <c:choose>
-                                            <c:when test="${product.status eq 'ACTIVE'}">
-                                                <c:set var="productStatusClass" value="status-in-stock" />
+                                            <c:when test="${variant.active}">
+                                                <c:set var="variantStatusClass" value="status-in-stock" />
                                                 <c:set var="nextStatus" value="INACTIVE" />
                                                 <c:set var="statusActionLabel" value="Deactivate" />
                                                 <c:set var="statusActionClass" value="btn-app-outline" />
                                             </c:when>
-                                            <c:when test="${product.status eq 'INACTIVE'}">
-                                                <c:set var="productStatusClass" value="status-out-stock" />
+                                            <c:otherwise>
+                                                <c:set var="variantStatusClass" value="status-out-stock" />
                                                 <c:set var="nextStatus" value="ACTIVE" />
                                                 <c:set var="statusActionLabel" value="Activate" />
-                                                <c:set var="statusActionClass" value="btn-app-primary" />
-                                            </c:when>
-                                            <c:otherwise>
-                                                <c:set var="productStatusClass" value="status-cancelled" />
-                                                <c:set var="nextStatus" value="ACTIVE" />
-                                                <c:set var="statusActionLabel" value="Reactivate" />
                                                 <c:set var="statusActionClass" value="btn-app-primary" />
                                             </c:otherwise>
                                         </c:choose>
                                         <tr>
                                             <td>
-                                                <strong><c:out value="${product.name}" /></strong>
-                                                <small class="d-block text-muted">
-                                                    <c:choose>
-                                                        <c:when test="${not empty product.modelCode}">
-                                                            Model: <c:out value="${product.modelCode}" />
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            Product ID: #${product.productId}
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </small>
-                                                <small class="d-block text-muted">Variants: ${product.variantCount}</small>
+                                                <strong><c:out value="${variant.sku}" /></strong>
+                                                <small class="d-block text-muted"><c:out value="${variant.variantLabel}" /></small>
                                             </td>
-                                            <td><c:out value="${product.categoryName}" /></td>
                                             <td>
-                                                <c:choose>
-                                                    <c:when test="${product.variantCount gt 0 and not empty product.minPrice}">
-                                                        <fmt:formatNumber value="${product.minPrice}" pattern="#,##0.##" /> VND
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <span class="text-muted">No variant yet</span>
-                                                    </c:otherwise>
-                                                </c:choose>
+                                                <c:if test="${not empty variant.colorName}">
+                                                    <small class="d-block text-muted">Color: <c:out value="${variant.colorName}" /></small>
+                                                </c:if>
+                                                <c:if test="${variant.storageCapacityGb ne null}">
+                                                    <small class="d-block text-muted">Storage: ${variant.storageCapacityGb} GB</small>
+                                                </c:if>
+                                                <c:if test="${variant.ramGb ne null}">
+                                                    <small class="d-block text-muted">RAM: ${variant.ramGb} GB</small>
+                                                </c:if>
+                                                <c:if test="${not empty variant.connectivity}">
+                                                    <small class="d-block text-muted">Connectivity: <c:out value="${variant.connectivity}" /></small>
+                                                </c:if>
                                             </td>
-                                            <td>${product.totalStock}</td>
-                                            <td><span class="status-badge ${productStatusClass}"><c:out value="${product.status}" /></span></td>
+                                            <td>
+                                                <strong><fmt:formatNumber value="${variant.price}" pattern="#,##0.##" /> VND</strong>
+                                                <c:if test="${not empty variant.discountPrice}">
+                                                    <small class="d-block text-muted">Discount: <fmt:formatNumber value="${variant.discountPrice}" pattern="#,##0.##" /> VND</small>
+                                                </c:if>
+                                            </td>
+                                            <td>${variant.stockQuantity}</td>
+                                            <td>
+                                                <span class="status-badge ${variantStatusClass}">
+                                                    <c:out value="${variant.active ? 'ACTIVE' : 'INACTIVE'}" />
+                                                </span>
+                                            </td>
                                             <td class="text-end table-actions">
-                                                <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products/variants?productId=${product.productId}">Variants</a>
-                                                <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products/edit?id=${product.productId}">Edit</a>
-                                                <form class="d-inline" action="${appPath}/admin/products/status" method="post">
-                                                    <input type="hidden" name="productId" value="${product.productId}">
+                                                <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products/variants/edit?id=${variant.variantId}">Edit</a>
+                                                <form class="d-inline" action="${appPath}/admin/products/variants/status" method="post">
+                                                    <input type="hidden" name="variantId" value="${variant.variantId}">
+                                                    <input type="hidden" name="productId" value="${managedProduct.productId}">
                                                     <input type="hidden" name="status" value="${nextStatus}">
                                                     <button class="btn ${statusActionClass} btn-sm" type="submit">${statusActionLabel}</button>
                                                 </form>
@@ -220,7 +208,8 @@
                         </tbody>
                     </table>
                 </div>
-                <nav aria-label="Product pagination" class="mt-3">
+
+                <nav aria-label="Variant pagination" class="mt-3">
                     <ul class="pagination app-pagination justify-content-end mb-0">
                         <li class="page-item ${currentPage le 1 ? 'disabled' : ''}">
                             <c:choose>
@@ -228,7 +217,7 @@
                                     <span class="page-link">Prev</span>
                                 </c:when>
                                 <c:otherwise>
-                                    <a class="page-link" href="${appPath}/admin/products?page=${currentPage - 1}${listQuerySuffix}">Prev</a>
+                                    <a class="page-link" href="${appPath}/admin/products/variants?productId=${managedProduct.productId}&page=${currentPage - 1}${listQuerySuffix}">Prev</a>
                                 </c:otherwise>
                             </c:choose>
                         </li>
@@ -239,7 +228,7 @@
                                         <span class="page-link">${pageNumber}</span>
                                     </c:when>
                                     <c:otherwise>
-                                        <a class="page-link" href="${appPath}/admin/products?page=${pageNumber}${listQuerySuffix}">${pageNumber}</a>
+                                        <a class="page-link" href="${appPath}/admin/products/variants?productId=${managedProduct.productId}&page=${pageNumber}${listQuerySuffix}">${pageNumber}</a>
                                     </c:otherwise>
                                 </c:choose>
                             </li>
@@ -250,15 +239,13 @@
                                     <span class="page-link">Next</span>
                                 </c:when>
                                 <c:otherwise>
-                                    <a class="page-link" href="${appPath}/admin/products?page=${currentPage + 1}${listQuerySuffix}">Next</a>
+                                    <a class="page-link" href="${appPath}/admin/products/variants?productId=${managedProduct.productId}&page=${currentPage + 1}${listQuerySuffix}">Next</a>
                                 </c:otherwise>
                             </c:choose>
                         </li>
                     </ul>
                 </nav>
             </section>
-
-            <p class="admin-footer-note">Variant CRUD is now available. Image and specification CRUD can be layered on next without changing the product master-data flow.</p>
         </section>
     </main>
 </body>
