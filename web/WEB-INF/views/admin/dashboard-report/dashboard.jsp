@@ -58,12 +58,7 @@
 
         <section class="admin-main">
             <div class="admin-topbar">
-                <form class="admin-topbar-search" action="<%= appPath %>/admin/dashboard" method="get" name="adminDashboardSearchForm">
-                    <label class="visually-hidden" for="admin-dashboard-search">Search admin workspace</label>
-                    <input id="admin-dashboard-search" class="form-control" type="search" name="keyword" placeholder="Search order, product, customer">
-                    <button class="btn btn-app-primary" type="submit">Search</button>
-                </form>
-                <div class="admin-topbar-actions">
+                <div class="admin-topbar-actions ms-auto">
                     <a class="btn btn-app-outline btn-sm" href="<%= appPath %>/">Storefront</a>
                     <div class="admin-user-pill">
                         <div class="account-avatar admin-user-pill-avatar">AD</div>
@@ -84,16 +79,11 @@
 
             <div class="admin-page-head">
                 <div>
-                    <span class="eyebrow">Admin overview</span>
                     <h1>Dashboard summary</h1>
                     <p>
                         A clean snapshot of shop performance, operational status, and high-priority items for the
                         product owner or admin role.
                     </p>
-                </div>
-                <div class="admin-page-actions">
-                    <a class="btn btn-app-outline" href="<%= appPath %>/admin/orders">Review Orders</a>
-                    <a class="btn btn-app-primary" href="<%= appPath %>/admin/products/new">Add Product</a>
                 </div>
             </div>
 
@@ -124,33 +114,7 @@
 
             <div class="admin-content-grid">
                 <div class="admin-section-stack">
-                    <section class="admin-panel">
-                        <div class="admin-panel-head">
-                            <div>
-                                <h2>Sales overview</h2>
-                                <p>Placeholder chart only, styled for later backend reporting integration.</p>
-                            </div>
-                            <span class="status-badge status-processing">Last 6 weeks</span>
-                        </div>
-                        <div class="admin-chart-placeholder">
-                            <div class="admin-chart-bars" aria-hidden="true">
-                                <div class="admin-chart-bar" style="height: 42%;"><span>$14K</span></div>
-                                <div class="admin-chart-bar" style="height: 56%;"><span>$19K</span></div>
-                                <div class="admin-chart-bar" style="height: 48%;"><span>$16K</span></div>
-                                <div class="admin-chart-bar" style="height: 72%;"><span>$24K</span></div>
-                                <div class="admin-chart-bar" style="height: 66%;"><span>$22K</span></div>
-                                <div class="admin-chart-bar" style="height: 88%;"><span>$29K</span></div>
-                            </div>
-                            <div class="admin-chart-labels">
-                                <span>Week 1</span>
-                                <span>Week 2</span>
-                                <span>Week 3</span>
-                                <span>Week 4</span>
-                                <span>Week 5</span>
-                                <span>Week 6</span>
-                            </div>
-                        </div>
-                    </section>
+                    <!-- Sales overview removed -->
 
                     <section class="admin-panel">
                         <div class="admin-panel-head">
@@ -158,7 +122,6 @@
                                 <h2>Recent orders</h2>
                                 <p>High-signal table for the newest activity entering the system.</p>
                             </div>
-                            <a class="btn btn-app-outline btn-sm" href="<%= appPath %>/admin/orders">View all</a>
                         </div>
                         <div class="table-responsive">
                             <table class="table app-table">
@@ -245,7 +208,6 @@
                                 <h2>Best selling products</h2>
                                 <p>Simple ranked list for spotlight decisions.</p>
                             </div>
-                            <a class="btn btn-app-outline btn-sm" href="<%= appPath %>/admin/products">Manage</a>
                         </div>
                         <ul class="admin-mini-list">
                             <li class="admin-mini-list-item">
