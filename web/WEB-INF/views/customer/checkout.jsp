@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <!DOCTYPE html>
@@ -10,10 +10,9 @@
 </head>
 <body>
 
-<jsp:include page="/common/header.jsp"/>
+<jsp:include page="/WEB-INF/views/common/header.jsp"/>
 
 <div class="container checkout-page">
-
     <h1>Thanh toán đơn hàng</h1>
 
     <c:if test="${not empty errorMsg}">
@@ -21,9 +20,7 @@
     </c:if>
 
     <div class="checkout-layout">
-
         <form method="post" action="${pageContext.request.contextPath}/checkout" class="checkout-form">
-
             <div class="form-group">
                 <label for="recipientName">Tên người nhận</label>
                 <input type="text" id="recipientName" name="recipientName"
@@ -51,13 +48,13 @@
             </div>
 
             <div class="form-group">
-                <label for="deliveryTimeSlot">Khung giờ nhận hàng (tuỳ chọn)</label>
+                <label for="deliveryTimeSlot">Khung giờ nhận hàng (tùy chọn)</label>
                 <input type="text" id="deliveryTimeSlot" name="deliveryTimeSlot"
-                       value="${param.deliveryTimeSlot}" placeholder="Vd: 8h - 12h">
+                       value="${param.deliveryTimeSlot}" placeholder="Ví dụ: 8h - 12h">
             </div>
 
             <div class="form-group">
-                <label for="notes">Ghi chú (tuỳ chọn)</label>
+                <label for="notes">Ghi chú (tùy chọn)</label>
                 <textarea id="notes" name="notes" maxlength="300">${param.notes}</textarea>
             </div>
 
@@ -96,11 +93,10 @@
                 <strong><fmt:formatNumber value="${cartTotal}" type="number" groupingUsed="true"/> đ</strong>
             </div>
         </div>
-
     </div>
 </div>
 
-<jsp:include page="/common/footer.jsp"/>
+<jsp:include page="/WEB-INF/views/common/footer.jsp"/>
 
 </body>
 </html>

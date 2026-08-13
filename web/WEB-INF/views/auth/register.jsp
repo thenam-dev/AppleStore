@@ -1,3 +1,6 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:set var="appPath" value="${pageContext.request.contextPath}" />
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -5,7 +8,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Apple Online Shop | Register</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="assets/css/style.css">
+        <link rel="stylesheet" href="${appPath}/assets/css/style.css">
     </head>
     <body class="site-body">
         <header class="site-header">
@@ -13,28 +16,28 @@
                 <div class="container topbar-inner">
                     <p class="topbar-note">Create an account to check out faster and track your orders.</p>
                     <ul class="topbar-links">
-                        <li><a href="index.html">Home</a></li>
-                        <li><a href="login.html">Login</a></li>
-                        <li><a href="products.html">Shop</a></li>
+                        <li><a href="${appPath}/index.jsp">Home</a></li>
+                        <li><a href="${appPath}/login">Login</a></li>
+                        <li><a href="${appPath}/products.html">Shop</a></li>
                     </ul>
                 </div>
             </div>
             <div class="container header-main">
-                <a class="brand" href="index.html" aria-label="Apple Online Shop">
-                    <img src="assets/images/logo-mark.svg" alt="AOS mark">
+                <a class="brand" href="${appPath}/index.jsp" aria-label="Apple Online Shop">
+                    <img src="${appPath}/assets/images/logo-mark.svg" alt="AOS mark">
                     <span>
                         <strong>AOS Template</strong>
                         <small>Create Account</small>
                     </span>
                 </a>
-                <form class="header-search" action="products.html" method="get" name="headerSearchForm">
+                <form class="header-search" action="${appPath}/products.html" method="get" name="headerSearchForm">
                     <label class="visually-hidden" for="register-search-input">Search products</label>
                     <input id="register-search-input" class="form-control" type="search" name="keyword" placeholder="Search products">
                     <button class="btn btn-app-primary" type="submit">Search</button>
                 </form>
                 <div class="header-actions">
-                    <a class="btn btn-app-outline" href="login.html">Login</a>
-                    <a class="cart-link" href="cart.html" aria-label="View cart">
+                    <a class="btn btn-app-outline" href="${appPath}/login">Login</a>
+                    <a class="cart-link" href="${appPath}/cart.html" aria-label="View cart">
                         <span>Cart</span>
                         <span class="cart-count">3</span>
                     </a>
@@ -48,10 +51,10 @@
             <div class="mobile-drawer" data-mobile-panel>
                 <div class="container mobile-drawer-inner">
                     <div class="mobile-links">
-                        <a href="index.html">Home</a>
-                        <a href="products.html">Shop</a>
-                        <a href="login.html">Login</a>
-                        <a href="cart.html">Cart</a>
+                        <a href="${appPath}/index.jsp">Home</a>
+                        <a href="${appPath}/products.html">Shop</a>
+                        <a href="${appPath}/login">Login</a>
+                        <a href="${appPath}/cart.html">Cart</a>
                     </div>
                 </div>
             </div>
@@ -90,7 +93,7 @@
                                 <p>Create a customer profile with the core fields required for the first account setup.</p>
                             </div>
                             <div class="auth-alert alert" data-auth-alert hidden></div>
-                            <form action="register" method="post" name="registerForm" class="auth-form">
+                            <form action="${appPath}/register" method="post" name="registerForm" class="auth-form">
                                 <div>
                                     <label class="form-label" for="register-fullname">Full name</label>
                                     <input id="register-fullname" class="form-control" type="text" name="fullName" placeholder="Nguyen Van A" required maxlength="100">
@@ -115,7 +118,7 @@
                             </form>
                             <div class="auth-footer-note">
                                 <span>Already have an account?</span>
-                                <a href="login.html">Login here</a>
+                                <a href="${appPath}/login">Login here</a>
                             </div>
                         </div>
                     </div>
@@ -130,6 +133,6 @@
         </footer>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="assets/js/main.js"></script>
+        <script src="${appPath}/assets/js/main.js"></script>
     </body>
 </html>
