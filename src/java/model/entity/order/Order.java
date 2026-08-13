@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 /**
  *
- * @author ACER
+ * @author admin
  */
 public class Order {
     private int orderId;
@@ -137,5 +137,10 @@ public class Order {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getFormattedCreatedAt() {
+        if (this.createdAt == null) return "";
+        return this.createdAt.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy", new java.util.Locale("vi", "VN")));
     }
 }

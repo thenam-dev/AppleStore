@@ -2,31 +2,31 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package model;
+package dto;
 
 /**
  *
  * @author admin
  */
-public class DashboardStats {
+public class DashboardStatsDTO {
 
     private double totalRevenue;
     private int totalOrders;
     private int activeProducts;
-    private int totalCustomers;
+    private int totalUsers;
     private int pendingOrdersCount;
     private int shippingOrdersCount;
     private int deliveredOrdersCount;
     private int cancelledOrdersCount;
 
-    public DashboardStats() {
+    public DashboardStatsDTO() {
     }
 
-    public DashboardStats(double totalRevenue, int totalOrders, int activeProducts, int totalCustomers, int pendingOrdersCount, int shippingOrdersCount, int deliveredOrdersCount, int cancelledOrdersCount) {
+    public DashboardStatsDTO(double totalRevenue, int totalOrders, int activeProducts, int totalUsers, int pendingOrdersCount, int shippingOrdersCount, int deliveredOrdersCount, int cancelledOrdersCount) {
         this.totalRevenue = totalRevenue;
         this.totalOrders = totalOrders;
         this.activeProducts = activeProducts;
-        this.totalCustomers = totalCustomers;
+        this.totalUsers = totalUsers;
         this.pendingOrdersCount = pendingOrdersCount;
         this.shippingOrdersCount = shippingOrdersCount;
         this.deliveredOrdersCount = deliveredOrdersCount;
@@ -57,12 +57,12 @@ public class DashboardStats {
         this.activeProducts = activeProducts;
     }
 
-    public int getTotalCustomers() {
-        return totalCustomers;
+    public int getTotalUsers() {
+        return totalUsers;
     }
 
-    public void setTotalCustomers(int totalCustomers) {
-        this.totalCustomers = totalCustomers;
+    public void setTotalUsers(int totalUsers) {
+        this.totalUsers = totalUsers;
     }
 
     public int getPendingOrdersCount() {

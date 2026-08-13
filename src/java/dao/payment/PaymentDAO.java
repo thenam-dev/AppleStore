@@ -9,10 +9,9 @@ import util.DBConnection;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Optional;
-
 /**
  *
- * @author ACER
+ * @author namnthe180997
  */
 public class PaymentDAO {
     /** Tạo 1 phiên thanh toán mới, attempt_no tự tăng theo order (phòng khi khách thử lại). */

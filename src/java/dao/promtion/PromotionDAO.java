@@ -1,6 +1,6 @@
-package dao;
+package dao.promtion;
 
-import model.Promotion;
+import model.entity.promtion.Promotion;
 import util.DBConnection;
 
 import java.sql.*;
@@ -168,5 +168,83 @@ public class PromotionDAO {
             }
         }
         return 0;
+    }
+
+    // Đếm tổng số bản ghi thỏa mãn điều kiện search/filter
+    public int countAll(String keyword, String statusFilter) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM promotions WHERE is_deleted = 0 ");
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND code LIKE ? ");
+        }
+        if (statusFilter != null && !statusFilter.isEmpty()) {
+            sql.append("AND is_active = ? ");
+        }
+
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                ps.setString(paramIndex++, "%" + keyword.trim() + "%");
+            }
+            if (statusFilter != null && !statusFilter.isEmpty()) {
+                ps.setBoolean(paramIndex++, "1".equals(statusFilter));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+// Lấy danh sách có phân trang và sắp xếp
+    public List<Promotion> findAllWithPaging(String keyword, String statusFilter, String sortCol, String sortDir, int offset, int limit) throws SQLException {
+        List<Promotion> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM promotions WHERE is_deleted = 0 ");
+
+        // 1. FILTER & SEARCH
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND code LIKE ? ");
+        }
+        if (statusFilter != null && !statusFilter.isEmpty()) {
+            sql.append("AND is_active = ? ");
+        }
+
+        // 2. SORT (Chống SQL Injection bằng cách chỉ cho phép các cột an toàn)
+        String safeCol = "promo_id"; // Mặc định
+        if ("code".equals(sortCol)) {
+            safeCol = "code";
+        } else if ("valid_until".equals(sortCol)) {
+            safeCol = "valid_until";
+        }
+
+        String safeDir = "ASC".equalsIgnoreCase(sortDir) ? "ASC" : "DESC"; // Mặc định DESC
+        sql.append("ORDER BY ").append(safeCol).append(" ").append(safeDir).append(" ");
+
+        // 3. PAGING (LIMIT, OFFSET)
+        sql.append("LIMIT ? OFFSET ?");
+
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                ps.setString(paramIndex++, "%" + keyword.trim() + "%");
+            }
+            if (statusFilter != null && !statusFilter.isEmpty()) {
+                ps.setBoolean(paramIndex++, "1".equals(statusFilter));
+            }
+            ps.setInt(paramIndex++, limit);
+            ps.setInt(paramIndex++, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
     }
 }

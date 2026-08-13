@@ -1,31 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.time.LocalDateTime" %>
-<%@ page import="java.time.format.DateTimeFormatter" %>
-<%@ page import="java.util.Collections" %>
-<%@ page import="java.util.List" %>
-<%@ page import="model.Promotion" %>
-<%! 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM d, yyyy");
-    
-    private String h(Object value) {
-        if (value == null) return "";
-        return String.valueOf(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
-    }
-%>
-<%
-    List<Promotion> promotions = (List<Promotion>) request.getAttribute("promotions");
-    if (promotions == null) promotions = Collections.emptyList();
-    
-    String keyword = (String) request.getAttribute("keyword");
-    String successMessage = (String) request.getAttribute("successMessage");
-    String errorMessage = (String) request.getAttribute("errorMessage");
-    String appPath = request.getContextPath();
-    
-    // Logic đếm nhanh số lượng đang active để hiển thị lên KPI Grid
-    long activeCount = promotions.stream().filter(Promotion::IsActive).count();
-    Long totalRedeemed = (Long) request.getAttribute("totalRedeemed");
-    Integer expiringSoon = (Integer) request.getAttribute("expiringSoon");
-%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -33,146 +8,216 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Apple Online Shop Admin | Vouchers</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="<%= appPath %>/assets/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
+        <style>
+            .sortable-link {
+                color: inherit;
+                text-decoration: none;
+            }
+            .sortable-link:hover {
+                color: #0d6efd;
+            }
+        </style>
     </head>
     <body class="site-body admin-app">
         <main class="admin-workspace">
-            <%
-                request.setAttribute("adminSidebarTitle", "Promotion view");
-                request.setAttribute("adminSidebarDescription", "Simple voucher management for a lightweight online shop MVP.");
-                request.setAttribute("adminSidebarFooterTitle", "Voucher scope");
-                request.setAttribute("adminSidebarFooterDescription", "Enough UI to cover code creation, activation, search, and tracking.");
-            %>
+
+            <c:set var="adminSidebarTitle" value="Voucher Management" scope="request" />
+            <c:set var="adminSidebarDescription" value="Manage all discount campaigns." scope="request" />
+            <c:set var="adminSidebarFooterTitle" value="Admin module" scope="request" />
+            <c:set var="adminSidebarFooterDescription" value="Secured list view." scope="request" />
+
             <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
 
             <section class="admin-main">
                 <!-- TOPBAR -->
                 <div class="admin-topbar">
-                    <form class="admin-topbar-search" action="<%= appPath %>/admin/promotions" method="get" name="adminVoucherSearchForm">
-                        <label class="visually-hidden" for="admin-vouchers-search">Search vouchers</label>
-                        <input id="admin-vouchers-search" class="form-control" type="search" name="keyword" value="<%= h(keyword) %>" placeholder="Search code or campaign">
-                        <button class="btn btn-app-primary" type="submit">Search</button>
-                    </form>
-                    <div class="admin-topbar-actions">
-                        <a class="btn btn-app-outline btn-sm" href="<%= appPath %>/admin/dashboard.html">Dashboard</a>
-                        <a class="btn btn-app-primary btn-sm" href="<%= appPath %>/admin/promotions/edit">New Voucher</a>
+                    <div class="admin-topbar-actions ms-auto">
+                        <a class="btn btn-app-primary btn-sm" href="${pageContext.request.contextPath}/admin/promotions/edit">
+                            + Create Voucher
+                        </a>
                     </div>
                 </div>
 
-                <!-- BREADCRUMB -->
+                <!-- BREADCRUMB & HEADER -->
                 <nav aria-label="Breadcrumb">
                     <ol class="breadcrumb app-breadcrumb">
-                        <li class="breadcrumb-item"><a href="<%= appPath %>/admin/dashboard.html">Admin</a></li>
+                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard.html">Admin</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Vouchers</li>
                     </ol>
                 </nav>
 
-                <!-- PAGE HEAD -->
                 <div class="admin-page-head">
                     <div>
                         <span class="eyebrow">Promotion master data</span>
-                        <h1>Voucher Management</h1>
-                        <p>This page gives the team a clean placeholder for voucher CRUD, campaign tracking, and redemption monitoring.</p>
-                    </div>
-                    <div class="admin-page-actions">
-                        <a class="btn btn-app-outline" href="<%= appPath %>/admin/orders">Order Impact</a>
-                        <a class="btn btn-app-primary" href="<%= appPath %>/admin/promotions/edit">Create Voucher</a>
+                        <h1>Voucher Campaigns</h1>
+                        <p>Track and manage active discount codes in the system.</p>
                     </div>
                 </div>
 
-                <% if (successMessage != null && !successMessage.isBlank()) { %>
-                <div class="alert alert-success" role="alert"><%= h(successMessage) %></div>
-                <% } %>
-                <% if (errorMessage != null && !errorMessage.isBlank()) { %>
-                <div class="alert alert-danger" role="alert"><%= h(errorMessage) %></div>
-                <% } %>
+                <!-- THÔNG BÁO LỖI NẾU CÓ -->
+                <c:if test="${not empty errorMessage}">
+                    <div class="alert alert-danger" role="alert"><c:out value="${errorMessage}" /></div>
+                </c:if>
 
-                <!-- KHỐI 1: KPI GRID -->
-                <section class="admin-kpi-grid">
-                    <article class="stat-card compact">
-                        <div class="stat-label">Active</div>
-                        <div class="stat-value"><%= activeCount %></div>
-                        <p>Running voucher campaigns</p>
+                <!-- KPI GRID -->
+                <div class="admin-summary-grid mb-4">
+                    <article class="admin-summary-card">
+                        <span>Active Vouchers</span>
+                        <strong>${activeCount}</strong>
                     </article>
-                    <article class="stat-card compact">
-                        <div class="stat-label">Total Valid</div>
-                        <div class="stat-value"><%= promotions.size() %></div>
-                        <p>All non-deleted vouchers</p>
+                    <article class="admin-summary-card">
+                        <span>Expiring Soon</span>
+                        <strong>${expiringSoon}</strong>
                     </article>
-                    <article class="stat-card compact">
-                        <div class="stat-label">Redeemed</div>
-                        <div class="stat-value"><%= totalRedeemed != null ? totalRedeemed : 0 %></div>
-                        <p>Tổng lượt đã sử dụng</p>
+                    <article class="admin-summary-card">
+                        <span>Total Redeemed</span>
+                        <strong>${totalRedeemed}</strong>
                     </article>
-                    <article class="stat-card compact">
-                        <div class="stat-label">Expiring</div>
-                        <div class="stat-value"><%= expiringSoon != null ? expiringSoon : 0 %></div>
-                        <p>Hết hạn trong 7 ngày tới</p>
-                    </article>
-                </section>
+                </div>
 
-                <!-- KHỐI 2: VOUCHER LIST -->
-                <section class="admin-panel mt-4">
-                    <div class="admin-panel-head">
-                        <div>
-                            <h2>Voucher list</h2>
-                            <p>Table-first layout backed by promotions database.</p>
+                <!-- FORM TÌM KIẾM & LỌC -->
+                <form action="${pageContext.request.contextPath}/admin/promotions" method="get" class="mb-4">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <input type="text" name="keyword" class="form-control" placeholder="Tìm theo mã Voucher..." value="<c:out value='${keyword}'/>" maxlength="50">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="status" class="form-select">
+                                <option value="">-- Tất cả trạng thái --</option>
+                                <option value="1" ${statusFilter == '1' ? 'selected' : ''}>Đang kích hoạt (Active)</option>
+                                <option value="0" ${statusFilter == '0' ? 'selected' : ''}>Đã vô hiệu hóa</option>
+                            </select>
+                        </div>
+                        <!-- Giữ lại Sort khi Search -->
+                        <input type="hidden" name="sortCol" value="${sortCol}">
+                        <input type="hidden" name="sortDir" value="${sortDir}">
+
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-secondary w-100">Lọc dữ liệu</button>
                         </div>
                     </div>
+                </form>
+
+                <!-- BẢNG DỮ LIỆU -->
+                <section class="admin-panel">
                     <div class="table-responsive">
-                        <table class="table app-table">
+                        <table class="table admin-table align-middle">
                             <thead>
                                 <tr>
-                                    <th scope="col">Code</th>
-                                    <th scope="col">Scope</th>
-                                    <th scope="col">Discount</th>
-                                    <th scope="col">Condition</th>
-                                    <th scope="col">Period</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col" class="text-end">Action</th>
+                                    <!-- Sort theo Code -->
+                                    <th>
+                                        <a href="?keyword=${keyword}&status=${statusFilter}&sortCol=code&sortDir=${sortCol == 'code' && sortDir == 'ASC' ? 'DESC' : 'ASC'}" class="sortable-link">
+                                            Code ${sortCol == 'code' ? (sortDir == 'ASC' ? '▲' : '▼') : ''}
+                                        </a>
+                                    </th>
+                                    <th>Discount</th>
+                                    <th>Scope</th>
+                                    <!-- Sort theo Ngày hết hạn -->
+                                    <th>
+                                        <a href="?keyword=${keyword}&status=${statusFilter}&sortCol=valid_until&sortDir=${sortCol == 'valid_until' && sortDir == 'ASC' ? 'DESC' : 'ASC'}" class="sortable-link">
+                                            Valid Until ${sortCol == 'valid_until' ? (sortDir == 'ASC' ? '▲' : '▼') : ''}
+                                        </a>
+                                    </th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <% if (promotions.isEmpty()) { %>
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">No vouchers found.</td>
-                                </tr>
-                                <% } %>
-                                <% for (Promotion promo : promotions) { %>
-                                <tr>
-                                    <td><strong><%= h(promo.getCode()) %></strong></td>
-                                    <td><%= h(promo.getScope()) %></td>
-                                    <td>
-                                        <%= promo.getDiscountValue() %><%= "PERCENT".equals(promo.getDiscountType()) ? "%" : " VNĐ" %> off
-                                    </td>
-                                    <td>Min <%= promo.getMinOrderValue() != null ? promo.getMinOrderValue() : "0" %></td>
-                                    <td>
-                                        <small class="d-block"><%= promo.getValidFrom() != null ? promo.getValidFrom().format(DATE_FORMATTER) : "" %></small>
-                                        <small class="d-block text-muted"><%= promo.getValidUntil() != null ? promo.getValidUntil().format(DATE_FORMATTER) : "" %></small>
-                                    </td>
-                                    <td>
-                                        <span class="status-badge <%= promo.IsActive() ? "status-in-stock" : "status-out-stock" %>">
-                                            <%= promo.IsActive() ? "Active" : "Inactive" %>
-                                        </span>
-                                    </td>
-                                    <td class="text-end table-actions">
-                                        <a class="btn btn-app-outline btn-sm" href="<%= appPath %>/admin/promotions/edit?id=<%= promo.getPromoId() %>">Edit</a>
-                                    </td>
-                                </tr>
-                                <% } %>
+                                <c:choose>
+                                    <c:when test="${empty promotions}">
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">Không tìm thấy mã khuyến mãi nào.</td>
+                                        </tr>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:forEach items="${promotions}" var="promo">
+                                            <tr>
+                                                <td>
+                                                    <strong><c:out value="${promo.code}" /></strong>
+                                                    <small class="d-block text-muted">ID: ${promo.promoId}</small>
+                                                </td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${promo.discountType == 'PERCENT'}">
+                                                            <span class="text-success">${promo.discountValue}%</span>
+                                                            <c:if test="${not empty promo.discountMax && promo.discountMax > 0}">
+                                                                <small class="d-block text-muted">Max: ${promo.discountMax}</small>
+                                                            </c:if>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span class="text-primary">${promo.discountValue} VND</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-secondary"><c:out value="${promo.scope}" /></span>
+                                                </td>
+                                                <td>
+                                                    <c:if test="${not empty promo.validUntil}">
+                                                        <small class="d-block text-muted">
+                                                            ${promo.validUntil.format(dateFormatter)}
+                                                        </small>
+                                                    </c:if>
+                                                </td>
+                                                <td>
+                                                    <span class="status-badge ${promo.IsActive() ? 'status-in-stock' : 'status-out-stock'}">
+                                                        ${promo.IsActive() ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                </td>
+                                                <td class="text-end table-actions">
+                                                    <!-- NÚT NGỪNG / BẬT LẠI GIỮA CHỪNG -->
+                                                    <form action="${pageContext.request.contextPath}/admin/promotions/status" method="post" class="d-inline" style="margin-right: 4px;">
+                                                        <input type="hidden" name="promoId" value="${promo.promoId}">
+                                                        <!-- Giá trị gửi lên sẽ đảo ngược với trạng thái hiện tại -->
+                                                        <input type="hidden" name="isActive" value="${!promo.IsActive()}">
+
+                                                        <button type="submit" 
+                                                                class="btn btn-sm ${promo.IsActive() ? 'btn-outline-danger' : 'btn-outline-success'}" 
+                                                                onclick="return confirm('Bạn có chắc chắn muốn ${promo.IsActive() ? 'NGỪNG' : 'BẬT LẠI'} mã khuyến mãi này không?');">
+                                                            ${promo.IsActive() ? 'Ngừng ngay' : 'Bật lại'}
+                                                        </button>
+                                                    </form>
+
+                                                    <!-- NÚT CHỈNH SỬA -->
+                                                    <a href="${pageContext.request.contextPath}/admin/promotions/edit?id=${promo.promoId}" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </c:otherwise>
+                                </c:choose>
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- PHÂN TRANG (PAGINATION) -->
+                    <c:if test="${totalPages > 1}">
+                        <div class="mt-4 d-flex justify-content-end">
+                            <ul class="pagination">
+                                <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                    <a class="page-link" href="?page=${currentPage - 1}&keyword=${keyword}&status=${statusFilter}&sortCol=${sortCol}&sortDir=${sortDir}">Previous</a>
+                                </li>
+
+                                <c:forEach begin="1" end="${totalPages}" var="i">
+                                    <li class="page-item ${currentPage == i ? 'active' : ''}">
+                                        <a class="page-link" href="?page=${i}&keyword=${keyword}&status=${statusFilter}&sortCol=${sortCol}&sortDir=${sortDir}">${i}</a>
+                                    </li>
+                                </c:forEach>
+
+                                <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                                    <a class="page-link" href="?page=${currentPage + 1}&keyword=${keyword}&status=${statusFilter}&sortCol=${sortCol}&sortDir=${sortDir}">Next</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </c:if>
                 </section>
 
-                <!-- KHỐI 3: SETUP NOTES -->
                 <jsp:include page="/WEB-INF/views/admin/promotions/setup-notes.jsp" />
 
-                <p class="admin-footer-note mt-4">Voucher data is rendered dynamically from the database.</p>
             </section>
         </main>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="<%= appPath %>/assets/js/main.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>
     </body>
 </html>

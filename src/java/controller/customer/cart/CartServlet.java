@@ -11,6 +11,8 @@ import service.cart.CartService;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -26,17 +28,23 @@ public class CartServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        int customerId = getCustomerId(request);
+        Integer customerId = getCustomerId(request);
+        if (customerId == null) {
+            redirectToLogin(request, response);
+            return;
+        }
 
         List<CartItem> items = cartService.getCartItems(customerId);
         BigDecimal cartTotal = items.stream()
                 .map(CartItem::getLineTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         boolean hasOverStockItem = items.stream().anyMatch(CartItem::isOverStock);
+        int cartItemCount = items.stream().mapToInt(CartItem::getQuantity).sum();
 
         request.setAttribute("cartItems", items);
         request.setAttribute("cartTotal", cartTotal);
         request.setAttribute("hasOverStockItem", hasOverStockItem);
+        request.setAttribute("cartItemCount", cartItemCount);
 
         // Đọc flash message từ session (đã set ở doPost sau khi redirect) rồi xoá đi
         readFlashMessage(request);
@@ -49,7 +57,11 @@ public class CartServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
 
-        int customerId = getCustomerId(request);
+        Integer customerId = getCustomerId(request);
+        if (customerId == null) {
+            redirectToLogin(request, response);
+            return;
+        }
         String action = request.getParameter("action");
         HttpSession session = request.getSession();
 
@@ -123,11 +135,18 @@ public class CartServlet extends HttpServlet {
         }
     }
 
-    /** TODO: thay bằng cách lấy customerId thật từ session sau khi AuthFilter xác thực đăng nhập. */
-    private int getCustomerId(HttpServletRequest request) {
+    /** Chuyển hướng sang trang đăng nhập, kèm redirect param để quay lại đúng /cart sau khi đăng nhập thành công. */
+    private void redirectToLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String redirectAfterLogin = request.getContextPath() + "/cart";
+        response.sendRedirect(request.getContextPath() + "/login.jsp?redirect=" +
+                URLEncoder.encode(redirectAfterLogin, StandardCharsets.UTF_8));
+    }
+ 
+    /** Trả về customerId từ session, hoặc null nếu khách chưa đăng nhập - AuthFilter là lớp chặn chính, đây là lớp phòng thủ thêm. */
+    private Integer getCustomerId(HttpServletRequest request) {
         Object customerId = request.getSession().getAttribute("customerId");
         if (customerId == null) {
-            throw new IllegalStateException("Khách chưa đăng nhập - AuthFilter phải chặn trước khi tới servlet này");
+            return null;
         }
         return (Integer) customerId;
     }

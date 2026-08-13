@@ -1,10 +1,13 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package service.cart;
 
 import dao.cart.CartDAO;
 import dao.catalog.ProductVariantDAO;
 import dao.order.OrderDAO;
 import dao.payment.PaymentDAO;
-import model.entity.cart.CartItem;
 
 import java.math.BigDecimal;
 import java.net.URLEncoder;
@@ -14,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import model.entity.cart.CartItem;
 import model.entity.order.Order;
 
 /**
@@ -28,10 +32,12 @@ import model.entity.order.Order;
  * DAO toàn hệ thống; vẫn còn rủi ro race condition ở mức thấp giữa các
  * request chạy song song vì không có SELECT ... FOR UPDATE giữ khoá xuyên
  * suốt nhiều câu lệnh.
+ * 
+ * @author namnthe180997
  */
 public class CheckoutService {
 
-    private static final String SEPAY_ACCOUNT_NUMBER = "0123456789"; // TODO: đọc từ config chung thay vì hard-code
+    private static final String SEPAY_ACCOUNT_NUMBER = "9999928012004"; // TODO: đọc từ config chung thay vì hard-code
     private static final String SEPAY_BANK_CODE = "MBBank";
     private static final String ORDER_PREFIX = "DH";
 
