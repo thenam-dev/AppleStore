@@ -1,6 +1,6 @@
-package controller.admin.user;
+package controller.admin.category;
 
-import model.entity.user.User;
+import model.entity.catalog.Category;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,64 +12,62 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
-@WebServlet(name = "UserListServlet", urlPatterns = {"/admin/users"})
-public class UserListServlet extends UserServletSupport {
+@WebServlet(name = "CategoryListServlet", urlPatterns = {"/admin/categories"})
+public class CategoryListServlet extends CategoryServletSupport {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            showUserList(request, response);
+            showCategoryList(request, response);
         } catch (SQLException | IllegalArgumentException ex) {
-            showUserListFallback(request, response, ex.getMessage());
+            showCategoryListFallback(request, response, ex.getMessage());
         }
     }
 
-    private void showUserList(HttpServletRequest request, HttpServletResponse response)
+    private void showCategoryList(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, ServletException, IOException {
         String keyword = request.getParameter("keyword");
-        String role = request.getParameter("role");
-        String status = request.getParameter("status");
-        String sort = normalizeUserSort(request.getParameter("sort"));
+        String status = normalizeStatusFilter(request.getParameter("status"));
+        String sort = normalizeCategorySort(request.getParameter("sort"));
         int currentPage = parsePage(request.getParameter("page"));
         int pageSize = config.AppConfig.PAGE_SIZE_ADMIN;
-        int totalUsers = userService.countUsers(keyword, role, status);
-        int totalPages = calculateTotalPages(totalUsers, pageSize);
+        List<Category> allCategories = categoryService.getAllCategories();
+        int filteredCount = categoryService.countCategories(keyword, status);
+        int totalPages = calculateTotalPages(filteredCount, pageSize);
         if (currentPage > totalPages) {
             currentPage = totalPages;
         }
+        List<Category> categories = categoryService.getCategories(keyword, status, sort, currentPage, pageSize);
+        String listQuery = buildCategoryListQueryString(keyword, status, sort);
 
-        List<User> users = userService.getUsers(keyword, role, status, sort, currentPage, pageSize);
-        String listQuery = buildUserListQueryString(keyword, role, status, sort);
-
-        request.setAttribute("users", users);
-        setUserReferenceData(request);
-        setUserListViewData(request, users);
+        request.setAttribute("categories", categories);
         request.setAttribute("keyword", keyword);
-        request.setAttribute("selectedRole", role);
         request.setAttribute("selectedStatus", status);
         request.setAttribute("selectedSort", sort);
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPages", totalPages);
-        request.setAttribute("totalUsers", totalUsers);
         request.setAttribute("listQuery", listQuery);
         request.setAttribute("listQuerySuffix", listQuery.isBlank() ? "" : "&" + listQuery);
         moveFlashMessagesToRequest(request);
+        setCategoryMetrics(request, allCategories, filteredCount);
 
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }
 
-    private void showUserListFallback(HttpServletRequest request, HttpServletResponse response, String message)
+    private void showCategoryListFallback(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {
-        request.setAttribute("users", Collections.emptyList());
+        request.setAttribute("categories", Collections.emptyList());
         request.setAttribute(FLASH_ERROR_KEY, message);
-        setUserReferenceData(request);
-        setUserListViewData(request, Collections.emptyList());
-        request.setAttribute("selectedSort", "created_desc");
+        request.setAttribute("totalCategories", 0);
+        request.setAttribute("activeCategories", 0L);
+        request.setAttribute("inactiveCategories", 0L);
+        request.setAttribute("filteredCategories", 0);
+        request.setAttribute("selectedSort", "display_asc");
         request.setAttribute("currentPage", 1);
         request.setAttribute("totalPages", 1);
-        request.setAttribute("totalUsers", 0);
         request.setAttribute("listQuery", "");
         request.setAttribute("listQuerySuffix", "");
+        request.setAttribute("sortOptions", java.util.List.of());
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }
 }
