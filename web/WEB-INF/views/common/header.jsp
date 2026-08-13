@@ -22,11 +22,11 @@
         </div>
     </div>
     <div class="container header-main">
-        <a class="brand" href="${appPath}/index.jsp" aria-label="Apple Online Shop">
-            <img src="${appPath}/assets/images/logo-mark.svg" alt="AOS mark">
+        <a class="brand" href="${appPath}/index.jsp" aria-label="AppleStore">
+            <img src="${appPath}/assets/images/logo-mark.svg" alt="Biểu tượng AOS">
             <span>
                 <strong>Cửa hàng AOS</strong>
-                <small>Customer Storefront</small>
+                <small>Cửa hàng trực tuyến</small>
             </span>
         </a>
         <form class="header-search" action="${appPath}/products.html" method="get" name="headerSearchForm">
@@ -46,11 +46,11 @@
                     </span>
                 </c:otherwise>
             </c:choose>
-            <a class="cart-link" href="${appPath}/cart" aria-label="View cart">
+            <a class="cart-link" href="${appPath}/cart" aria-label="Xem giỏ hàng">
                 <span>Giỏ hàng</span>
                 <span class="cart-count">${requestScope.cartItemCount != null ? requestScope.cartItemCount : 0}</span>
             </a>
-            <button class="mobile-menu-button" type="button" data-mobile-toggle aria-expanded="false" aria-label="Open mobile navigation">
+            <button class="mobile-menu-button" type="button" data-mobile-toggle aria-expanded="false" aria-label="Mở menu di động">
                 <span></span>
                 <span></span>
                 <span></span>

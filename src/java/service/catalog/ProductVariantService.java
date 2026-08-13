@@ -75,7 +75,7 @@ public class ProductVariantService {
     public ProductVariant getVariantById(int variantId) throws SQLException {
         validateVariantId(variantId);
         return productVariantDAO.findById(variantId)
-                .orElseThrow(() -> new IllegalArgumentException("Variant does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException("Biến thể không tồn tại."));
     }
 
     public int createVariant(ProductVariant variant) throws SQLException {
@@ -84,7 +84,7 @@ public class ProductVariantService {
         validateProductExists(variant.getProductId());
 
         if (productVariantDAO.existsBySku(variant.getSku())) {
-            throw new IllegalArgumentException("SKU already exists.");
+            throw new IllegalArgumentException("SKU đã tồn tại.");
         }
 
         return productVariantDAO.insert(variant);
@@ -97,17 +97,17 @@ public class ProductVariantService {
         validateProductExists(variant.getProductId());
 
         if (productVariantDAO.existsBySkuForOtherVariant(variant.getVariantId(), variant.getSku())) {
-            throw new IllegalArgumentException("SKU already exists.");
+            throw new IllegalArgumentException("SKU đã tồn tại.");
         }
         if (!productVariantDAO.update(variant)) {
-            throw new IllegalArgumentException("Variant does not exist.");
+            throw new IllegalArgumentException("Biến thể không tồn tại.");
         }
     }
 
     public void changeStatus(int variantId, boolean isActive) throws SQLException {
         validateVariantId(variantId);
         if (!productVariantDAO.updateStatus(variantId, isActive)) {
-            throw new IllegalArgumentException("Variant does not exist.");
+            throw new IllegalArgumentException("Biến thể không tồn tại.");
         }
     }
 
@@ -125,7 +125,7 @@ public class ProductVariantService {
 
     private void normalizeVariant(ProductVariant variant) {
         if (variant == null) {
-            throw new IllegalArgumentException("Variant data is required.");
+            throw new IllegalArgumentException("Dữ liệu biến thể là bắt buộc.");
         }
 
         variant.setSku(normalizeRequiredSku(variant.getSku()));
@@ -138,81 +138,81 @@ public class ProductVariantService {
 
     private void validateVariant(ProductVariant variant) {
         if (variant.getProductId() <= 0) {
-            throw new IllegalArgumentException("Product is invalid.");
+            throw new IllegalArgumentException("Sản phẩm không hợp lệ.");
         }
         if (variant.getSku().length() > MAX_SKU_LENGTH) {
-            throw new IllegalArgumentException("SKU must be 50 characters or less.");
+            throw new IllegalArgumentException("SKU không được vượt quá 50 ký tự.");
         }
         if (variant.getVariantLabel().length() > MAX_LABEL_LENGTH) {
-            throw new IllegalArgumentException("Variant label must be 150 characters or less.");
+            throw new IllegalArgumentException("Nhãn biến thể không được vượt quá 150 ký tự.");
         }
         if (variant.getColorName() != null && variant.getColorName().length() > MAX_COLOR_NAME_LENGTH) {
-            throw new IllegalArgumentException("Color name must be 50 characters or less.");
+            throw new IllegalArgumentException("Tên màu không được vượt quá 50 ký tự.");
         }
         if (variant.getColorHex() != null) {
             if (variant.getColorHex().length() > MAX_COLOR_HEX_LENGTH || !COLOR_HEX_PATTERN.matcher(variant.getColorHex()).matches()) {
-                throw new IllegalArgumentException("Color hex must follow format #RRGGBB.");
+                throw new IllegalArgumentException("Mã màu phải theo định dạng #RRGGBB.");
             }
         }
         if (variant.getStorageCapacityGb() != null && variant.getStorageCapacityGb() < 0) {
-            throw new IllegalArgumentException("Storage capacity must be 0 or greater.");
+            throw new IllegalArgumentException("Dung lượng lưu trữ phải lớn hơn hoặc bằng 0.");
         }
         if (variant.getRamGb() != null && variant.getRamGb() < 0) {
-            throw new IllegalArgumentException("RAM must be 0 or greater.");
+            throw new IllegalArgumentException("RAM phải lớn hơn hoặc bằng 0.");
         }
         if (variant.getConnectivity() != null && !ALLOWED_CONNECTIVITIES.contains(variant.getConnectivity())) {
-            throw new IllegalArgumentException("Connectivity is invalid.");
+            throw new IllegalArgumentException("Kết nối không hợp lệ.");
         }
         if (variant.getChipOption() != null && variant.getChipOption().length() > MAX_CHIP_OPTION_LENGTH) {
-            throw new IllegalArgumentException("Chip option must be 50 characters or less.");
+            throw new IllegalArgumentException("Tùy chọn chip không được vượt quá 50 ký tự.");
         }
         if (variant.getScreenSizeInch() != null && variant.getScreenSizeInch().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Screen size must be greater than 0.");
+            throw new IllegalArgumentException("Kích thước màn hình phải lớn hơn 0.");
         }
         if (variant.getPrice() == null || variant.getPrice().compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Price must be 0 or greater.");
+            throw new IllegalArgumentException("Giá phải lớn hơn hoặc bằng 0.");
         }
         if (variant.getStockQuantity() < 0) {
-            throw new IllegalArgumentException("Stock quantity must be 0 or greater.");
+            throw new IllegalArgumentException("Số lượng tồn kho phải lớn hơn hoặc bằng 0.");
         }
         if (variant.getWeightKg() == null || variant.getWeightKg().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Weight must be greater than 0.");
+            throw new IllegalArgumentException("Khối lượng phải lớn hơn 0.");
         }
         if (variant.getDiscountPrice() != null) {
             if (variant.getDiscountPrice().compareTo(BigDecimal.ZERO) < 0) {
-                throw new IllegalArgumentException("Discount price must be 0 or greater.");
+                throw new IllegalArgumentException("Giá giảm phải lớn hơn hoặc bằng 0.");
             }
             if (variant.getDiscountPrice().compareTo(variant.getPrice()) > 0) {
-                throw new IllegalArgumentException("Discount price must not be greater than price.");
+                throw new IllegalArgumentException("Giá giảm không được lớn hơn giá bán.");
             }
         }
 
         boolean hasDiscountStart = variant.getDiscountStart() != null;
         boolean hasDiscountEnd = variant.getDiscountEnd() != null;
         if (hasDiscountStart != hasDiscountEnd) {
-            throw new IllegalArgumentException("Discount start and end must both be filled or both be empty.");
+            throw new IllegalArgumentException("Thời gian bắt đầu và kết thúc giảm giá phải cùng được nhập hoặc cùng để trống.");
         }
         if (hasDiscountStart && !variant.getDiscountEnd().isAfter(variant.getDiscountStart())) {
-            throw new IllegalArgumentException("Discount end must be after discount start.");
+            throw new IllegalArgumentException("Thời gian kết thúc giảm giá phải sau thời gian bắt đầu.");
         }
     }
 
     private void validateProductExists(int productId) throws SQLException {
         if (productDAO.findById(productId).isEmpty()) {
-            throw new IllegalArgumentException("Product does not exist.");
+            throw new IllegalArgumentException("Sản phẩm không tồn tại.");
         }
     }
 
     private int normalizeProductId(int productId) {
         if (productId <= 0) {
-            throw new IllegalArgumentException("Product id is invalid.");
+            throw new IllegalArgumentException("ID sản phẩm không hợp lệ.");
         }
         return productId;
     }
 
     private void validateVariantId(int variantId) {
         if (variantId <= 0) {
-            throw new IllegalArgumentException("Variant id is invalid.");
+            throw new IllegalArgumentException("ID biến thể không hợp lệ.");
         }
     }
 
@@ -233,7 +233,7 @@ public class ProductVariantService {
     private String normalizeRequiredStatus(String value) {
         String normalized = normalizeRequiredUpper(value);
         if (!ALLOWED_STATUSES.contains(normalized)) {
-            throw new IllegalArgumentException("Variant status is invalid.");
+            throw new IllegalArgumentException("Trạng thái biến thể không hợp lệ.");
         }
         return normalized;
     }
@@ -244,28 +244,28 @@ public class ProductVariantService {
         }
         String normalized = value.trim().toLowerCase(Locale.ROOT);
         if (!ALLOWED_SORTS.contains(normalized)) {
-            throw new IllegalArgumentException("Sort option is invalid.");
+            throw new IllegalArgumentException("Tùy chọn sắp xếp không hợp lệ.");
         }
         return normalized;
     }
 
     private String normalizeRequiredSku(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Required value is missing.");
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
         }
         return value.trim().toUpperCase(Locale.ROOT);
     }
 
     private String normalizeRequiredUpper(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Required value is missing.");
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
         }
         return value.trim().toUpperCase(Locale.ROOT);
     }
 
     private String trimRequired(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Required value is missing.");
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
         }
         return value.trim();
     }

@@ -53,7 +53,7 @@ public class LoginServlet extends HttpServlet {
             redirectWithError(request, response, ex.getMessage(), email, redirectTo);
         } catch (SQLException ex) {
             redirectWithError(request, response,
-                    "Unable to sign in right now. Please try again later.", email, redirectTo);
+                    "Hiện chưa thể đăng nhập. Vui lòng thử lại sau.", email, redirectTo);
         }
     }
 

@@ -14,7 +14,7 @@
         <header class="site-header">
             <div class="container header-main">
                 <a class="brand" href="${appPath}/index.jsp" aria-label="AppleStore">
-                    <img src="${appPath}/assets/images/logo-mark.svg" alt="AppleStore mark">
+                    <img src="${appPath}/assets/images/logo-mark.svg" alt="Biểu tượng AppleStore">
                     <span>
                         <strong>AppleStore</strong>
                         <small>Đăng nhập tài khoản</small>

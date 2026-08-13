@@ -22,12 +22,12 @@ public class CategoryUpdateServlet extends CategoryServletSupport {
 
             if (category.getCategoryId() > 0) {
                 categoryService.updateCategory(category);
-                redirectToCategoryListWithMessage(request, response, FLASH_SUCCESS_KEY, "Category updated successfully.");
+                redirectToCategoryListWithMessage(request, response, FLASH_SUCCESS_KEY, "Cập nhật danh mục thành công.");
                 return;
             }
 
             categoryService.createCategory(category);
-            redirectToCategoryListWithMessage(request, response, FLASH_SUCCESS_KEY, "Category created successfully.");
+            redirectToCategoryListWithMessage(request, response, FLASH_SUCCESS_KEY, "Tạo danh mục thành công.");
         } catch (SQLException | IllegalArgumentException ex) {
             forwardBackToForm(request, response, ex.getMessage());
         }

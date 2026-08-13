@@ -20,7 +20,7 @@ public class ProductEditServlet extends ProductServletSupport {
             Product product = createDefaultProduct();
 
             if (productId != null && !productId.isBlank()) {
-                product = productService.getProductById(parseInt(productId, "Product id is invalid."));
+                product = productService.getProductById(parseInt(productId, "ID sản phẩm không hợp lệ."));
             }
 
             request.setAttribute("product", product);

@@ -35,7 +35,7 @@ public abstract class UserServletSupport extends HttpServlet {
 
     protected User buildUserFromRequest(HttpServletRequest request) {
         User user = new User();
-        user.setUserId(parseInt(request.getParameter("userId"), "User id is invalid."));
+        user.setUserId(parseInt(request.getParameter("userId"), "ID người dùng không hợp lệ."));
         user.setFullName(request.getParameter("fullName"));
         user.setEmail(request.getParameter("email"));
         user.setPhone(request.getParameter("phone"));
@@ -179,12 +179,12 @@ public abstract class UserServletSupport extends HttpServlet {
 
     private List<SortOption> buildSortOptions() {
         return List.of(
-                new SortOption("created_desc", "Newest"),
-                new SortOption("created_asc", "Oldest"),
-                new SortOption("name_asc", "Name A-Z"),
+                new SortOption("created_desc", "Mới nhất"),
+                new SortOption("created_asc", "Cũ nhất"),
+                new SortOption("name_asc", "Tên A-Z"),
                 new SortOption("email_asc", "Email A-Z"),
-                new SortOption("role_asc", "Role A-Z"),
-                new SortOption("status_asc", "Status A-Z")
+                new SortOption("role_asc", "Vai trò A-Z"),
+                new SortOption("status_asc", "Trạng thái A-Z")
         );
     }
 

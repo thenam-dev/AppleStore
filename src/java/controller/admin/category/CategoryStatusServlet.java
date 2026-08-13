@@ -16,10 +16,10 @@ public class CategoryStatusServlet extends CategoryServletSupport {
         request.setCharacterEncoding("UTF-8");
 
         try {
-            int categoryId = parseInt(request.getParameter("categoryId"), "Category id is invalid.");
+            int categoryId = parseInt(request.getParameter("categoryId"), "ID danh mục không hợp lệ.");
             String status = request.getParameter("status");
             categoryService.changeCategoryStatus(categoryId, status);
-            redirectToCategoryListWithMessage(request, response, FLASH_SUCCESS_KEY, "Category status updated.");
+            redirectToCategoryListWithMessage(request, response, FLASH_SUCCESS_KEY, "Cập nhật trạng thái danh mục thành công.");
         } catch (SQLException | IllegalArgumentException ex) {
             redirectToCategoryListWithMessage(request, response, FLASH_ERROR_KEY, ex.getMessage());
         }

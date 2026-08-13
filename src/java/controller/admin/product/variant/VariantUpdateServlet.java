@@ -28,7 +28,7 @@ public class VariantUpdateServlet extends VariantServletSupport {
                         response,
                         variant.getProductId(),
                         FLASH_SUCCESS_KEY,
-                        "Variant updated successfully."
+                        "Cập nhật biến thể thành công."
                 );
                 return;
             }
@@ -39,7 +39,7 @@ public class VariantUpdateServlet extends VariantServletSupport {
                     response,
                     variant.getProductId(),
                     FLASH_SUCCESS_KEY,
-                    "Variant created successfully."
+                    "Tạo biến thể thành công."
             );
         } catch (SQLException | IllegalArgumentException ex) {
             forwardBackToForm(request, response, ex.getMessage());
