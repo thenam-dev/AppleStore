@@ -16,10 +16,10 @@ public class ProductStatusServlet extends ProductServletSupport {
         request.setCharacterEncoding("UTF-8");
 
         try {
-            int productId = parseInt(request.getParameter("productId"), "Product id is invalid.");
+            int productId = parseInt(request.getParameter("productId"), "ID sản phẩm không hợp lệ.");
             String status = request.getParameter("status");
             productService.changeStatus(productId, status);
-            redirectToProductListWithMessage(request, response, FLASH_SUCCESS_KEY, "Product status updated.");
+            redirectToProductListWithMessage(request, response, FLASH_SUCCESS_KEY, "Cập nhật trạng thái sản phẩm thành công.");
         } catch (SQLException | IllegalArgumentException ex) {
             redirectToProductListWithMessage(request, response, FLASH_ERROR_KEY, ex.getMessage());
         }

@@ -18,11 +18,11 @@ public class VariantStatusServlet extends VariantServletSupport {
         int productId = parseIntOrDefault(request.getParameter("productId"), 0);
 
         try {
-            int variantId = parseInt(request.getParameter("variantId"), "Variant id is invalid.");
-            productId = parseInt(request.getParameter("productId"), "Product id is invalid.");
+            int variantId = parseInt(request.getParameter("variantId"), "ID biến thể không hợp lệ.");
+            productId = parseInt(request.getParameter("productId"), "ID sản phẩm không hợp lệ.");
             boolean isActive = parseRequiredVariantStatusToActive(request.getParameter("status"));
             productVariantService.changeStatus(variantId, isActive);
-            redirectToVariantListWithMessage(request, response, productId, FLASH_SUCCESS_KEY, "Variant status updated.");
+            redirectToVariantListWithMessage(request, response, productId, FLASH_SUCCESS_KEY, "Cập nhật trạng thái biến thể thành công.");
         } catch (SQLException | IllegalArgumentException ex) {
             if (productId > 0) {
                 redirectToVariantListWithMessage(request, response, productId, FLASH_ERROR_KEY, ex.getMessage());

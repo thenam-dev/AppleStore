@@ -3,17 +3,17 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <c:set var="appPath" value="${pageContext.request.contextPath}" />
-<c:set var="adminSidebarTitle" scope="request" value="Product Management" />
-<c:set var="adminSidebarDescription" scope="request" value="Product master data, status control, and category assignment." />
-<c:set var="adminSidebarFooterTitle" scope="request" value="Catalog module" />
-<c:set var="adminSidebarFooterDescription" scope="request" value="Variants, images, and specifications will be plugged in after the product master-data flow is stable." />
+<c:set var="adminSidebarTitle" scope="request" value="Quản lý sản phẩm" />
+<c:set var="adminSidebarDescription" scope="request" value="Quản lý dữ liệu sản phẩm, trạng thái và danh mục." />
+<c:set var="adminSidebarFooterTitle" scope="request" value="Module sản phẩm" />
+<c:set var="adminSidebarFooterDescription" scope="request" value="Sản phẩm liên kết trực tiếp với biến thể, tồn kho và giá bán." />
 <c:set var="adminSidebarActive" scope="request" value="products" />
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Online Shop Admin | Products</title>
+    <title>AppleStore Quản trị | Sản phẩm</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="${appPath}/assets/css/style.css">
 </head>
@@ -23,34 +23,25 @@
 
         <section class="admin-main">
             <div class="admin-topbar">
-                <form class="admin-topbar-search" action="${appPath}/admin/products" method="get" name="adminProductsSearchForm">
-                    <label class="visually-hidden" for="admin-products-search">Search products</label>
-                    <input id="admin-products-search" class="form-control" type="search" name="keyword" value="${fn:escapeXml(keyword)}" placeholder="Search by product name or model code">
-                    <input type="hidden" name="categoryId" value="${selectedCategoryId}">
-                    <input type="hidden" name="status" value="${fn:escapeXml(selectedStatus)}">
-                    <input type="hidden" name="sort" value="${fn:escapeXml(selectedSort)}">
-                    <button class="btn btn-app-primary" type="submit">Search</button>
-                </form>
                 <div class="admin-topbar-actions">
-                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/categories">Categories</a>
-                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products">Reset</a>
+                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products">Đặt lại</a>
                 </div>
             </div>
 
-            <nav aria-label="Breadcrumb">
+            <nav aria-label="Đường dẫn">
                 <ol class="breadcrumb app-breadcrumb">
-                    <li class="breadcrumb-item"><a href="${appPath}/admin/dashboard">Admin</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Products</li>
+                    <li class="breadcrumb-item"><a href="${appPath}/admin/dashboard">Quản trị</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Sản phẩm</li>
                 </ol>
             </nav>
 
             <div class="admin-page-head">
                 <div>
-                    <span class="eyebrow">Product management</span>
-                    <h1>Catalog products</h1>
-                    <p>This backend version manages product master data and now links directly into variant-level SKU, stock, and pricing management.</p>
+                    <span class="eyebrow">Quản lý sản phẩm</span>
+                    <h1>Danh sách sản phẩm</h1>
+                    <p>Quản lý thông tin sản phẩm và mở nhanh sang biến thể để cập nhật SKU, giá bán và tồn kho.</p>
                 </div>
-                <a class="btn btn-app-primary" href="${appPath}/admin/products/edit">Add Product</a>
+                <a class="btn btn-app-primary" href="${appPath}/admin/products/edit">Thêm sản phẩm</a>
             </div>
 
             <c:if test="${not empty successMsg}">
@@ -62,40 +53,40 @@
 
             <section class="admin-kpi-grid">
                 <article class="stat-card compact">
-                    <div class="stat-label">Total Products</div>
+                    <div class="stat-label">Tổng sản phẩm</div>
                     <div class="stat-value">${totalProducts}</div>
-                    <p>All records in product master data</p>
+                    <p>Tất cả bản ghi sản phẩm</p>
                 </article>
                 <article class="stat-card compact">
-                    <div class="stat-label">Active</div>
+                    <div class="stat-label">Đang bán</div>
                     <div class="stat-value">${activeProducts}</div>
-                    <p>Visible for selling</p>
+                    <p>Hiển thị trong luồng bán hàng</p>
                 </article>
                 <article class="stat-card compact">
-                    <div class="stat-label">Inactive</div>
+                    <div class="stat-label">Tạm ẩn</div>
                     <div class="stat-value">${inactiveProducts}</div>
-                    <p>Temporarily hidden</p>
+                    <p>Không hiển thị tạm thời</p>
                 </article>
                 <article class="stat-card compact">
-                    <div class="stat-label">Discontinued</div>
+                    <div class="stat-label">Ngừng kinh doanh</div>
                     <div class="stat-value">${discontinuedProducts}</div>
-                    <p>Kept for history and audit</p>
+                    <p>Giữ lại cho lịch sử và đối soát</p>
                 </article>
             </section>
 
             <section class="admin-panel">
                 <div class="admin-panel-head">
                     <div>
-                        <h2>Product list</h2>
-                        <p>List, search, filter, sort, paging, create, update, and status toggle now route through servlet, service, and DAO.</p>
+                        <h2>Bảng sản phẩm</h2>
+                        <p>Danh sách hỗ trợ tìm kiếm, lọc, sắp xếp, phân trang, tạo mới, cập nhật và đổi trạng thái.</p>
                     </div>
-                    <span class="text-muted small">Filtered result: ${filteredProducts}</span>
+                    <span class="text-muted small">Kết quả lọc: ${filteredProducts}</span>
                 </div>
                 <div class="table-toolbar">
                     <form class="admin-filter-bar compact" action="${appPath}/admin/products" method="get" name="adminProductFilterForm">
-                        <input class="form-control" type="search" name="keyword" value="${fn:escapeXml(keyword)}" placeholder="Search product name or model code">
+                        <input class="form-control" type="search" name="keyword" value="${fn:escapeXml(keyword)}" placeholder="Tìm tên sản phẩm hoặc mã model">
                         <select class="form-select" name="categoryId">
-                            <option value="">All categories</option>
+                            <option value="">Tất cả danh mục</option>
                             <c:forEach var="category" items="${categories}">
                                 <c:choose>
                                     <c:when test="${selectedCategoryId eq category.categoryId}">
@@ -108,14 +99,14 @@
                             </c:forEach>
                         </select>
                         <select class="form-select" name="status">
-                            <option value="">All status</option>
+                            <option value="">Tất cả trạng thái</option>
                             <c:forEach var="status" items="${productStatusOptions}">
                                 <c:choose>
                                     <c:when test="${selectedStatus eq status}">
-                                        <option value="${fn:escapeXml(status)}" selected><c:out value="${status}" /></option>
+                                        <option value="${fn:escapeXml(status)}" selected>${status eq 'ACTIVE' ? 'Đang bán' : status eq 'INACTIVE' ? 'Tạm ẩn' : status eq 'DISCONTINUED' ? 'Ngừng kinh doanh' : status}</option>
                                     </c:when>
                                     <c:otherwise>
-                                        <option value="${fn:escapeXml(status)}"><c:out value="${status}" /></option>
+                                        <option value="${fn:escapeXml(status)}">${status eq 'ACTIVE' ? 'Đang bán' : status eq 'INACTIVE' ? 'Tạm ẩn' : status eq 'DISCONTINUED' ? 'Ngừng kinh doanh' : status}</option>
                                     </c:otherwise>
                                 </c:choose>
                             </c:forEach>
@@ -132,26 +123,26 @@
                                 </c:choose>
                             </c:forEach>
                         </select>
-                        <button class="btn btn-app-primary" type="submit">Filter</button>
+                        <button class="btn btn-app-primary" type="submit">Lọc</button>
                     </form>
                 </div>
                 <div class="table-responsive">
                     <table class="table app-table">
                         <thead>
                             <tr>
-                                <th scope="col">Product</th>
-                                <th scope="col">Category</th>
-                                <th scope="col">Price</th>
-                                <th scope="col">Stock</th>
-                                <th scope="col">Status</th>
-                                <th scope="col" class="text-end">Action</th>
+                                <th scope="col">Sản phẩm</th>
+                                <th scope="col">Danh mục</th>
+                                <th scope="col">Giá</th>
+                                <th scope="col">Tồn kho</th>
+                                <th scope="col">Trạng thái</th>
+                                <th scope="col" class="text-end">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:choose>
                                 <c:when test="${empty products}">
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">No products found.</td>
+                                        <td colspan="6" class="text-center text-muted py-4">Không tìm thấy sản phẩm.</td>
                                     </tr>
                                 </c:when>
                                 <c:otherwise>
@@ -160,19 +151,19 @@
                                             <c:when test="${product.status eq 'ACTIVE'}">
                                                 <c:set var="productStatusClass" value="status-in-stock" />
                                                 <c:set var="nextStatus" value="INACTIVE" />
-                                                <c:set var="statusActionLabel" value="Deactivate" />
+                                                <c:set var="statusActionLabel" value="Tạm ẩn" />
                                                 <c:set var="statusActionClass" value="btn-app-outline" />
                                             </c:when>
                                             <c:when test="${product.status eq 'INACTIVE'}">
                                                 <c:set var="productStatusClass" value="status-out-stock" />
                                                 <c:set var="nextStatus" value="ACTIVE" />
-                                                <c:set var="statusActionLabel" value="Activate" />
+                                                <c:set var="statusActionLabel" value="Kích hoạt" />
                                                 <c:set var="statusActionClass" value="btn-app-primary" />
                                             </c:when>
                                             <c:otherwise>
                                                 <c:set var="productStatusClass" value="status-cancelled" />
                                                 <c:set var="nextStatus" value="ACTIVE" />
-                                                <c:set var="statusActionLabel" value="Reactivate" />
+                                                <c:set var="statusActionLabel" value="Bán lại" />
                                                 <c:set var="statusActionClass" value="btn-app-primary" />
                                             </c:otherwise>
                                         </c:choose>
@@ -185,11 +176,11 @@
                                                             Model: <c:out value="${product.modelCode}" />
                                                         </c:when>
                                                         <c:otherwise>
-                                                            Product ID: #${product.productId}
+                                                            Mã sản phẩm: #${product.productId}
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </small>
-                                                <small class="d-block text-muted">Variants: ${product.variantCount}</small>
+                                                <small class="d-block text-muted">Biến thể: ${product.variantCount}</small>
                                             </td>
                                             <td><c:out value="${product.categoryName}" /></td>
                                             <td>
@@ -198,15 +189,15 @@
                                                         <fmt:formatNumber value="${product.minPrice}" pattern="#,##0.##" /> VND
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <span class="text-muted">No variant yet</span>
+                                                        <span class="text-muted">Chưa có biến thể</span>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </td>
                                             <td>${product.totalStock}</td>
-                                            <td><span class="status-badge ${productStatusClass}"><c:out value="${product.status}" /></span></td>
+                                            <td><span class="status-badge ${productStatusClass}">${product.status eq 'ACTIVE' ? 'Đang bán' : product.status eq 'INACTIVE' ? 'Tạm ẩn' : product.status eq 'DISCONTINUED' ? 'Ngừng kinh doanh' : product.status}</span></td>
                                             <td class="text-end table-actions">
-                                                <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products/variants?productId=${product.productId}">Variants</a>
-                                                <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products/edit?id=${product.productId}">Edit</a>
+                                                <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products/variants?productId=${product.productId}">Biến thể</a>
+                                                <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products/edit?id=${product.productId}">Sửa</a>
                                                 <form class="d-inline" action="${appPath}/admin/products/status" method="post">
                                                     <input type="hidden" name="productId" value="${product.productId}">
                                                     <input type="hidden" name="status" value="${nextStatus}">
@@ -220,15 +211,15 @@
                         </tbody>
                     </table>
                 </div>
-                <nav aria-label="Product pagination" class="mt-3">
+                <nav aria-label="Phân trang sản phẩm" class="mt-3">
                     <ul class="pagination app-pagination justify-content-end mb-0">
                         <li class="page-item ${currentPage le 1 ? 'disabled' : ''}">
                             <c:choose>
                                 <c:when test="${currentPage le 1}">
-                                    <span class="page-link">Prev</span>
+                                    <span class="page-link">Trước</span>
                                 </c:when>
                                 <c:otherwise>
-                                    <a class="page-link" href="${appPath}/admin/products?page=${currentPage - 1}${listQuerySuffix}">Prev</a>
+                                    <a class="page-link" href="${appPath}/admin/products?page=${currentPage - 1}${listQuerySuffix}">Trước</a>
                                 </c:otherwise>
                             </c:choose>
                         </li>
@@ -247,10 +238,10 @@
                         <li class="page-item ${currentPage ge totalPages ? 'disabled' : ''}">
                             <c:choose>
                                 <c:when test="${currentPage ge totalPages}">
-                                    <span class="page-link">Next</span>
+                                    <span class="page-link">Sau</span>
                                 </c:when>
                                 <c:otherwise>
-                                    <a class="page-link" href="${appPath}/admin/products?page=${currentPage + 1}${listQuerySuffix}">Next</a>
+                                    <a class="page-link" href="${appPath}/admin/products?page=${currentPage + 1}${listQuerySuffix}">Sau</a>
                                 </c:otherwise>
                             </c:choose>
                         </li>
@@ -258,7 +249,7 @@
                 </nav>
             </section>
 
-            <p class="admin-footer-note">Variant CRUD is now available. Image and specification CRUD can be layered on next without changing the product master-data flow.</p>
+            <p class="admin-footer-note">CRUD biến thể đã sẵn sàng để quản lý SKU, giá và tồn kho theo từng sản phẩm.</p>
         </section>
     </main>
 </body>

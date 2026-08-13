@@ -55,16 +55,16 @@ public abstract class ProductServletSupport extends HttpServlet {
     protected Product buildProductFromRequest(HttpServletRequest request) {
         Product product = new Product();
         product.setProductId(parseIntOrDefault(request.getParameter("productId"), 0));
-        product.setCategoryId(parseInt(request.getParameter("categoryId"), "Category is invalid."));
+        product.setCategoryId(parseInt(request.getParameter("categoryId"), "Danh mục không hợp lệ."));
         product.setName(request.getParameter("name"));
         product.setDescription(request.getParameter("description"));
         product.setBrand("Apple");
         product.setModelCode(request.getParameter("modelCode"));
-        product.setReleaseYear(parseNullableInt(request.getParameter("releaseYear"), "Release year is invalid."));
+        product.setReleaseYear(parseNullableInt(request.getParameter("releaseYear"), "Năm phát hành không hợp lệ."));
         product.setProductCondition(request.getParameter("productCondition"));
         product.setImportType(request.getParameter("importType"));
         product.setOriginCountry(request.getParameter("originCountry"));
-        product.setWarrantyMonths(parseInt(request.getParameter("warrantyMonths"), "Warranty months is invalid."));
+        product.setWarrantyMonths(parseInt(request.getParameter("warrantyMonths"), "Thời hạn bảo hành không hợp lệ."));
         product.setWarrantyProvider("Apple Viet Nam");
         product.setStatus(request.getParameter("status"));
         product.setFeatured("on".equals(request.getParameter("isFeatured")));
@@ -191,14 +191,14 @@ public abstract class ProductServletSupport extends HttpServlet {
 
     private List<SortOption> buildSortOptions() {
         return List.of(
-                new SortOption("newest", "Newest"),
-                new SortOption("oldest", "Oldest"),
-                new SortOption("name_asc", "Name A-Z"),
-                new SortOption("name_desc", "Name Z-A"),
-                new SortOption("price_asc", "Price low-high"),
-                new SortOption("price_desc", "Price high-low"),
-                new SortOption("stock_asc", "Stock low-high"),
-                new SortOption("stock_desc", "Stock high-low")
+                new SortOption("newest", "Mới nhất"),
+                new SortOption("oldest", "Cũ nhất"),
+                new SortOption("name_asc", "Tên A-Z"),
+                new SortOption("name_desc", "Tên Z-A"),
+                new SortOption("price_asc", "Giá thấp đến cao"),
+                new SortOption("price_desc", "Giá cao đến thấp"),
+                new SortOption("stock_asc", "Tồn kho thấp đến cao"),
+                new SortOption("stock_desc", "Tồn kho cao đến thấp")
         );
     }
 

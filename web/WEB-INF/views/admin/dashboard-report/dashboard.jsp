@@ -4,11 +4,11 @@
 <fmt:setLocale value="vi_VN" />
 <c:set var="appPath" value="${pageContext.request.contextPath}" />
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Apple Online Shop Admin | Dashboard</title>
+        <title>AppleStore Quản trị | Tổng quan</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="${appPath}/assets/css/style.css">
     </head>
@@ -18,7 +18,6 @@
             <c:set var="adminSidebarDescription" value="Tóm tắt hiệu suất và trạng thái của cửa hàng." scope="request" />
             <c:set var="adminSidebarFooterTitle" value="Tổng quan" scope="request" />
             <c:set var="adminSidebarFooterDescription" value="Không gian quản lý dữ liệu và hệ thống." scope="request" />
-            <c:set var="adminSidebarShowUserQuickLinks" value="true" scope="request" />
             <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
 
             <section class="admin-main">    

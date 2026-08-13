@@ -47,10 +47,10 @@ public class UserService {
         String normalizedSort = normalizeSort(sort);
 
         if (normalizedRole != null && !ALLOWED_ROLES.contains(normalizedRole)) {
-            throw new IllegalArgumentException("Role filter is invalid.");
+            throw new IllegalArgumentException("Bộ lọc vai trò không hợp lệ.");
         }
         if (normalizedStatus != null && !ALLOWED_STATUSES.contains(normalizedStatus)) {
-            throw new IllegalArgumentException("Status filter is invalid.");
+            throw new IllegalArgumentException("Bộ lọc trạng thái không hợp lệ.");
         }
 
         return userDAO.findAll(
@@ -68,10 +68,10 @@ public class UserService {
         String normalizedStatus = normalizeOptional(status);
 
         if (normalizedRole != null && !ALLOWED_ROLES.contains(normalizedRole)) {
-            throw new IllegalArgumentException("Role filter is invalid.");
+            throw new IllegalArgumentException("Bộ lọc vai trò không hợp lệ.");
         }
         if (normalizedStatus != null && !ALLOWED_STATUSES.contains(normalizedStatus)) {
-            throw new IllegalArgumentException("Status filter is invalid.");
+            throw new IllegalArgumentException("Bộ lọc trạng thái không hợp lệ.");
         }
 
         return userDAO.countAll(keyword, normalizedRole, normalizedStatus);
@@ -79,7 +79,7 @@ public class UserService {
 
     public User getUserById(int userId) throws SQLException {
         return userDAO.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException("Người dùng không tồn tại."));
     }
 
     public void updateUser(User user) throws SQLException {
@@ -87,26 +87,26 @@ public class UserService {
         validateUser(user);
 
         if (userDAO.existsByEmailForOtherUser(user.getEmail(), user.getUserId())) {
-            throw new IllegalArgumentException("Email is already used by another account.");
+            throw new IllegalArgumentException("Email đã được tài khoản khác sử dụng.");
         }
 
         if (userDAO.existsByPhoneForOtherUser(user.getPhone(), user.getUserId())) {
-            throw new IllegalArgumentException("Phone is already used by another account.");
+            throw new IllegalArgumentException("Số điện thoại đã được tài khoản khác sử dụng.");
         }
 
         if (!userDAO.update(user)) {
-            throw new IllegalArgumentException("User does not exist.");
+            throw new IllegalArgumentException("Người dùng không tồn tại.");
         }
     }
 
     public void changeStatus(int userId, String status) throws SQLException {
         String normalizedStatus = normalizeRequired(status);
         if (!ALLOWED_STATUSES.contains(normalizedStatus)) {
-            throw new IllegalArgumentException("Status is invalid.");
+            throw new IllegalArgumentException("Trạng thái không hợp lệ.");
         }
 
         if (!userDAO.updateStatus(userId, normalizedStatus)) {
-            throw new IllegalArgumentException("User does not exist.");
+            throw new IllegalArgumentException("Người dùng không tồn tại.");
         }
     }
 
@@ -132,35 +132,35 @@ public class UserService {
 
     private void validateUser(User user) {
         if (user.getUserId() <= 0) {
-            throw new IllegalArgumentException("User id is invalid.");
+            throw new IllegalArgumentException("ID người dùng không hợp lệ.");
         }
         if (user.getFullName().length() > 100) {
-            throw new IllegalArgumentException("Full name must be 100 characters or less.");
+            throw new IllegalArgumentException("Họ tên không được vượt quá 100 ký tự.");
         }
         if (!EMAIL_PATTERN.matcher(user.getEmail()).matches() || user.getEmail().length() > 255) {
-            throw new IllegalArgumentException("Email is invalid.");
+            throw new IllegalArgumentException("Email không hợp lệ.");
         }
         if (user.getPhone() != null && !PHONE_PATTERN.matcher(user.getPhone()).matches()) {
-            throw new IllegalArgumentException("Phone must contain 9 to 15 digits.");
+            throw new IllegalArgumentException("Số điện thoại phải gồm 9 đến 15 chữ số.");
         }
         if (!ALLOWED_ROLES.contains(user.getRole())) {
-            throw new IllegalArgumentException("Role is invalid.");
+            throw new IllegalArgumentException("Vai trò không hợp lệ.");
         }
         if (!ALLOWED_STATUSES.contains(user.getStatus())) {
-            throw new IllegalArgumentException("Status is invalid.");
+            throw new IllegalArgumentException("Trạng thái không hợp lệ.");
         }
     }
 
     private String normalizeRequired(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Required value is missing.");
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
         }
         return value.trim().toUpperCase();
     }
 
     private String trimRequired(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Required value is missing.");
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
         }
         return value.trim();
     }
@@ -178,7 +178,7 @@ public class UserService {
         }
         String normalized = value.trim().toLowerCase();
         if (!ALLOWED_SORTS.contains(normalized)) {
-            throw new IllegalArgumentException("Sort option is invalid.");
+            throw new IllegalArgumentException("Tùy chọn sắp xếp không hợp lệ.");
         }
         return normalized;
     }

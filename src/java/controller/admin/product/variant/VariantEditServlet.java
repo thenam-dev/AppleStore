@@ -22,10 +22,10 @@ public class VariantEditServlet extends VariantServletSupport {
             String variantId = request.getParameter("id");
 
             if (variantId != null && !variantId.isBlank()) {
-                variant = productVariantService.getVariantById(parseInt(variantId, "Variant id is invalid."));
+                variant = productVariantService.getVariantById(parseInt(variantId, "ID biến thể không hợp lệ."));
                 managedProduct = loadManagedProduct(variant.getProductId());
             } else {
-                int productId = parseInt(request.getParameter("productId"), "Product id is invalid.");
+                int productId = parseInt(request.getParameter("productId"), "ID sản phẩm không hợp lệ.");
                 managedProduct = loadManagedProduct(productId);
                 variant = createDefaultVariant(productId);
             }

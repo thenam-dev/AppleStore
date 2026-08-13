@@ -3,11 +3,11 @@
 <!-- Nếu chạy báo lỗi taglib, đổi uri thành: "http://java.sun.com/jsp/jstl/core" -->
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Apple Online Shop Admin | ${isEdit ? 'Edit' : 'Create'} Voucher</title>
+        <title>AppleStore Quản trị | ${isEdit ? 'Chỉnh sửa' : 'Tạo'} mã giảm giá</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     </head>
@@ -15,33 +15,33 @@
         <main class="admin-workspace">
             
             <!-- Truyền tham số cho Sidebar bằng EL -->
-            <c:set var="adminSidebarTitle" value="${isEdit ? 'Edit Voucher' : 'Create Voucher'}" scope="request" />
-            <c:set var="adminSidebarDescription" value="Manage discount information." scope="request" />
-            <c:set var="adminSidebarFooterTitle" value="Voucher scope" scope="request" />
-            <c:set var="adminSidebarFooterDescription" value="Validate logic using PromotionService." scope="request" />
+            <c:set var="adminSidebarTitle" value="${isEdit ? 'Chỉnh sửa mã giảm giá' : 'Tạo mã giảm giá'}" scope="request" />
+            <c:set var="adminSidebarDescription" value="Quản lý thông tin và điều kiện áp dụng mã giảm giá." scope="request" />
+            <c:set var="adminSidebarFooterTitle" value="Phạm vi mã giảm giá" scope="request" />
+            <c:set var="adminSidebarFooterDescription" value="Quy tắc được kiểm tra bằng PromotionService." scope="request" />
             
             <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
 
             <section class="admin-main">
                 <div class="admin-topbar">
                     <div class="admin-topbar-actions ms-auto">
-                        <a class="btn btn-app-outline btn-sm" href="${pageContext.request.contextPath}/admin/promotions">Back to Vouchers</a>
+                        <a class="btn btn-app-outline btn-sm" href="${pageContext.request.contextPath}/admin/promotions">Về danh sách mã giảm giá</a>
                     </div>
                 </div>
 
-                <nav aria-label="Breadcrumb">
+                <nav aria-label="Đường dẫn">
                     <ol class="breadcrumb app-breadcrumb">
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard.html">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/promotions">Vouchers</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">${isEdit ? 'Edit' : 'Create'}</li>
+                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Quản trị</a></li>
+                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/promotions">Mã giảm giá</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">${isEdit ? 'Chỉnh sửa' : 'Tạo mới'}</li>
                     </ol>
                 </nav>
 
                 <div class="admin-page-head">
                     <div>
-                        <span class="eyebrow">Promotion master data</span>
-                        <h1>${isEdit ? 'Edit voucher: ' : 'Create new voucher'} <c:out value="${promo.code}" /></h1>
-                        <p>Enter the details for the discount campaign.</p>
+                        <span class="eyebrow">Dữ liệu khuyến mãi</span>
+                        <h1>${isEdit ? 'Chỉnh sửa mã: ' : 'Tạo mã giảm giá mới'} <c:out value="${promo.code}" /></h1>
+                        <p>Nhập thông tin chi tiết cho chiến dịch giảm giá.</p>
                     </div>
                 </div>
 
@@ -59,35 +59,35 @@
 
                         <div class="admin-form-grid">
                             <div>
-                                <label class="form-label" for="voucher-code">Voucher code</label>
+                                <label class="form-label" for="voucher-code">Mã giảm giá</label>
                                 <input id="voucher-code" class="form-control" type="text" name="code" value="<c:out value='${promo.code}'/>" placeholder="APPLE40" maxlength="50" required>
                             </div>
                             <div>
-                                <label class="form-label" for="voucher-type">Discount type</label>
+                                <label class="form-label" for="voucher-type">Loại giảm giá</label>
                                 <select id="voucher-type" class="form-select" name="discountType">
-                                    <option value="FIXED" ${promo.discountType == 'FIXED' ? 'selected' : ''}>Fixed amount</option>
-                                    <option value="PERCENT" ${promo.discountType == 'PERCENT' ? 'selected' : ''}>Percentage</option>
+                                    <option value="FIXED" ${promo.discountType == 'FIXED' ? 'selected' : ''}>Số tiền cố định</option>
+                                    <option value="PERCENT" ${promo.discountType == 'PERCENT' ? 'selected' : ''}>Phần trăm</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label" for="voucher-value">Discount value</label>
+                                <label class="form-label" for="voucher-value">Giá trị giảm</label>
                                 <input id="voucher-value" class="form-control" type="number" step="0.01" name="discountValue" value="${promo.discountValue}" min="0" max="99999999" required>
                             </div>
                             <div>
-                                <label class="form-label" for="voucher-discount-max">Max discount (If %)</label>
-                                <input id="voucher-discount-max" class="form-control" type="number" step="0.01" name="discountMax" value="${promo.discountMax}" placeholder="Optional max limit">
+                                <label class="form-label" for="voucher-discount-max">Mức giảm tối đa (nếu giảm theo %)</label>
+                                <input id="voucher-discount-max" class="form-control" type="number" step="0.01" name="discountMax" value="${promo.discountMax}" placeholder="Không bắt buộc">
                             </div>
                             
                             <div>
-                                <label class="form-label" for="voucher-scope">Apply scope</label>
+                                <label class="form-label" for="voucher-scope">Phạm vi áp dụng</label>
                                 <select id="voucher-scope" class="form-select" name="scope">
-                                    <option value="ORDER" ${promo.scope == 'ORDER' ? 'selected' : ''}>Order total</option>
-                                    <option value="CATEGORY" ${promo.scope == 'CATEGORY' ? 'selected' : ''}>Product Category</option>
-                                    <option value="PRODUCT" ${promo.scope == 'PRODUCT' ? 'selected' : ''}>Product variant</option>
+                                    <option value="ORDER" ${promo.scope == 'ORDER' ? 'selected' : ''}>Tổng đơn hàng</option>
+                                    <option value="CATEGORY" ${promo.scope == 'CATEGORY' ? 'selected' : ''}>Danh mục sản phẩm</option>
+                                    <option value="PRODUCT" ${promo.scope == 'PRODUCT' ? 'selected' : ''}>Sản phẩm cụ thể</option>
                                 </select>
                             </div>
 
-                            <!-- Khối Category -->
+                            <!-- Khối danh mục -->
                             <div id="category-selection-group" style="display: none;">
                                 <label class="form-label" for="voucher-category">Danh mục áp dụng</label>
                                 <select id="voucher-category" class="form-select" name="categoryId">
@@ -98,10 +98,10 @@
                                         </option>
                                     </c:forEach>
                                 </select>
-                                <small class="text-muted d-block mt-1">Bắt buộc khi phạm vi là Category.</small>
+                                <small class="text-muted d-block mt-1">Bắt buộc khi phạm vi là danh mục.</small>
                             </div>
                             
-                            <!-- Khối Product -->
+                            <!-- Khối sản phẩm -->
                             <div id="product-selection-group" style="display: none;">
                                 <label class="form-label" for="voucher-product">Sản phẩm áp dụng</label>
                                 <select id="voucher-product" class="form-select" name="productId">
@@ -112,54 +112,54 @@
                                         </option>
                                     </c:forEach>
                                 </select>
-                                <small class="text-muted d-block mt-1">Bắt buộc khi phạm vi là Product.</small>
+                                <small class="text-muted d-block mt-1">Bắt buộc khi phạm vi là sản phẩm.</small>
                             </div>
                             
                             <div>
-                                <label class="form-label" for="voucher-target">Benefit Target</label>
+                                <label class="form-label" for="voucher-target">Đối tượng được giảm</label>
                                 <select id="voucher-target" class="form-select" name="benefitTarget">
-                                    <option value="MERCHANDISE" ${promo.benefitTarget == 'MERCHANDISE' ? 'selected' : ''}>Merchandise (Tiền hàng)</option>
-                                    <option value="SHIPPING" ${promo.benefitTarget == 'SHIPPING' ? 'selected' : ''}>Shipping (Vận chuyển)</option>
-                                    <option value="PRODUCT" ${promo.benefitTarget == 'PRODUCT' ? 'selected' : ''}>Product (Sản phẩm)</option>
+                                    <option value="MERCHANDISE" ${promo.benefitTarget == 'MERCHANDISE' ? 'selected' : ''}>Tiền hàng</option>
+                                    <option value="SHIPPING" ${promo.benefitTarget == 'SHIPPING' ? 'selected' : ''}>Phí vận chuyển</option>
+                                    <option value="PRODUCT" ${promo.benefitTarget == 'PRODUCT' ? 'selected' : ''}>Sản phẩm</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label" for="voucher-min-order">Minimum order</label>
+                                <label class="form-label" for="voucher-min-order">Giá trị đơn hàng tối thiểu</label>
                                 <input id="voucher-min-order" class="form-control" type="number" step="0.01" name="minOrderValue" value="${not empty promo.minOrderValue ? promo.minOrderValue : '0'}" placeholder="2500">
                             </div>
                             <div>
-                                <label class="form-label" for="voucher-usage-limit">Usage limit</label>
-                                <input id="voucher-usage-limit" class="form-control" type="number" name="maxUses" value="${promo.maxUses}" placeholder="Leave blank for unlimited">
+                                <label class="form-label" for="voucher-usage-limit">Giới hạn lượt dùng</label>
+                                <input id="voucher-usage-limit" class="form-control" type="number" name="maxUses" value="${promo.maxUses}" placeholder="Để trống nếu không giới hạn">
                             </div>
                             <div>
-                                <label class="form-label" for="voucher-start-date">Start date</label>
+                                <label class="form-label" for="voucher-start-date">Ngày bắt đầu</label>
                                 <!-- Đã dùng biến String validFromStr truyền từ Servlet -->
                                 <input id="voucher-start-date" class="form-control" type="datetime-local" name="validFrom" value="${validFromStr}" required>
                             </div>
                             <div>
-                                <label class="form-label" for="voucher-end-date">End date</label>
+                                <label class="form-label" for="voucher-end-date">Ngày kết thúc</label>
                                 <input id="voucher-end-date" class="form-control" type="datetime-local" name="validUntil" value="${validUntilStr}" required>
                             </div>
 
                             <div class="form-check align-self-end mt-3">
                                 <input id="canStack" class="form-check-input" type="checkbox" name="canStack" ${isEdit and promo.canStack ? 'checked' : ''}>
-                                <label class="form-check-label" for="canStack">Can Stack (Cộng dồn)</label>
+                                <label class="form-check-label" for="canStack">Cho phép cộng dồn</label>
                             </div>
                             <div class="form-check align-self-end mt-3">
                                 <!-- Hỗ trợ trực tiếp gọi hàm () trong EL của Tomcat 10 -->
                                 <input id="isActive" class="form-check-input" type="checkbox" name="isActive" ${not isEdit or promo.IsActive() ? 'checked' : ''}>
-                                <label class="form-check-label" for="isActive">Active (Kích hoạt)</label>
+                                <label class="form-check-label" for="isActive">Kích hoạt</label>
                             </div>
                         </div>
 
                         <div class="mt-3">
-                            <label class="form-label" for="voucher-note">Internal note (Optional)</label>
-                            <textarea id="voucher-note" class="form-control" name="note" rows="4" placeholder="Campaign note, excluded products, or internal approval remark."></textarea>
+                            <label class="form-label" for="voucher-note">Ghi chú nội bộ (tùy chọn)</label>
+                            <textarea id="voucher-note" class="form-control" name="note" rows="4" placeholder="Ghi chú chiến dịch, sản phẩm loại trừ hoặc lưu ý duyệt nội bộ."></textarea>
                         </div>
 
                         <div class="admin-form-actions mt-4">
-                            <a class="btn btn-app-outline" href="${pageContext.request.contextPath}/admin/promotions">Cancel</a>
-                            <button class="btn btn-app-primary" type="submit">${isEdit ? 'Update Voucher' : 'Publish Voucher'}</button>
+                            <a class="btn btn-app-outline" href="${pageContext.request.contextPath}/admin/promotions">Hủy</a>
+                            <button class="btn btn-app-primary" type="submit">${isEdit ? 'Cập nhật mã giảm giá' : 'Phát hành mã giảm giá'}</button>
                         </div>
                     </form>
                 </section>
@@ -171,7 +171,7 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>
         
-        <!-- Script JS giữ nguyên y hệt như cũ -->
+        <!-- Script xử lý form mã giảm giá -->
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 const discountTypeSelect = document.getElementById('voucher-type');
@@ -236,11 +236,11 @@
                     }
 
                     if (scopeSelect.value === 'PRODUCT' && productInput.value === '') {
-                        alert('Lỗi: Bạn phải chọn Sản phẩm áp dụng khi phạm vi là Product.');
+                        alert('Lỗi: Bạn phải chọn sản phẩm áp dụng khi phạm vi là sản phẩm.');
                         event.preventDefault(); return;
                     }
                     if (scopeSelect.value === 'CATEGORY' && categoryInput.value === '') {
-                        alert('Lỗi: Bạn phải chọn Danh mục áp dụng khi phạm vi là Category.');
+                        alert('Lỗi: Bạn phải chọn danh mục áp dụng khi phạm vi là danh mục.');
                         event.preventDefault(); return;
                     }
                     if (validFrom && validUntil) {

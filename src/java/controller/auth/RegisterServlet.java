@@ -44,7 +44,7 @@ public class RegisterServlet extends HttpServlet {
             redirectWithError(request, response, ex.getMessage(), fullName, email, phone);
         } catch (SQLException ex) {
             redirectWithError(request, response,
-                    "Unable to create the account right now. Please try again later.", fullName, email, phone);
+                    "Hiện chưa thể tạo tài khoản. Vui lòng thử lại sau.", fullName, email, phone);
         }
     }
 
