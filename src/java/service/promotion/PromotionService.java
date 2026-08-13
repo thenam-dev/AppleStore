@@ -1,6 +1,7 @@
-package service;
+package service.promotion;
 
-import dao.PromotionDAO;
+import dao.promtion.PromotionDAO;
+import dao.promtion.PromotionDAO;
 import model.Promotion;
 
 import java.math.BigDecimal;

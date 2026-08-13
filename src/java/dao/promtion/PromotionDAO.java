@@ -1,4 +1,4 @@
-package dao;
+package dao.promtion;
 
 import model.Promotion;
 import util.DBConnection;

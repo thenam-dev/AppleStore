@@ -1,6 +1,6 @@
 package controller.admin.promotion;
 
-import service.PromotionService;
+import service.promotion.PromotionService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

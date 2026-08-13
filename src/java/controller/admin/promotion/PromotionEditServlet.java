@@ -3,7 +3,7 @@ package controller.admin.promotion;
 import model.Promotion;
 //import model.Category;
 //import model.Product;
-import service.PromotionService;
+import service.promotion.PromotionService;
 import util.DBConnection; // Hoặc cách kết nối DB của nhóm bạn
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
