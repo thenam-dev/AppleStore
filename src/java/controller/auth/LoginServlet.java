@@ -51,7 +51,7 @@ public class LoginServlet extends HttpServlet {
 
             String redirectUrl = isSafeRedirect(redirectTo)
                     ? redirectTo
-                    : request.getContextPath() + "/index.html";
+                    : request.getContextPath() + "/index.jsp";
             response.sendRedirect(redirectUrl);
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectWithError(request, response, ex.getMessage(), email, redirectTo);
