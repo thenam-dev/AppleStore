@@ -17,7 +17,7 @@
 <main>
     <section class="section-block">
         <div class="container">
-            <nav aria-label="Breadcrumb">
+            <nav aria-label="Đường dẫn">
                 <ol class="breadcrumb app-breadcrumb">
                     <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp">Trang chủ</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Giỏ hàng</li>

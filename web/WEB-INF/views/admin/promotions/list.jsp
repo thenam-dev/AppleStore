@@ -2,11 +2,11 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Apple Online Shop Admin | Vouchers</title>
+        <title>AppleStore Quản trị | Mã giảm giá</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
         <style>
@@ -22,10 +22,10 @@
     <body class="site-body admin-app">
         <main class="admin-workspace">
 
-            <c:set var="adminSidebarTitle" value="Voucher Management" scope="request" />
-            <c:set var="adminSidebarDescription" value="Manage all discount campaigns." scope="request" />
-            <c:set var="adminSidebarFooterTitle" value="Admin module" scope="request" />
-            <c:set var="adminSidebarFooterDescription" value="Secured list view." scope="request" />
+            <c:set var="adminSidebarTitle" value="Quản lý mã giảm giá" scope="request" />
+            <c:set var="adminSidebarDescription" value="Quản lý các chiến dịch khuyến mãi và mã giảm giá." scope="request" />
+            <c:set var="adminSidebarFooterTitle" value="Module khuyến mãi" scope="request" />
+            <c:set var="adminSidebarFooterDescription" value="Danh sách được bảo vệ trong khu vực quản trị." scope="request" />
 
             <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
 
@@ -34,24 +34,24 @@
                 <div class="admin-topbar">
                     <div class="admin-topbar-actions ms-auto">
                         <a class="btn btn-app-primary btn-sm" href="${pageContext.request.contextPath}/admin/promotions/edit">
-                            + Create Voucher
+                            + Tạo mã giảm giá
                         </a>
                     </div>
                 </div>
 
                 <!-- BREADCRUMB & HEADER -->
-                <nav aria-label="Breadcrumb">
+                <nav aria-label="Đường dẫn">
                     <ol class="breadcrumb app-breadcrumb">
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard.html">Admin</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Vouchers</li>
+                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Quản trị</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Mã giảm giá</li>
                     </ol>
                 </nav>
 
                 <div class="admin-page-head">
                     <div>
-                        <span class="eyebrow">Promotion master data</span>
-                        <h1>Voucher Campaigns</h1>
-                        <p>Track and manage active discount codes in the system.</p>
+                        <span class="eyebrow">Dữ liệu khuyến mãi</span>
+                        <h1>Chiến dịch mã giảm giá</h1>
+                        <p>Theo dõi và quản lý các mã giảm giá trong hệ thống.</p>
                     </div>
                 </div>
 
@@ -63,15 +63,15 @@
                 <!-- KPI GRID -->
                 <div class="admin-summary-grid mb-4">
                     <article class="admin-summary-card">
-                        <span>Active Vouchers</span>
+                        <span>Mã đang kích hoạt</span>
                         <strong>${activeCount}</strong>
                     </article>
                     <article class="admin-summary-card">
-                        <span>Expiring Soon</span>
+                        <span>Sắp hết hạn</span>
                         <strong>${expiringSoon}</strong>
                     </article>
                     <article class="admin-summary-card">
-                        <span>Total Redeemed</span>
+                        <span>Tổng lượt sử dụng</span>
                         <strong>${totalRedeemed}</strong>
                     </article>
                 </div>
@@ -80,16 +80,16 @@
                 <form action="${pageContext.request.contextPath}/admin/promotions" method="get" class="mb-4">
                     <div class="row g-2">
                         <div class="col-md-4">
-                            <input type="text" name="keyword" class="form-control" placeholder="Tìm theo mã Voucher..." value="<c:out value='${keyword}'/>" maxlength="50">
+                            <input type="text" name="keyword" class="form-control" placeholder="Tìm theo mã giảm giá..." value="<c:out value='${keyword}'/>" maxlength="50">
                         </div>
                         <div class="col-md-3">
                             <select name="status" class="form-select">
                                 <option value="">-- Tất cả trạng thái --</option>
-                                <option value="1" ${statusFilter == '1' ? 'selected' : ''}>Đang kích hoạt (Active)</option>
+                                <option value="1" ${statusFilter == '1' ? 'selected' : ''}>Đang kích hoạt</option>
                                 <option value="0" ${statusFilter == '0' ? 'selected' : ''}>Đã vô hiệu hóa</option>
                             </select>
                         </div>
-                        <!-- Giữ lại Sort khi Search -->
+                        <!-- Giữ lại sắp xếp khi tìm kiếm -->
                         <input type="hidden" name="sortCol" value="${sortCol}">
                         <input type="hidden" name="sortDir" value="${sortDir}">
 
@@ -105,22 +105,22 @@
                         <table class="table admin-table align-middle">
                             <thead>
                                 <tr>
-                                    <!-- Sort theo Code -->
+                                    <!-- Sort theo mã -->
                                     <th>
                                         <a href="?keyword=${keyword}&status=${statusFilter}&sortCol=code&sortDir=${sortCol == 'code' && sortDir == 'ASC' ? 'DESC' : 'ASC'}" class="sortable-link">
-                                            Code ${sortCol == 'code' ? (sortDir == 'ASC' ? '▲' : '▼') : ''}
+                                            Mã ${sortCol == 'code' ? (sortDir == 'ASC' ? '▲' : '▼') : ''}
                                         </a>
                                     </th>
-                                    <th>Discount</th>
-                                    <th>Scope</th>
+                                    <th>Giảm giá</th>
+                                    <th>Phạm vi</th>
                                     <!-- Sort theo Ngày hết hạn -->
                                     <th>
                                         <a href="?keyword=${keyword}&status=${statusFilter}&sortCol=valid_until&sortDir=${sortCol == 'valid_until' && sortDir == 'ASC' ? 'DESC' : 'ASC'}" class="sortable-link">
-                                            Valid Until ${sortCol == 'valid_until' ? (sortDir == 'ASC' ? '▲' : '▼') : ''}
+                                            Hết hạn ${sortCol == 'valid_until' ? (sortDir == 'ASC' ? '▲' : '▼') : ''}
                                         </a>
                                     </th>
-                                    <th>Status</th>
-                                    <th class="text-end">Actions</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -142,7 +142,7 @@
                                                         <c:when test="${promo.discountType == 'PERCENT'}">
                                                             <span class="text-success">${promo.discountValue}%</span>
                                                             <c:if test="${not empty promo.discountMax && promo.discountMax > 0}">
-                                                                <small class="d-block text-muted">Max: ${promo.discountMax}</small>
+                                                                <small class="d-block text-muted">Tối đa: ${promo.discountMax}</small>
                                                             </c:if>
                                                         </c:when>
                                                         <c:otherwise>
@@ -151,7 +151,14 @@
                                                     </c:choose>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-secondary"><c:out value="${promo.scope}" /></span>
+                                                    <span class="badge bg-secondary">
+                                                        <c:choose>
+                                                            <c:when test="${promo.scope eq 'ORDER'}">Tổng đơn hàng</c:when>
+                                                            <c:when test="${promo.scope eq 'CATEGORY'}">Danh mục</c:when>
+                                                            <c:when test="${promo.scope eq 'PRODUCT'}">Sản phẩm</c:when>
+                                                            <c:otherwise><c:out value="${promo.scope}" /></c:otherwise>
+                                                        </c:choose>
+                                                    </span>
                                                 </td>
                                                 <td>
                                                     <c:if test="${not empty promo.validUntil}">
@@ -162,7 +169,7 @@
                                                 </td>
                                                 <td>
                                                     <span class="status-badge ${promo.IsActive() ? 'status-in-stock' : 'status-out-stock'}">
-                                                        ${promo.IsActive() ? 'Active' : 'Inactive'}
+                                                        ${promo.IsActive() ? 'Đang kích hoạt' : 'Đã vô hiệu hóa'}
                                                     </span>
                                                 </td>
                                                 <td class="text-end table-actions">
@@ -195,7 +202,7 @@
                         <div class="mt-4 d-flex justify-content-end">
                             <ul class="pagination">
                                 <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                                    <a class="page-link" href="?page=${currentPage - 1}&keyword=${keyword}&status=${statusFilter}&sortCol=${sortCol}&sortDir=${sortDir}">Previous</a>
+                                    <a class="page-link" href="?page=${currentPage - 1}&keyword=${keyword}&status=${statusFilter}&sortCol=${sortCol}&sortDir=${sortDir}">Trước</a>
                                 </li>
 
                                 <c:forEach begin="1" end="${totalPages}" var="i">
@@ -205,7 +212,7 @@
                                 </c:forEach>
 
                                 <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                                    <a class="page-link" href="?page=${currentPage + 1}&keyword=${keyword}&status=${statusFilter}&sortCol=${sortCol}&sortDir=${sortDir}">Next</a>
+                                    <a class="page-link" href="?page=${currentPage + 1}&keyword=${keyword}&status=${statusFilter}&sortCol=${sortCol}&sortDir=${sortDir}">Sau</a>
                                 </li>
                             </ul>
                         </div>

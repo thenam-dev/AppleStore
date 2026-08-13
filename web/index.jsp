@@ -11,18 +11,18 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     </head>
     <body class="site-body">
-        <!-- Site header -->
+        <!-- Header trang -->
         <header class="site-header">
             <div class="container header-main">
-                <a class="brand" href="${pageContext.request.contextPath}/index.jsp" aria-label="Apple Online Shop">
-                    <img src="${pageContext.request.contextPath}/assets/images/logo-mark.svg" alt="AOS mark">
+                <a class="brand" href="${pageContext.request.contextPath}/index.jsp" aria-label="Cửa hàng Apple trực tuyến">
+                    <img src="${pageContext.request.contextPath}/assets/images/logo-mark.svg" alt="Biểu tượng AOS">
                     <span>
                         <strong>Cửa hàng AOS</strong>
                         <small>Giao diện Apple</small>
                     </span>
                 </a>
                 <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-app-primary ms-auto me-3">
-                    Vào trang Quản trị (Admin)
+                    Vào trang quản trị
                 </a>
                 <div class="header-actions">
                     <div class="dropdown">
@@ -35,11 +35,11 @@
                             <li><a class="dropdown-item" href="${pageContext.request.contextPath}/wishlist.html">Yêu thích</a></li>
                         </ul>
                     </div>
-                    <a class="cart-link" href="${pageContext.request.contextPath}/cart" aria-label="View cart">
+                    <a class="cart-link" href="${pageContext.request.contextPath}/cart" aria-label="Xem giỏ hàng">
                         <span>Giỏ hàng</span>
                         <span class="cart-count">3</span>
                     </a>
-                    <button class="mobile-menu-button" type="button" data-mobile-toggle aria-expanded="false" aria-label="Open mobile navigation">
+                    <button class="mobile-menu-button" type="button" data-mobile-toggle aria-expanded="false" aria-label="Mở menu di động">
                         <span></span>
                         <span></span>
                         <span></span>
@@ -73,14 +73,14 @@
                         <a href="${pageContext.request.contextPath}/login">Đăng nhập</a>
                         <a href="${pageContext.request.contextPath}/register">Đăng ký</a>
                         <a href="${pageContext.request.contextPath}/wishlist.html">Yêu thích</a>
-                        <a href="${pageContext.request.contextPath}/components/component-demo.html">Bản Demo</a>
+                        <a href="${pageContext.request.contextPath}/components/component-demo.html">Bản thử nghiệm</a>
                     </div>
                 </div>
             </div>
         </header>
 
         <main>
-            <!-- Home hero -->
+            <!-- Hero trang chủ -->
             <section class="hero-section home-hero">
                 <div class="container">
                     <div class="hero-shell">
@@ -109,7 +109,7 @@
                                     <span class="hero-chip">Sản phẩm nổi bật</span>
                                     <span class="hero-chip hero-chip-muted">Bản 256GB từ $1,149</span>
                                 </div>
-                                <img src="${pageContext.request.contextPath}/assets/images/device-hero.svg" alt="Apple storefront spotlight">
+                                <img src="${pageContext.request.contextPath}/assets/images/device-hero.svg" alt="Sản phẩm Apple nổi bật">
                                 <div class="hero-panel-foot">
                                     <div>
                                         <small>Tiêu điểm</small>
@@ -126,7 +126,7 @@
                 </div>
             </section>
 
-            <!-- Categories -->
+            <!-- Danh mục -->
             <section class="section-block">
                 <div class="container">
                     <div class="section-heading">
@@ -183,7 +183,7 @@
                 </div>
             </section>
 
-            <!-- Featured products -->
+            <!-- Sản phẩm nổi bật -->
             <section class="section-block section-soft">
                 <div class="container">
                     <div class="section-heading">
@@ -291,7 +291,7 @@
                 </div>
             </section>
 
-            <!-- Promotion -->
+            <!-- Khuyến mãi -->
             <section class="section-block">
                 <div class="container">
                     <div class="promo-banner">
@@ -322,7 +322,7 @@
                 </div>
             </section>
 
-            <!-- New arrivals -->
+            <!-- Sản phẩm mới -->
             <section class="section-block section-soft">
                 <div class="container">
                     <div class="section-heading">
@@ -373,7 +373,7 @@
                 </div>
             </section>
 
-            <!-- Best sellers -->
+            <!-- Sản phẩm bán chạy -->
             <section class="section-block">
                 <div class="container">
                     <div class="section-heading">
@@ -381,7 +381,7 @@
                             <span class="eyebrow">Sản phẩm bán chạy</span>
                             <h2>Các thiết bị được khách hàng ưa chuộng nhất</h2>
                         </div>
-                        <p>Top những sản phẩm hiệu năng cao bạn không nên bỏ lỡ tại cửa hàng của chúng tôi.</p>
+                        <p>Những sản phẩm hiệu năng cao bạn không nên bỏ lỡ tại cửa hàng của chúng tôi.</p>
                     </div>
                     <div class="row g-4">
                         <div class="col-lg-4">
@@ -418,7 +418,7 @@
                 </div>
             </section>
 
-            <!-- Benefits -->
+            <!-- Lợi ích -->
             <section class="section-block section-soft">
                 <div class="container">
                     <div class="section-heading">
@@ -458,12 +458,12 @@
             </section>
         </main>
 
-        <!-- Site footer -->
+        <!-- Footer trang -->
         <footer class="site-footer">
             <div class="container footer-grid">
                 <div>
                     <a class="brand brand-footer" href="${pageContext.request.contextPath}/index.jsp">
-                        <img src="${pageContext.request.contextPath}/assets/images/logo-mark.svg" alt="AOS mark">
+                        <img src="${pageContext.request.contextPath}/assets/images/logo-mark.svg" alt="Biểu tượng AOS">
                         <span>
                             <strong>Cửa hàng AOS</strong>
                             <small>Trang chủ</small>
@@ -501,7 +501,7 @@
                 </div>
             </div>
             <div class="container footer-bottom">
-                <small>&copy; <span data-current-year></span> Apple Store. Tất cả các quyền được bảo lưu.</small>
+                <small>&copy; <span data-current-year></span> AppleStore. Tất cả các quyền được bảo lưu.</small>
             </div>
         </footer>
 
