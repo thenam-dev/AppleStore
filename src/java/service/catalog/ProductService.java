@@ -1,0 +1,275 @@
+package service.catalog;
+
+import config.AppConfig;
+import dao.catalog.CategoryDAO;
+import dao.catalog.ProductDAO;
+import model.entity.catalog.Product;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class ProductService {
+    private static final int DEFAULT_PAGE = 1;
+    private static final int DEFAULT_PAGE_SIZE = AppConfig.PAGE_SIZE_ADMIN;
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final String DEFAULT_BRAND = "Apple";
+    private static final String DEFAULT_WARRANTY_PROVIDER = "Apple Viet Nam";
+    private static final int MIN_RELEASE_YEAR = 1998;
+    private static final int MAX_RELEASE_YEAR = 2100;
+    private static final int MAX_NAME_LENGTH = 200;
+    private static final int MAX_DESCRIPTION_LENGTH = 2000;
+    private static final int MAX_BRAND_LENGTH = 50;
+    private static final int MAX_MODEL_CODE_LENGTH = 50;
+    private static final int MAX_ORIGIN_COUNTRY_LENGTH = 100;
+    private static final int MAX_WARRANTY_PROVIDER_LENGTH = 100;
+    private static final List<String> ALLOWED_STATUSES = List.of("ACTIVE", "INACTIVE", "DISCONTINUED");
+    private static final List<String> ALLOWED_CONDITIONS = List.of("NEW", "LIKE_NEW", "REFURBISHED");
+    private static final List<String> ALLOWED_IMPORT_TYPES = List.of("VN/A", "LL/A", "ZA/A", "ZP/A", "J/A", "KH/A");
+    private static final List<String> ALLOWED_SORTS = List.of(
+            "newest",
+            "oldest",
+            "name_asc",
+            "name_desc",
+            "price_asc",
+            "price_desc",
+            "stock_asc",
+            "stock_desc"
+    );
+
+    private final ProductDAO productDAO;
+    private final CategoryDAO categoryDAO;
+
+    public ProductService() {
+        this(new ProductDAO(), new CategoryDAO());
+    }
+
+    public ProductService(ProductDAO productDAO, CategoryDAO categoryDAO) {
+        this.productDAO = productDAO;
+        this.categoryDAO = categoryDAO;
+    }
+
+    public List<Product> getProducts(String keyword, Integer categoryId, String status, String sort, int page, int pageSize)
+            throws SQLException {
+        return productDAO.findAll(
+                keyword,
+                normalizeCategoryId(categoryId),
+                normalizeOptionalStatus(status),
+                normalizeSort(sort),
+                normalizePage(page),
+                normalizePageSize(pageSize)
+        );
+    }
+
+    public int countProducts(String keyword, Integer categoryId, String status) throws SQLException {
+        return productDAO.countAll(keyword, normalizeCategoryId(categoryId), normalizeOptionalStatus(status));
+    }
+
+    public int countProductsByStatus(String status) throws SQLException {
+        return productDAO.countAll(null, null, normalizeRequiredStatus(status));
+    }
+
+    public Product getProductById(int productId) throws SQLException {
+        validateProductId(productId);
+        return productDAO.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product does not exist."));
+    }
+
+    public int createProduct(Product product) throws SQLException {
+        normalizeProduct(product);
+        validateProduct(product);
+        validateCategoryExists(product.getCategoryId());
+
+        if (productDAO.existsByName(product.getName())) {
+            throw new IllegalArgumentException("Product name already exists.");
+        }
+        if (productDAO.existsByModelCode(product.getModelCode())) {
+            throw new IllegalArgumentException("Model code already exists.");
+        }
+
+        return productDAO.insert(product);
+    }
+
+    public void updateProduct(Product product) throws SQLException {
+        validateProductId(product.getProductId());
+        normalizeProduct(product);
+        validateProduct(product);
+        validateCategoryExists(product.getCategoryId());
+
+        if (productDAO.existsByNameForOtherProduct(product.getName(), product.getProductId())) {
+            throw new IllegalArgumentException("Product name already exists.");
+        }
+        if (productDAO.existsByModelCodeForOtherProduct(product.getModelCode(), product.getProductId())) {
+            throw new IllegalArgumentException("Model code already exists.");
+        }
+        if (!productDAO.update(product)) {
+            throw new IllegalArgumentException("Product does not exist.");
+        }
+    }
+
+    public void changeStatus(int productId, String status) throws SQLException {
+        validateProductId(productId);
+        String normalizedStatus = normalizeRequiredStatus(status);
+        if (!productDAO.updateStatus(productId, normalizedStatus)) {
+            throw new IllegalArgumentException("Product does not exist.");
+        }
+    }
+
+    public List<String> getAllowedStatuses() {
+        return ALLOWED_STATUSES;
+    }
+
+    public List<String> getAllowedConditions() {
+        return ALLOWED_CONDITIONS;
+    }
+
+    public List<String> getAllowedImportTypes() {
+        return ALLOWED_IMPORT_TYPES;
+    }
+
+    public List<String> getAllowedSorts() {
+        return ALLOWED_SORTS;
+    }
+
+    private void normalizeProduct(Product product) {
+        if (product == null) {
+            throw new IllegalArgumentException("Product data is required.");
+        }
+
+        product.setName(trimRequired(product.getName()));
+        product.setDescription(normalizeOptional(product.getDescription()));
+        product.setBrand(normalizeOptional(product.getBrand()));
+        if (product.getBrand() == null) {
+            product.setBrand(DEFAULT_BRAND);
+        }
+        product.setModelCode(normalizeOptional(product.getModelCode()));
+        product.setProductCondition(normalizeRequired(product.getProductCondition()));
+        product.setImportType(normalizeRequired(product.getImportType()));
+        product.setOriginCountry(normalizeOptional(product.getOriginCountry()));
+        product.setWarrantyProvider(normalizeOptional(product.getWarrantyProvider()));
+        if (product.getWarrantyProvider() == null) {
+            product.setWarrantyProvider(DEFAULT_WARRANTY_PROVIDER);
+        }
+        product.setStatus(normalizeRequiredStatus(product.getStatus()));
+    }
+
+    private void validateProduct(Product product) {
+        if (product.getCategoryId() <= 0) {
+            throw new IllegalArgumentException("Category is invalid.");
+        }
+        if (product.getName().length() > MAX_NAME_LENGTH) {
+            throw new IllegalArgumentException("Product name must be 200 characters or less.");
+        }
+        if (product.getDescription() != null && product.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
+            throw new IllegalArgumentException("Description must be 2000 characters or less.");
+        }
+        if (product.getBrand() != null && product.getBrand().length() > MAX_BRAND_LENGTH) {
+            throw new IllegalArgumentException("Brand must be 50 characters or less.");
+        }
+        if (product.getModelCode() != null && product.getModelCode().length() > MAX_MODEL_CODE_LENGTH) {
+            throw new IllegalArgumentException("Model code must be 50 characters or less.");
+        }
+        if (product.getReleaseYear() != null
+                && (product.getReleaseYear() < MIN_RELEASE_YEAR || product.getReleaseYear() > MAX_RELEASE_YEAR)) {
+            throw new IllegalArgumentException("Release year is invalid.");
+        }
+        if (!ALLOWED_CONDITIONS.contains(product.getProductCondition())) {
+            throw new IllegalArgumentException("Product condition is invalid.");
+        }
+        if (!ALLOWED_IMPORT_TYPES.contains(product.getImportType())) {
+            throw new IllegalArgumentException("Import type is invalid.");
+        }
+        if (product.getOriginCountry() != null && product.getOriginCountry().length() > MAX_ORIGIN_COUNTRY_LENGTH) {
+            throw new IllegalArgumentException("Origin country must be 100 characters or less.");
+        }
+        if (product.getWarrantyMonths() < 0) {
+            throw new IllegalArgumentException("Warranty months must be 0 or greater.");
+        }
+        if (product.getWarrantyProvider() != null
+                && product.getWarrantyProvider().length() > MAX_WARRANTY_PROVIDER_LENGTH) {
+            throw new IllegalArgumentException("Warranty provider must be 100 characters or less.");
+        }
+        if (!ALLOWED_STATUSES.contains(product.getStatus())) {
+            throw new IllegalArgumentException("Status is invalid.");
+        }
+    }
+
+    private void validateCategoryExists(int categoryId) throws SQLException {
+        if (categoryDAO.findById(categoryId).isEmpty()) {
+            throw new IllegalArgumentException("Category does not exist.");
+        }
+    }
+
+    private void validateProductId(int productId) {
+        if (productId <= 0) {
+            throw new IllegalArgumentException("Product id is invalid.");
+        }
+    }
+
+    private Integer normalizeCategoryId(Integer categoryId) {
+        if (categoryId == null) {
+            return null;
+        }
+        if (categoryId <= 0) {
+            throw new IllegalArgumentException("Category filter is invalid.");
+        }
+        return categoryId;
+    }
+
+    private String normalizeOptionalStatus(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return normalizeRequiredStatus(value);
+    }
+
+    private String normalizeRequiredStatus(String value) {
+        String normalized = normalizeRequired(value);
+        if (!ALLOWED_STATUSES.contains(normalized)) {
+            throw new IllegalArgumentException("Status is invalid.");
+        }
+        return normalized;
+    }
+
+    private String normalizeSort(String value) {
+        if (value == null || value.isBlank()) {
+            return "newest";
+        }
+        String normalized = value.trim().toLowerCase();
+        if (!ALLOWED_SORTS.contains(normalized)) {
+            throw new IllegalArgumentException("Sort option is invalid.");
+        }
+        return normalized;
+    }
+
+    private String normalizeRequired(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Required value is missing.");
+        }
+        return value.trim().toUpperCase();
+    }
+
+    private String trimRequired(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Required value is missing.");
+        }
+        return value.trim();
+    }
+
+    private String normalizeOptional(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private int normalizePage(int page) {
+        return page <= 0 ? DEFAULT_PAGE : page;
+    }
+
+    private int normalizePageSize(int pageSize) {
+        if (pageSize <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(pageSize, MAX_PAGE_SIZE);
+    }
+}

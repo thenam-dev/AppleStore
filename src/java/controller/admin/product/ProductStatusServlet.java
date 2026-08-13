@@ -1,4 +1,4 @@
-package controller.admin.user;
+package controller.admin.product;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -8,21 +8,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
 
-@WebServlet(name = "UserStatusServlet", urlPatterns = {"/admin/users/status"})
-public class UserStatusServlet extends UserServletSupport {
+@WebServlet(name = "ProductStatusServlet", urlPatterns = {"/admin/products/status"})
+public class ProductStatusServlet extends ProductServletSupport {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
 
         try {
-            int userId = parseInt(request.getParameter("userId"), "User id is invalid.");
+            int productId = parseInt(request.getParameter("productId"), "Product id is invalid.");
             String status = request.getParameter("status");
-
-            userService.changeStatus(userId, status);
-            redirectToUserListWithMessage(request, response, FLASH_SUCCESS_KEY, "User status updated.");
+            productService.changeStatus(productId, status);
+            redirectToProductListWithMessage(request, response, FLASH_SUCCESS_KEY, "Product status updated.");
         } catch (SQLException | IllegalArgumentException ex) {
-            redirectToUserListWithMessage(request, response, FLASH_ERROR_KEY, ex.getMessage());
+            redirectToProductListWithMessage(request, response, FLASH_ERROR_KEY, ex.getMessage());
         }
     }
 }

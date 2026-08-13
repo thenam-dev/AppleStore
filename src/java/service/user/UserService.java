@@ -1,16 +1,32 @@
-package service;
+package service.user;
 
-import dao.UserDAO;
-import model.User;
-import model.UserStats;
+import config.AppConfig;
+import dao.user.UserDAO;
+import model.entity.user.User;
 
 import java.sql.SQLException;
 import java.util.List;
 import java.util.regex.Pattern;
 
 public class UserService {
-    private static final List<String> ALLOWED_ROLES = List.of("CUSTOMER", "ADMIN", "SALE_STAFF", "DELIVERY");
+    private static final int DEFAULT_PAGE = 1;
+    private static final int DEFAULT_PAGE_SIZE = AppConfig.PAGE_SIZE_ADMIN;
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final List<String> ALLOWED_ROLES = List.of(
+            AppConfig.ROLE_CUSTOMER,
+            AppConfig.ROLE_ADMIN,
+            AppConfig.ROLE_SALE_STAFF,
+            AppConfig.ROLE_DELIVERY
+    );
     private static final List<String> ALLOWED_STATUSES = List.of("ACTIVE", "INACTIVE", "LOCKED", "SUSPENDED");
+    private static final List<String> ALLOWED_SORTS = List.of(
+            "created_desc",
+            "created_asc",
+            "name_asc",
+            "email_asc",
+            "role_asc",
+            "status_asc"
+    );
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{9,15}$");
 
@@ -24,7 +40,30 @@ public class UserService {
         this.userDAO = userDAO;
     }
 
-    public List<User> getUsers(String keyword, String role, String status) throws SQLException {
+    public List<User> getUsers(String keyword, String role, String status, String sort, int page, int pageSize)
+            throws SQLException {
+        String normalizedRole = normalizeOptional(role);
+        String normalizedStatus = normalizeOptional(status);
+        String normalizedSort = normalizeSort(sort);
+
+        if (normalizedRole != null && !ALLOWED_ROLES.contains(normalizedRole)) {
+            throw new IllegalArgumentException("Role filter is invalid.");
+        }
+        if (normalizedStatus != null && !ALLOWED_STATUSES.contains(normalizedStatus)) {
+            throw new IllegalArgumentException("Status filter is invalid.");
+        }
+
+        return userDAO.findAll(
+                keyword,
+                normalizedRole,
+                normalizedStatus,
+                normalizedSort,
+                normalizePage(page),
+                normalizePageSize(pageSize)
+        );
+    }
+
+    public int countUsers(String keyword, String role, String status) throws SQLException {
         String normalizedRole = normalizeOptional(role);
         String normalizedStatus = normalizeOptional(status);
 
@@ -35,7 +74,7 @@ public class UserService {
             throw new IllegalArgumentException("Status filter is invalid.");
         }
 
-        return userDAO.findAll(keyword, normalizedRole, normalizedStatus);
+        return userDAO.countAll(keyword, normalizedRole, normalizedStatus);
     }
 
     public User getUserById(int userId) throws SQLException {
@@ -71,19 +110,6 @@ public class UserService {
         }
     }
 
-    public UserStats buildStats(List<User> users) {
-        UserStats stats = new UserStats();
-        stats.setTotalUsers(users.size());
-        stats.setActiveUsers(countByStatus(users, "ACTIVE"));
-        stats.setInactiveUsers(countByStatus(users, "INACTIVE"));
-        stats.setStaffUsers((int) users.stream()
-                .filter(user -> "ADMIN".equals(user.getRole())
-                        || "SALE_STAFF".equals(user.getRole())
-                        || "DELIVERY".equals(user.getRole()))
-                .count());
-        return stats;
-    }
-
     public List<String> getAllowedRoles() {
         return ALLOWED_ROLES;
     }
@@ -92,10 +118,8 @@ public class UserService {
         return ALLOWED_STATUSES;
     }
 
-    private int countByStatus(List<User> users, String status) {
-        return (int) users.stream()
-                .filter(user -> status.equals(user.getStatus()))
-                .count();
+    public List<String> getAllowedSorts() {
+        return ALLOWED_SORTS;
     }
 
     private void normalizeUser(User user) {
@@ -146,5 +170,27 @@ public class UserService {
             return null;
         }
         return value.trim().toUpperCase();
+    }
+
+    private String normalizeSort(String value) {
+        if (value == null || value.isBlank()) {
+            return "created_desc";
+        }
+        String normalized = value.trim().toLowerCase();
+        if (!ALLOWED_SORTS.contains(normalized)) {
+            throw new IllegalArgumentException("Sort option is invalid.");
+        }
+        return normalized;
+    }
+
+    private int normalizePage(int page) {
+        return page <= 0 ? DEFAULT_PAGE : page;
+    }
+
+    private int normalizePageSize(int pageSize) {
+        if (pageSize <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(pageSize, MAX_PAGE_SIZE);
     }
 }
