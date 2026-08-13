@@ -1,5 +1,6 @@
 package dao.promtion;
 
+import java.math.BigDecimal;
 import model.entity.promtion.Promotion;
 import util.DBConnection;
 
@@ -243,6 +244,46 @@ public class PromotionDAO {
                 while (rs.next()) {
                     list.add(mapRow(rs));
                 }
+            }
+        }
+        return list;
+    }
+    
+    public void insertOrderPromotion(Connection conn, int orderId, int promoId, int customerId, BigDecimal discountApplied, String couponCode, String benefitTarget) throws SQLException {
+        String sql = "INSERT INTO order_promotions (order_id, promo_id, customer_id, discount_applied, coupon_code, benefit_target) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.setInt(2, promoId);
+            ps.setInt(3, customerId);
+            ps.setBigDecimal(4, discountApplied);
+            ps.setString(5, couponCode);
+            ps.setString(6, benefitTarget);
+            ps.executeUpdate();
+        }
+    }
+
+    public void incrementUsedCount(Connection conn, int promoId) throws SQLException {
+        String sql = "UPDATE promotions SET used_count = used_count + 1 WHERE promo_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, promoId);
+            ps.executeUpdate();
+        }
+    }
+    
+    // Lấy danh sách mã giảm giá khả dụng cho Giỏ hàng
+    public List<Promotion> findAvailableVouchersForCart() throws SQLException {
+        List<Promotion> list = new ArrayList<>();
+        String sql = "SELECT * FROM promotions WHERE is_deleted = 0 AND is_active = 1 "
+                   + "AND valid_from <= NOW() AND valid_until >= NOW() "
+                   + "AND scope = 'ORDER' AND benefit_target = 'MERCHANDISE' "
+                   + "AND (max_uses IS NULL OR used_count < max_uses) "
+                   + "ORDER BY discount_value DESC"; // Ưu tiên mã giảm giá trị cao lên đầu
+                   
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql); 
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
             }
         }
         return list;

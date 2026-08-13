@@ -9,7 +9,8 @@ import jakarta.servlet.http.HttpSession;
 import model.entity.cart.CartItem;
 import service.cart.CartService;
 import service.cart.CheckoutService;
-
+// ---- THÊM MỚI: Import class Promotion ----loc
+import model.entity.promtion.Promotion;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -46,6 +47,12 @@ public class CheckoutServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
 
+        // ---- THÊM MỚI: Khởi tạo session ở ngay đầu hàm để lấy Voucher ----
+        // LƯU Ý XÓA: Tôi đã xóa dòng "HttpSession session = request.getSession();" ở phía dưới 
+        HttpSession session = request.getSession();
+        Promotion appliedPromo = (Promotion) session.getAttribute("appliedPromo");
+        BigDecimal discountAmount = (BigDecimal) session.getAttribute("discountAmount");
+        
         int customerId = getCustomerId(request);
 
         CheckoutService.CheckoutForm form = new CheckoutService.CheckoutForm();
@@ -57,6 +64,10 @@ public class CheckoutServlet extends HttpServlet {
         form.notes = request.getParameter("notes");
         form.paymentMethod = request.getParameter("paymentMethod");
 
+        // ---- THÊM MỚI: Nhét mã giảm giá vào form để truyền cho Service ----
+        form.appliedPromo = appliedPromo;
+        form.discountAmount = discountAmount;
+        
         CheckoutService.CheckoutResult result = checkoutService.checkout(form);
 
         if (!result.success) {
@@ -74,9 +85,12 @@ public class CheckoutServlet extends HttpServlet {
             request.getRequestDispatcher("/customer/checkout.jsp").forward(request, response);
             return;
         }
+        // ---- THÊM MỚI: Dọn dẹp Session giỏ hàng sau khi đặt hàng thành công ----
+        session.removeAttribute("appliedPromo");
+        session.removeAttribute("discountAmount");
 
         // Thành công: PRG - redirect sang trang thanh toán QR (CK) hoặc trang xác nhận đơn (COD)
-        HttpSession session = request.getSession();
+        //HttpSession session = request.getSession();
         if (result.qrCodeUrl != null) {
             session.setAttribute("successMsg", "Đặt hàng thành công, vui lòng quét mã để thanh toán");
             response.sendRedirect(request.getContextPath() + "/payment?orderId=" + result.orderId);
