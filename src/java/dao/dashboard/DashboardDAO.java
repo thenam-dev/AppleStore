@@ -20,20 +20,9 @@ import model.entity.order.Order;
 public class DashboardDAO {
 
     // 2. Đếm số lượng theo bảng
-    public int getCount(String table, String condition, String startDate, String endDate) {
+    public int getCount(String table, String condition) {
         String sql = "SELECT COUNT(*) FROM " + table + " WHERE " + condition;
-        // 1. Kiểm tra xem có lọc ngày không, VÀ bảng đang đếm có phải là bảng orders không?
-        boolean hasDateFilter = (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty());
-        boolean isOrderTable = table.equalsIgnoreCase("orders");
-        if (hasDateFilter && isOrderTable) {
-            sql += " AND created_at BETWEEN ? AND ?";
-        }
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (hasDateFilter && isOrderTable) {
-                ps.setString(1, startDate + " 00:00:00");
-                ps.setString(2, endDate + " 23:59:59");
-            }
-
             // 3. Try con để chạy lệnh
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -48,24 +37,12 @@ public class DashboardDAO {
     }
     // 3. Lấy đơn hàng mới nhất (Đổi TOP thành LIMIT)
 
-    public List<Order> getRecentOrders(int limit, String startDate, String endDate) {
+    public List<Order> getRecentOrders(int limit) {
         List<Order> list = new ArrayList<>();
-        String sql = "SELECT order_id, recipient_name, created_at, final_amount, status FROM orders";
-        boolean hasDateFilter = (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty());
-
-        // 3. Nối thêm chữ WHERE nếu có lọc ngày
-        if (hasDateFilter) {
-            sql += " WHERE created_at BETWEEN ? AND ?";
-        }
-        sql += " ORDER BY created_at DESC LIMIT ?";
+        String sql = "SELECT order_id, recipient_name, created_at, final_amount, status FROM orders " +
+                     "ORDER BY created_at DESC LIMIT ?";
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (hasDateFilter) {
-                ps.setString(1, startDate + " 00:00:00");
-                ps.setString(2, endDate + " 23:59:59");
-                ps.setInt(3, limit);
-            } else {
-                ps.setInt(1, limit);
-            }
+            ps.setInt(1, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Order o = new Order();

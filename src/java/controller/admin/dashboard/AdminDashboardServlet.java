@@ -22,15 +22,13 @@ public class AdminDashboardServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         service.dashboard.DashboardService service = new service.dashboard.DashboardService();
-        String startDate = request.getParameter("startDate");
-        String endDate = request.getParameter("endDate");
         
         // Lấy dữ liệu tổng quan
-        dto.DashboardStatsDTO stats = service.getDashboardStats(startDate, endDate);
+        dto.DashboardStatsDTO stats = service.getDashboardStats();
 
         // Bắn sang JSP
         request.setAttribute("stats", stats);
-        request.setAttribute("recentOrders", service.getRecentOrders(4, startDate, endDate));
+        request.setAttribute("recentOrders", service.getRecentOrders(4));
         request.setAttribute("bestSellingProducts", service.getBestSellingProducts(3));
 
         // Set các biến Sidebar
