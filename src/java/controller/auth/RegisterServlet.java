@@ -1,6 +1,6 @@
 package controller.auth;
 
-import model.User;
+import model.entity.user.User;
 import service.AuthService;
 
 import jakarta.servlet.ServletException;

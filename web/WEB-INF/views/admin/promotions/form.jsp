@@ -1,148 +1,116 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.time.format.DateTimeFormatter" %>
-<%@ page import="java.util.List" %>
-<%@ page import="model.Promotion" %>
-<%@ page import="model.Category" %>
-<%@ page import="model.Product" %>
-<%! 
-    private String h(Object value) {
-        if (value == null) return "";
-        return String.valueOf(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
-    }
-    private String selected(Object current, String option) {
-        if (current == null) return "";
-        return option.equalsIgnoreCase(String.valueOf(current)) ? "selected" : "";
-    }
-%>
-<%
-    Promotion p = (Promotion) request.getAttribute("promo");
-    boolean isEdit = (p != null);
-    String errorMessage = (String) request.getAttribute("errorMessage");
-    String appPath = request.getContextPath();
-    DateTimeFormatter htmlFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
-%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<!-- Nếu chạy báo lỗi taglib, đổi uri thành: "http://java.sun.com/jsp/jstl/core" -->
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Apple Online Shop Admin | <%= isEdit ? "Edit" : "Create" %> Voucher</title>
+        <title>Apple Online Shop Admin | ${isEdit ? 'Edit' : 'Create'} Voucher</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="<%= appPath %>/assets/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     </head>
     <body class="site-body admin-app">
         <main class="admin-workspace">
-            <%
-                request.setAttribute("adminSidebarTitle", isEdit ? "Edit Voucher" : "Create Voucher");
-                request.setAttribute("adminSidebarDescription", "Manage discount information.");
-                request.setAttribute("adminSidebarFooterTitle", "Voucher scope");
-                request.setAttribute("adminSidebarFooterDescription", "Validate logic using PromotionService.");
-            %>
+            
+            <!-- Truyền tham số cho Sidebar bằng EL -->
+            <c:set var="adminSidebarTitle" value="${isEdit ? 'Edit Voucher' : 'Create Voucher'}" scope="request" />
+            <c:set var="adminSidebarDescription" value="Manage discount information." scope="request" />
+            <c:set var="adminSidebarFooterTitle" value="Voucher scope" scope="request" />
+            <c:set var="adminSidebarFooterDescription" value="Validate logic using PromotionService." scope="request" />
+            
             <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
 
             <section class="admin-main">
-                <!-- TOPBAR -->
                 <div class="admin-topbar">
                     <div class="admin-topbar-actions ms-auto">
-                        <a class="btn btn-app-outline btn-sm" href="<%= appPath %>/admin/promotions">Back to Vouchers</a>
+                        <a class="btn btn-app-outline btn-sm" href="${pageContext.request.contextPath}/admin/promotions">Back to Vouchers</a>
                     </div>
                 </div>
 
-                <!-- BREADCRUMB -->
                 <nav aria-label="Breadcrumb">
                     <ol class="breadcrumb app-breadcrumb">
-                        <li class="breadcrumb-item"><a href="<%= appPath %>/admin/dashboard.html">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="<%= appPath %>/admin/promotions">Vouchers</a></li>
-                        <li class="breadcrumb-item active" aria-current="page"><%= isEdit ? "Edit" : "Create" %></li>
+                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard.html">Admin</a></li>
+                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/promotions">Vouchers</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">${isEdit ? 'Edit' : 'Create'}</li>
                     </ol>
                 </nav>
 
                 <div class="admin-page-head">
                     <div>
                         <span class="eyebrow">Promotion master data</span>
-                        <h1><%= isEdit ? "Edit voucher: " + h(p.getCode()) : "Create new voucher" %></h1>
+                        <h1>${isEdit ? 'Edit voucher: ' : 'Create new voucher'} <c:out value="${promo.code}" /></h1>
                         <p>Enter the details for the discount campaign.</p>
                     </div>
                 </div>
 
-                <% if (errorMessage != null && !errorMessage.isBlank()) { %>
-                <div class="alert alert-danger" role="alert"><%= h(errorMessage) %></div>
-                <% } %>
+                <!-- Hiển thị lỗi nếu có -->
+                <c:if test="${not empty errorMessage}">
+                    <div class="alert alert-danger" role="alert"><c:out value="${errorMessage}" /></div>
+                </c:if>
 
-                <!-- FORM PANEL -->
                 <section class="admin-panel">
-                    <form action="<%= appPath %>/admin/promotions/update" method="post" name="adminVoucherForm" class="admin-form-stack">
-                        <% if (isEdit) { %>
-                        <input type="hidden" name="promoId" value="<%= p.getPromoId() %>">
-                        <% } %>
+                    <form action="${pageContext.request.contextPath}/admin/promotions/update" method="post" name="adminVoucherForm" class="admin-form-stack">
+                        
+                        <c:if test="${isEdit}">
+                            <input type="hidden" name="promoId" value="${promo.promoId}">
+                        </c:if>
 
                         <div class="admin-form-grid">
                             <div>
                                 <label class="form-label" for="voucher-code">Voucher code</label>
-                                <input id="voucher-code" class="form-control" type="text" name="code" value="<%= isEdit ? h(p.getCode()) : "" %>" placeholder="APPLE40" required>
+                                <input id="voucher-code" class="form-control" type="text" name="code" value="<c:out value='${promo.code}'/>" placeholder="APPLE40" maxlength="50" required>
                             </div>
                             <div>
                                 <label class="form-label" for="voucher-type">Discount type</label>
                                 <select id="voucher-type" class="form-select" name="discountType">
-                                    <option value="FIXED" <%= selected(isEdit ? p.getDiscountType() : "", "FIXED") %>>Fixed amount</option>
-                                    <option value="PERCENT" <%= selected(isEdit ? p.getDiscountType() : "", "PERCENT") %>>Percentage</option>
+                                    <option value="FIXED" ${promo.discountType == 'FIXED' ? 'selected' : ''}>Fixed amount</option>
+                                    <option value="PERCENT" ${promo.discountType == 'PERCENT' ? 'selected' : ''}>Percentage</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="form-label" for="voucher-value">Discount value</label>
-                                <input id="voucher-value" class="form-control" type="number" step="0.01" name="discountValue" value="<%= isEdit && p.getDiscountValue() != null ? p.getDiscountValue() : "" %>" placeholder="40" required>
+                                <input id="voucher-value" class="form-control" type="number" step="0.01" name="discountValue" value="${promo.discountValue}" min="0" max="99999999" required>
                             </div>
                             <div>
                                 <label class="form-label" for="voucher-discount-max">Max discount (If %)</label>
-                                <input id="voucher-discount-max" class="form-control" type="number" step="0.01" name="discountMax" value="<%= isEdit && p.getDiscountMax() != null ? p.getDiscountMax() : "" %>" placeholder="Optional max limit">
+                                <input id="voucher-discount-max" class="form-control" type="number" step="0.01" name="discountMax" value="${promo.discountMax}" placeholder="Optional max limit">
                             </div>
                             
-                            <!-- BỔ SUNG OPTION CATEGORY -->
                             <div>
                                 <label class="form-label" for="voucher-scope">Apply scope</label>
                                 <select id="voucher-scope" class="form-select" name="scope">
-                                    <option value="ORDER" <%= selected(isEdit ? p.getScope() : "", "ORDER") %>>Order total</option>
-                                    <option value="CATEGORY" <%= selected(isEdit ? p.getScope() : "", "CATEGORY") %>>Product Category</option>
-                                    <option value="PRODUCT" <%= selected(isEdit ? p.getScope() : "", "PRODUCT") %>>Product variant</option>
+                                    <option value="ORDER" ${promo.scope == 'ORDER' ? 'selected' : ''}>Order total</option>
+                                    <option value="CATEGORY" ${promo.scope == 'CATEGORY' ? 'selected' : ''}>Product Category</option>
+                                    <option value="PRODUCT" ${promo.scope == 'PRODUCT' ? 'selected' : ''}>Product variant</option>
                                 </select>
                             </div>
 
-                            <!-- KHỐI CHỌN DANH MỤC (CATEGORY) -->
+                            <!-- Khối Category -->
                             <div id="category-selection-group" style="display: none;">
                                 <label class="form-label" for="voucher-category">Danh mục áp dụng</label>
                                 <select id="voucher-category" class="form-select" name="categoryId">
                                     <option value="">-- Chọn danh mục --</option>
-                                    <% 
-                                        List<Category> categories = (List<Category>) request.getAttribute("categories");
-                                        if (categories != null) {
-                                            for (Category cat : categories) {
-                                    %>
-                                        <option value="<%= cat.getCategoryId() %>" <%= (isEdit && p.getCategoryId() != null && p.getCategoryId() == cat.getCategoryId()) ? "selected" : "" %>>
-                                            <%= h(cat.getName()) %>
+                                    <c:forEach items="${categories}" var="cat">
+                                        <option value="${cat.categoryId}" ${promo.categoryId == cat.categoryId ? 'selected' : ''}>
+                                            <c:out value="${cat.name}" />
                                         </option>
-                                    <%      } 
-                                        } 
-                                    %>
+                                    </c:forEach>
                                 </select>
                                 <small class="text-muted d-block mt-1">Bắt buộc khi phạm vi là Category.</small>
                             </div>
                             
-                            <!-- KHỐI CHỌN SẢN PHẨM (Đã đổi thành Dropdown) -->
+                            <!-- Khối Product -->
                             <div id="product-selection-group" style="display: none;">
                                 <label class="form-label" for="voucher-product">Sản phẩm áp dụng</label>
                                 <select id="voucher-product" class="form-select" name="productId">
                                     <option value="">-- Chọn sản phẩm --</option>
-                                    <% 
-                                        List<Product> products = (List<Product>) request.getAttribute("products");
-                                        if (products != null) {
-                                            for (Product prod : products) {
-                                    %>
-                                        <option value="<%= prod.getProductId() %>" <%= (isEdit && p.getProductId() != null && p.getProductId() == prod.getProductId()) ? "selected" : "" %>>
-                                            <%= h(prod.getName()) %>
+                                    <c:forEach items="${products}" var="prod">
+                                        <option value="${prod.productId}" ${promo.productId == prod.productId ? 'selected' : ''}>
+                                            <c:out value="${prod.name}" />
                                         </option>
-                                    <%      } 
-                                        } 
-                                    %>
+                                    </c:forEach>
                                 </select>
                                 <small class="text-muted d-block mt-1">Bắt buộc khi phạm vi là Product.</small>
                             </div>
@@ -150,34 +118,36 @@
                             <div>
                                 <label class="form-label" for="voucher-target">Benefit Target</label>
                                 <select id="voucher-target" class="form-select" name="benefitTarget">
-                                    <option value="MERCHANDISE" <%= selected(isEdit ? p.getBenefitTarget() : "", "MERCHANDISE") %>>Merchandise (Tiền hàng)</option>
-                                    <option value="SHIPPING" <%= selected(isEdit ? p.getBenefitTarget() : "", "SHIPPING") %>>Shipping (Vận chuyển)</option>
-                                    <option value="PRODUCT" <%= selected(isEdit ? p.getBenefitTarget() : "", "PRODUCT") %>>Product (Sản phẩm)</option>
+                                    <option value="MERCHANDISE" ${promo.benefitTarget == 'MERCHANDISE' ? 'selected' : ''}>Merchandise (Tiền hàng)</option>
+                                    <option value="SHIPPING" ${promo.benefitTarget == 'SHIPPING' ? 'selected' : ''}>Shipping (Vận chuyển)</option>
+                                    <option value="PRODUCT" ${promo.benefitTarget == 'PRODUCT' ? 'selected' : ''}>Product (Sản phẩm)</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="form-label" for="voucher-min-order">Minimum order</label>
-                                <input id="voucher-min-order" class="form-control" type="number" step="0.01" name="minOrderValue" value="<%= isEdit && p.getMinOrderValue() != null ? p.getMinOrderValue() : "0" %>" placeholder="2500">
+                                <input id="voucher-min-order" class="form-control" type="number" step="0.01" name="minOrderValue" value="${not empty promo.minOrderValue ? promo.minOrderValue : '0'}" placeholder="2500">
                             </div>
                             <div>
                                 <label class="form-label" for="voucher-usage-limit">Usage limit</label>
-                                <input id="voucher-usage-limit" class="form-control" type="number" name="maxUses" value="<%= isEdit && p.getMaxUses() != null ? p.getMaxUses() : "" %>" placeholder="Leave blank for unlimited">
+                                <input id="voucher-usage-limit" class="form-control" type="number" name="maxUses" value="${promo.maxUses}" placeholder="Leave blank for unlimited">
                             </div>
                             <div>
                                 <label class="form-label" for="voucher-start-date">Start date</label>
-                                <input id="voucher-start-date" class="form-control" type="datetime-local" name="validFrom" value="<%= isEdit && p.getValidFrom() != null ? p.getValidFrom().format(htmlFormatter) : "" %>" required>
+                                <!-- Đã dùng biến String validFromStr truyền từ Servlet -->
+                                <input id="voucher-start-date" class="form-control" type="datetime-local" name="validFrom" value="${validFromStr}" required>
                             </div>
                             <div>
                                 <label class="form-label" for="voucher-end-date">End date</label>
-                                <input id="voucher-end-date" class="form-control" type="datetime-local" name="validUntil" value="<%= isEdit && p.getValidUntil() != null ? p.getValidUntil().format(htmlFormatter) : "" %>" required>
+                                <input id="voucher-end-date" class="form-control" type="datetime-local" name="validUntil" value="${validUntilStr}" required>
                             </div>
 
                             <div class="form-check align-self-end mt-3">
-                                <input id="canStack" class="form-check-input" type="checkbox" name="canStack" <%= isEdit && p.isCanStack() ? "checked" : "" %>>
+                                <input id="canStack" class="form-check-input" type="checkbox" name="canStack" ${isEdit and promo.canStack ? 'checked' : ''}>
                                 <label class="form-check-label" for="canStack">Can Stack (Cộng dồn)</label>
                             </div>
                             <div class="form-check align-self-end mt-3">
-                                <input id="IsActive" class="form-check-input" type="checkbox" name="IsActive" <%= !isEdit || p.IsActive() ? "checked" : "" %>>
+                                <!-- Hỗ trợ trực tiếp gọi hàm () trong EL của Tomcat 10 -->
+                                <input id="isActive" class="form-check-input" type="checkbox" name="isActive" ${not isEdit or promo.IsActive() ? 'checked' : ''}>
                                 <label class="form-check-label" for="isActive">Active (Kích hoạt)</label>
                             </div>
                         </div>
@@ -188,8 +158,8 @@
                         </div>
 
                         <div class="admin-form-actions mt-4">
-                            <a class="btn btn-app-outline" href="<%= appPath %>/admin/promotions">Cancel</a>
-                            <button class="btn btn-app-primary" type="submit"><%= isEdit ? "Update Voucher" : "Publish Voucher" %></button>
+                            <a class="btn btn-app-outline" href="${pageContext.request.contextPath}/admin/promotions">Cancel</a>
+                            <button class="btn btn-app-primary" type="submit">${isEdit ? 'Update Voucher' : 'Publish Voucher'}</button>
                         </div>
                     </form>
                 </section>
@@ -199,8 +169,9 @@
         </main>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="<%= appPath %>/assets/js/main.js"></script>
-
+        <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>
+        
+        <!-- Script JS giữ nguyên y hệt như cũ -->
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 const discountTypeSelect = document.getElementById('voucher-type');
@@ -213,7 +184,6 @@
                 const categoryInput = document.getElementById('voucher-category');
                 const targetSelect = document.getElementById('voucher-target');
 
-                // 1. Hàm kiểm tra và bật/tắt ô Giảm tối đa
                 function toggleDiscountMax() {
                     if (discountTypeSelect.value === 'FIXED') {
                         discountMaxInput.disabled = true;  
@@ -223,79 +193,60 @@
                     }
                 }
 
-                // 2. Hàm kiểm tra và ẩn/hiện ô Nhập ID Sản phẩm / Danh mục
                 function toggleScopeSelection() {
-                    // Reset trạng thái hiển thị
                     productGroup.style.display = 'none';
                     categoryGroup.style.display = 'none';
                     targetSelect.style.pointerEvents = 'auto';
                     targetSelect.style.opacity = '1';
                     
-                    // Validate cho PRODUCT (Sửa từ input.value sang select)
-                    if (scopeSelect.value === 'PRODUCT' && productInput.value === '') {
-                        alert('Lỗi: Bạn phải chọn Sản phẩm áp dụng khi phạm vi là Product.');
-                        event.preventDefault();
-                        return;
-                    }else if (scopeSelect.value === 'CATEGORY') {
+                    if (scopeSelect.value === 'PRODUCT') {
+                        productGroup.style.display = 'block'; 
+                        categoryInput.value = '';
+                        targetSelect.value = 'PRODUCT';
+                        targetSelect.style.pointerEvents = 'none'; 
+                        targetSelect.style.opacity = '0.6';
+                    } else if (scopeSelect.value === 'CATEGORY') {
                         categoryGroup.style.display = 'block';
-                        productInput.value = ''; // Xóa data product cũ
+                        productInput.value = '';
                         if(targetSelect.value === 'PRODUCT') targetSelect.value = 'MERCHANDISE';
-                    } else { // ORDER
+                    } else { 
                         productInput.value = '';
                         categoryInput.value = '';
                         if(targetSelect.value === 'PRODUCT') targetSelect.value = 'MERCHANDISE';
                     }
                 }
 
-                // Gọi chạy ngay lần đầu và gán event listener
                 toggleDiscountMax();
                 discountTypeSelect.addEventListener('change', toggleDiscountMax);
-                
                 toggleScopeSelection();
                 scopeSelect.addEventListener('change', toggleScopeSelection);
 
-                // 3. KIỂM TRA DỮ LIỆU KHI SUBMIT
                 document.forms['adminVoucherForm'].addEventListener('submit', function (event) {
                     const discountType = discountTypeSelect.value;
                     const discountValue = parseFloat(document.getElementById('voucher-value').value);
                     const validFrom = document.getElementById('voucher-start-date').value;
                     const validUntil = document.getElementById('voucher-end-date').value;
 
-                    if (discountType === 'PERCENT') {
-                        if (discountValue <= 0 || discountValue > 100) {
-                            alert('Lỗi: Giá trị giảm theo Phần trăm (%) phải lớn hơn 0 và tối đa là 100.');
-                            event.preventDefault(); 
-                            return;
-                        }
-                    } else if (discountType === 'FIXED') {
-                        if (discountValue <= 0) {
-                            alert('Lỗi: Số tiền giảm cố định phải lớn hơn 0.');
-                            event.preventDefault();
-                            return;
-                        }
+                    if (discountType === 'PERCENT' && (discountValue <= 0 || discountValue > 100)) {
+                        alert('Lỗi: Giá trị giảm theo Phần trăm (%) phải lớn hơn 0 và tối đa là 100.');
+                        event.preventDefault(); return;
+                    } else if (discountType === 'FIXED' && discountValue <= 0) {
+                        alert('Lỗi: Số tiền giảm cố định phải lớn hơn 0.');
+                        event.preventDefault(); return;
                     }
 
-                    // Validate cho PRODUCT
-                    if (scopeSelect.value === 'PRODUCT' && productInput.value.trim() === '') {
-                        alert('Lỗi: Bạn phải nhập ID Sản phẩm áp dụng khi phạm vi là Product.');
-                        event.preventDefault();
-                        return;
+                    if (scopeSelect.value === 'PRODUCT' && productInput.value === '') {
+                        alert('Lỗi: Bạn phải chọn Sản phẩm áp dụng khi phạm vi là Product.');
+                        event.preventDefault(); return;
                     }
-                    
-                    // Validate cho CATEGORY
-                    if (scopeSelect.value === 'CATEGORY' && categoryInput.value.trim() === '') {
+                    if (scopeSelect.value === 'CATEGORY' && categoryInput.value === '') {
                         alert('Lỗi: Bạn phải chọn Danh mục áp dụng khi phạm vi là Category.');
-                        event.preventDefault();
-                        return;
+                        event.preventDefault(); return;
                     }
-
                     if (validFrom && validUntil) {
-                        const startDate = new Date(validFrom);
-                        const endDate = new Date(validUntil);
-                        if (endDate <= startDate) {
+                        if (new Date(validUntil) <= new Date(validFrom)) {
                             alert('Lỗi: Thời gian kết thúc phải diễn ra SAU thời gian bắt đầu.');
-                            event.preventDefault();
-                            return;
+                            event.preventDefault(); return;
                         }
                     }
                 });
