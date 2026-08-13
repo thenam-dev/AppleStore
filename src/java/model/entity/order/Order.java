@@ -6,6 +6,8 @@ package model.entity.order;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 /**
  *
@@ -137,5 +139,10 @@ return paymentMethod;
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getFormattedCreatedAt() {
+        if (this.createdAt == null) return "";
+        return this.createdAt.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy", new java.util.Locale("vi", "VN")));
     }
 }
