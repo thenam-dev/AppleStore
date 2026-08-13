@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <!DOCTYPE html>
@@ -12,14 +12,14 @@
 </head>
 <body class="site-body">
 
-<jsp:include page="/common/header.jsp"/>
+<jsp:include page="/WEB-INF/views/common/header.jsp"/>
 
 <main>
     <section class="section-block">
         <div class="container">
             <nav aria-label="Breadcrumb">
                 <ol class="breadcrumb app-breadcrumb">
-                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.html">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp">Trang chủ</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Giỏ hàng</li>
                 </ol>
             </nav>
@@ -51,7 +51,6 @@
 
     <section class="section-block section-soft">
         <div class="container">
-
             <c:choose>
                 <%-- ================= GIỎ HÀNG CÓ SẢN PHẨM ================= --%>
                 <c:when test="${not empty cartItems}">
@@ -61,7 +60,7 @@
                                 <div class="cart-list-head">
                                     <div>
                                         <h2>Sản phẩm trong giỏ</h2>
-                                        <p>Thay đổi số lượng hoặc xoá sản phẩm bạn không muốn mua nữa.</p>
+                                        <p>Thay đổi số lượng hoặc xóa sản phẩm bạn không muốn mua nữa.</p>
                                     </div>
                                     <a class="btn btn-app-outline" href="${pageContext.request.contextPath}/products">Tiếp tục mua sắm</a>
                                 </div>
@@ -86,14 +85,14 @@
                                                         <p class="text-danger">Chỉ còn ${item.stockQuantity} sản phẩm trong kho, vui lòng cập nhật lại số lượng.</p>
                                                     </c:if>
                                                     <c:if test="${item.stockQuantity <= 0}">
-                                                        <p class="text-danger">Sản phẩm đã hết hàng, vui lòng xoá khỏi giỏ hàng.</p>
+                                                        <p class="text-danger">Sản phẩm đã hết hàng, vui lòng xóa khỏi giỏ hàng.</p>
                                                     </c:if>
                                                 </div>
                                                 <form action="${pageContext.request.contextPath}/cart" method="post"
-                                                      onsubmit="return confirm('Xoá sản phẩm này khỏi giỏ hàng?');">
+                                                      onsubmit="return confirm('Xóa sản phẩm này khỏi giỏ hàng?');">
                                                     <input type="hidden" name="action" value="remove">
                                                     <input type="hidden" name="cartItemId" value="${item.cartItemId}">
-                                                    <button class="btn btn-app-ghost btn-sm" type="submit">Xoá</button>
+                                                    <button class="btn btn-app-ghost btn-sm" type="submit">Xóa</button>
                                                 </form>
                                             </div>
                                             <div class="cart-item-meta">
@@ -166,17 +165,16 @@
                         <p>Chọn sản phẩm bạn thích và thêm vào giỏ hàng.</p>
                         <div class="hero-actions">
                             <a class="btn btn-app-primary" href="${pageContext.request.contextPath}/products">Xem sản phẩm</a>
-                            <a class="btn btn-app-outline" href="${pageContext.request.contextPath}/index.html">Về trang chủ</a>
+                            <a class="btn btn-app-outline" href="${pageContext.request.contextPath}/index.jsp">Về trang chủ</a>
                         </div>
                     </div>
                 </c:otherwise>
             </c:choose>
-
         </div>
     </section>
 </main>
 
-<jsp:include page="/common/footer.jsp"/>
+<jsp:include page="/WEB-INF/views/common/footer.jsp"/>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>

@@ -30,8 +30,12 @@ public abstract class CategoryServletSupport extends HttpServlet {
         category.setName(request.getParameter("name"));
         category.setSlug(request.getParameter("slug"));
         category.setDisplayOrder(parseInt(request.getParameter("displayOrder"), "Display order is invalid."));
-        category.setIsActive("on".equals(request.getParameter("isActive")));
+        category.setIsActive(parseRequiredCategoryStatusToActive(request.getParameter("status")));
         return category;
+    }
+
+    protected void setCategoryFormOptions(HttpServletRequest request) {
+        request.setAttribute("categoryStatusOptions", categoryService.getAllowedStatuses());
     }
 
     protected int parseInt(String value, String errorMessage) {
@@ -104,6 +108,34 @@ public abstract class CategoryServletSupport extends HttpServlet {
             return normalized;
         }
         throw new IllegalArgumentException("Category status filter is invalid.");
+    }
+
+    protected boolean parseRequiredCategoryStatusToActive(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Category status is invalid.");
+        }
+        String normalized = value.trim().toUpperCase(Locale.ROOT);
+        if ("ACTIVE".equals(normalized)) {
+            return true;
+        }
+        if ("INACTIVE".equals(normalized)) {
+            return false;
+        }
+        throw new IllegalArgumentException("Category status is invalid.");
+    }
+
+    protected boolean parseCategoryStatusToActiveOrDefault(String value, boolean defaultValue) {
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        String normalized = value.trim().toUpperCase(Locale.ROOT);
+        if ("ACTIVE".equals(normalized)) {
+            return true;
+        }
+        if ("INACTIVE".equals(normalized)) {
+            return false;
+        }
+        return defaultValue;
     }
 
     protected String normalizeCategorySort(String sort) {

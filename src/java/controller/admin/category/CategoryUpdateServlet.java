@@ -40,10 +40,11 @@ public class CategoryUpdateServlet extends CategoryServletSupport {
         category.setName(request.getParameter("name"));
         category.setSlug(request.getParameter("slug"));
         category.setDisplayOrder(parseIntOrDefault(request.getParameter("displayOrder"), 0));
-        category.setIsActive("on".equals(request.getParameter("isActive")));
+        category.setIsActive(parseCategoryStatusToActiveOrDefault(request.getParameter("status"), true));
 
         request.setAttribute("category", category);
         request.setAttribute(FLASH_ERROR_KEY, message);
+        setCategoryFormOptions(request);
         request.getRequestDispatcher(FORM_VIEW).forward(request, response);
     }
 }

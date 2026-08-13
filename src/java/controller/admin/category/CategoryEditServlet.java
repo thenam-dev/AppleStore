@@ -24,6 +24,7 @@ public class CategoryEditServlet extends CategoryServletSupport {
             }
 
             request.setAttribute("category", category);
+            setCategoryFormOptions(request);
             moveFlashMessagesToRequest(request);
             request.getRequestDispatcher(FORM_VIEW).forward(request, response);
         } catch (SQLException | IllegalArgumentException ex) {
