@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import model.entity.user.User;
 
 @WebServlet(name = "PromotionUpdateServlet", urlPatterns = {"/admin/promotions/update"})
 public class PromotionUpdateServlet extends HttpServlet {
@@ -23,7 +24,7 @@ public class PromotionUpdateServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Promotion p = new Promotion(); // Khởi tạo sẵn để nếu có lỗi thì đẩy lại dữ liệu về form
-        
+
         try {
             String promoIdStr = req.getParameter("promoId");
             if (promoIdStr != null && !promoIdStr.isBlank()) {
@@ -33,13 +34,13 @@ public class PromotionUpdateServlet extends HttpServlet {
             p.setCode(req.getParameter("code"));
             p.setDiscountType(req.getParameter("discountType"));
             p.setDiscountValue(new BigDecimal(req.getParameter("discountValue")));
-            
+
             String discountMaxStr = req.getParameter("discountMax");
             p.setDiscountMax(discountMaxStr != null && !discountMaxStr.isBlank() ? new BigDecimal(discountMaxStr) : BigDecimal.ZERO);
 
             String minOrderStr = req.getParameter("minOrderValue");
             p.setMinOrderValue(minOrderStr != null && !minOrderStr.isBlank() ? new BigDecimal(minOrderStr) : BigDecimal.ZERO);
-            
+
             p.setBenefitTarget(req.getParameter("benefitTarget"));
 
             String maxUsesStr = req.getParameter("maxUses");
@@ -57,7 +58,7 @@ public class PromotionUpdateServlet extends HttpServlet {
             } else if ("PRODUCT".equals(scope) && productIdStr != null && !productIdStr.isBlank()) {
                 p.setProductId(Integer.parseInt(productIdStr));
                 p.setCategoryId(null);
-            } else { 
+            } else {
                 p.setCategoryId(null);
                 p.setProductId(null);
             }
@@ -73,7 +74,9 @@ public class PromotionUpdateServlet extends HttpServlet {
             if (p.getPromoId() > 0) {
                 promotionService.updatePromotion(p);
             } else {
-                int adminId = 1; // Tạm fix cứng, sau này lấy từ Session đăng nhập
+                // Thay dòng int adminId = 1; bằng:
+                User loggedInAdmin = (User) req.getSession().getAttribute("loggedInUser");
+                int adminId = (loggedInAdmin != null) ? loggedInAdmin.getUserId() : 1;
                 promotionService.createPromotion(p, adminId);
             }
 
@@ -97,11 +100,15 @@ public class PromotionUpdateServlet extends HttpServlet {
         req.setAttribute("errorMessage", errorMessage);
         req.setAttribute("promo", p);
         req.setAttribute("isEdit", p.getPromoId() > 0);
-        
+
         // Push lại ngày giờ dạng chuỗi để input datetime-local hiển thị lại
-        if(p.getValidFrom() != null) req.setAttribute("validFromStr", p.getValidFrom().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
-        if(p.getValidUntil() != null) req.setAttribute("validUntilStr", p.getValidUntil().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
-        
+        if (p.getValidFrom() != null) {
+            req.setAttribute("validFromStr", p.getValidFrom().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
+        }
+        if (p.getValidUntil() != null) {
+            req.setAttribute("validUntilStr", p.getValidUntil().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
+        }
+
         req.getRequestDispatcher("/WEB-INF/views/admin/promotions/form.jsp").forward(req, resp);
     }
 }
