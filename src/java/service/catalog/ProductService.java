@@ -71,7 +71,7 @@ public class ProductService {
     public Product getProductById(int productId) throws SQLException {
         validateProductId(productId);
         return productDAO.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại."));
     }
 
     public int createProduct(Product product) throws SQLException {
@@ -80,10 +80,10 @@ public class ProductService {
         validateCategoryExists(product.getCategoryId());
 
         if (productDAO.existsByName(product.getName())) {
-            throw new IllegalArgumentException("Product name already exists.");
+            throw new IllegalArgumentException("Tên sản phẩm đã tồn tại.");
         }
         if (productDAO.existsByModelCode(product.getModelCode())) {
-            throw new IllegalArgumentException("Model code already exists.");
+            throw new IllegalArgumentException("Mã model đã tồn tại.");
         }
 
         return productDAO.insert(product);
@@ -96,13 +96,13 @@ public class ProductService {
         validateCategoryExists(product.getCategoryId());
 
         if (productDAO.existsByNameForOtherProduct(product.getName(), product.getProductId())) {
-            throw new IllegalArgumentException("Product name already exists.");
+            throw new IllegalArgumentException("Tên sản phẩm đã tồn tại.");
         }
         if (productDAO.existsByModelCodeForOtherProduct(product.getModelCode(), product.getProductId())) {
-            throw new IllegalArgumentException("Model code already exists.");
+            throw new IllegalArgumentException("Mã model đã tồn tại.");
         }
         if (!productDAO.update(product)) {
-            throw new IllegalArgumentException("Product does not exist.");
+            throw new IllegalArgumentException("Sản phẩm không tồn tại.");
         }
     }
 
@@ -110,7 +110,7 @@ public class ProductService {
         validateProductId(productId);
         String normalizedStatus = normalizeRequiredStatus(status);
         if (!productDAO.updateStatus(productId, normalizedStatus)) {
-            throw new IllegalArgumentException("Product does not exist.");
+            throw new IllegalArgumentException("Sản phẩm không tồn tại.");
         }
     }
 
@@ -132,7 +132,7 @@ public class ProductService {
 
     private void normalizeProduct(Product product) {
         if (product == null) {
-            throw new IllegalArgumentException("Product data is required.");
+            throw new IllegalArgumentException("Dữ liệu sản phẩm là bắt buộc.");
         }
 
         product.setName(trimRequired(product.getName()));
@@ -154,54 +154,54 @@ public class ProductService {
 
     private void validateProduct(Product product) {
         if (product.getCategoryId() <= 0) {
-            throw new IllegalArgumentException("Category is invalid.");
+            throw new IllegalArgumentException("Danh mục không hợp lệ.");
         }
         if (product.getName().length() > MAX_NAME_LENGTH) {
-            throw new IllegalArgumentException("Product name must be 200 characters or less.");
+            throw new IllegalArgumentException("Tên sản phẩm không được vượt quá 200 ký tự.");
         }
         if (product.getDescription() != null && product.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
-            throw new IllegalArgumentException("Description must be 2000 characters or less.");
+            throw new IllegalArgumentException("Mô tả không được vượt quá 2000 ký tự.");
         }
         if (product.getBrand() != null && product.getBrand().length() > MAX_BRAND_LENGTH) {
-            throw new IllegalArgumentException("Brand must be 50 characters or less.");
+            throw new IllegalArgumentException("Thương hiệu không được vượt quá 50 ký tự.");
         }
         if (product.getModelCode() != null && product.getModelCode().length() > MAX_MODEL_CODE_LENGTH) {
-            throw new IllegalArgumentException("Model code must be 50 characters or less.");
+            throw new IllegalArgumentException("Mã model không được vượt quá 50 ký tự.");
         }
         if (product.getReleaseYear() != null
                 && (product.getReleaseYear() < MIN_RELEASE_YEAR || product.getReleaseYear() > MAX_RELEASE_YEAR)) {
-            throw new IllegalArgumentException("Release year is invalid.");
+            throw new IllegalArgumentException("Năm phát hành không hợp lệ.");
         }
         if (!ALLOWED_CONDITIONS.contains(product.getProductCondition())) {
-            throw new IllegalArgumentException("Product condition is invalid.");
+            throw new IllegalArgumentException("Tình trạng sản phẩm không hợp lệ.");
         }
         if (!ALLOWED_IMPORT_TYPES.contains(product.getImportType())) {
-            throw new IllegalArgumentException("Import type is invalid.");
+            throw new IllegalArgumentException("Mã nhập khẩu không hợp lệ.");
         }
         if (product.getOriginCountry() != null && product.getOriginCountry().length() > MAX_ORIGIN_COUNTRY_LENGTH) {
-            throw new IllegalArgumentException("Origin country must be 100 characters or less.");
+            throw new IllegalArgumentException("Quốc gia xuất xứ không được vượt quá 100 ký tự.");
         }
         if (product.getWarrantyMonths() < 0) {
-            throw new IllegalArgumentException("Warranty months must be 0 or greater.");
+            throw new IllegalArgumentException("Thời hạn bảo hành phải lớn hơn hoặc bằng 0.");
         }
         if (product.getWarrantyProvider() != null
                 && product.getWarrantyProvider().length() > MAX_WARRANTY_PROVIDER_LENGTH) {
-            throw new IllegalArgumentException("Warranty provider must be 100 characters or less.");
+            throw new IllegalArgumentException("Đơn vị bảo hành không được vượt quá 100 ký tự.");
         }
         if (!ALLOWED_STATUSES.contains(product.getStatus())) {
-            throw new IllegalArgumentException("Status is invalid.");
+            throw new IllegalArgumentException("Trạng thái không hợp lệ.");
         }
     }
 
     private void validateCategoryExists(int categoryId) throws SQLException {
         if (categoryDAO.findById(categoryId).isEmpty()) {
-            throw new IllegalArgumentException("Category does not exist.");
+            throw new IllegalArgumentException("Danh mục không tồn tại.");
         }
     }
 
     private void validateProductId(int productId) {
         if (productId <= 0) {
-            throw new IllegalArgumentException("Product id is invalid.");
+            throw new IllegalArgumentException("ID sản phẩm không hợp lệ.");
         }
     }
 
@@ -210,7 +210,7 @@ public class ProductService {
             return null;
         }
         if (categoryId <= 0) {
-            throw new IllegalArgumentException("Category filter is invalid.");
+            throw new IllegalArgumentException("Bộ lọc danh mục không hợp lệ.");
         }
         return categoryId;
     }
@@ -225,7 +225,7 @@ public class ProductService {
     private String normalizeRequiredStatus(String value) {
         String normalized = normalizeRequired(value);
         if (!ALLOWED_STATUSES.contains(normalized)) {
-            throw new IllegalArgumentException("Status is invalid.");
+            throw new IllegalArgumentException("Trạng thái không hợp lệ.");
         }
         return normalized;
     }
@@ -236,21 +236,21 @@ public class ProductService {
         }
         String normalized = value.trim().toLowerCase();
         if (!ALLOWED_SORTS.contains(normalized)) {
-            throw new IllegalArgumentException("Sort option is invalid.");
+            throw new IllegalArgumentException("Tùy chọn sắp xếp không hợp lệ.");
         }
         return normalized;
     }
 
     private String normalizeRequired(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Required value is missing.");
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
         }
         return value.trim().toUpperCase();
     }
 
     private String trimRequired(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Required value is missing.");
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
         }
         return value.trim();
     }

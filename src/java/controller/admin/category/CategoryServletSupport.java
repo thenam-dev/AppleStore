@@ -29,7 +29,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         category.setCategoryId(parseIntOrDefault(request.getParameter("categoryId"), 0));
         category.setName(request.getParameter("name"));
         category.setSlug(request.getParameter("slug"));
-        category.setDisplayOrder(parseInt(request.getParameter("displayOrder"), "Display order is invalid."));
+        category.setDisplayOrder(parseInt(request.getParameter("displayOrder"), "Thứ tự hiển thị không hợp lệ."));
         category.setIsActive(parseRequiredCategoryStatusToActive(request.getParameter("status")));
         return category;
     }
@@ -107,12 +107,12 @@ public abstract class CategoryServletSupport extends HttpServlet {
         if ("ACTIVE".equals(normalized) || "INACTIVE".equals(normalized)) {
             return normalized;
         }
-        throw new IllegalArgumentException("Category status filter is invalid.");
+        throw new IllegalArgumentException("Bộ lọc trạng thái danh mục không hợp lệ.");
     }
 
     protected boolean parseRequiredCategoryStatusToActive(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Category status is invalid.");
+            throw new IllegalArgumentException("Trạng thái danh mục không hợp lệ.");
         }
         String normalized = value.trim().toUpperCase(Locale.ROOT);
         if ("ACTIVE".equals(normalized)) {
@@ -121,7 +121,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         if ("INACTIVE".equals(normalized)) {
             return false;
         }
-        throw new IllegalArgumentException("Category status is invalid.");
+        throw new IllegalArgumentException("Trạng thái danh mục không hợp lệ.");
     }
 
     protected boolean parseCategoryStatusToActiveOrDefault(String value, boolean defaultValue) {
@@ -195,12 +195,12 @@ public abstract class CategoryServletSupport extends HttpServlet {
 
     private List<SortOption> buildSortOptions() {
         return List.of(
-                new SortOption("display_asc", "Display order (low-high)"),
-                new SortOption("display_desc", "Display order (high-low)"),
-                new SortOption("name_asc", "Name A-Z"),
-                new SortOption("name_desc", "Name Z-A"),
-                new SortOption("newest", "Newest"),
-                new SortOption("oldest", "Oldest")
+                new SortOption("display_asc", "Thứ tự hiển thị tăng dần"),
+                new SortOption("display_desc", "Thứ tự hiển thị giảm dần"),
+                new SortOption("name_asc", "Tên A-Z"),
+                new SortOption("name_desc", "Tên Z-A"),
+                new SortOption("newest", "Mới nhất"),
+                new SortOption("oldest", "Cũ nhất")
         );
     }
 

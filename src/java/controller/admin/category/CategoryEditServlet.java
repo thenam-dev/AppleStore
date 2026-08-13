@@ -20,7 +20,7 @@ public class CategoryEditServlet extends CategoryServletSupport {
             Category category = createDefaultCategory();
 
             if (categoryId != null && !categoryId.isBlank()) {
-                category = categoryService.getCategoryById(parseInt(categoryId, "Category id is invalid."));
+                category = categoryService.getCategoryById(parseInt(categoryId, "ID danh mục không hợp lệ."));
             }
 
             request.setAttribute("category", category);

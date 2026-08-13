@@ -22,12 +22,12 @@ public class ProductUpdateServlet extends ProductServletSupport {
 
             if (product.getProductId() > 0) {
                 productService.updateProduct(product);
-                redirectToProductListWithMessage(request, response, FLASH_SUCCESS_KEY, "Product updated successfully.");
+                redirectToProductListWithMessage(request, response, FLASH_SUCCESS_KEY, "Cập nhật sản phẩm thành công.");
                 return;
             }
 
             productService.createProduct(product);
-            redirectToProductListWithMessage(request, response, FLASH_SUCCESS_KEY, "Product created successfully.");
+            redirectToProductListWithMessage(request, response, FLASH_SUCCESS_KEY, "Tạo sản phẩm thành công.");
         } catch (SQLException | IllegalArgumentException ex) {
             forwardBackToForm(request, response, ex.getMessage());
         }
@@ -41,7 +41,7 @@ public class ProductUpdateServlet extends ProductServletSupport {
         product.setName(request.getParameter("name"));
         product.setDescription(request.getParameter("description"));
         product.setModelCode(request.getParameter("modelCode"));
-        product.setReleaseYear(parseNullableInt(request.getParameter("releaseYear"), "Release year is invalid."));
+        product.setReleaseYear(parseNullableInt(request.getParameter("releaseYear"), "Năm phát hành không hợp lệ."));
         product.setProductCondition(request.getParameter("productCondition"));
         product.setImportType(request.getParameter("importType"));
         product.setOriginCountry(request.getParameter("originCountry"));

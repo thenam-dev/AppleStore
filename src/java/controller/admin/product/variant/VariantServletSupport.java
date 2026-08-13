@@ -49,22 +49,22 @@ public abstract class VariantServletSupport extends HttpServlet {
     protected ProductVariant buildVariantFromRequest(HttpServletRequest request) {
         ProductVariant variant = new ProductVariant();
         variant.setVariantId(parseIntOrDefault(request.getParameter("variantId"), 0));
-        variant.setProductId(parseInt(request.getParameter("productId"), "Product id is invalid."));
+        variant.setProductId(parseInt(request.getParameter("productId"), "ID sản phẩm không hợp lệ."));
         variant.setSku(request.getParameter("sku"));
         variant.setVariantLabel(request.getParameter("variantLabel"));
         variant.setColorName(request.getParameter("colorName"));
         variant.setColorHex(request.getParameter("colorHex"));
-        variant.setStorageCapacityGb(parseNullableInteger(request.getParameter("storageCapacityGb"), "Storage capacity is invalid."));
-        variant.setRamGb(parseNullableInteger(request.getParameter("ramGb"), "RAM is invalid."));
+        variant.setStorageCapacityGb(parseNullableInteger(request.getParameter("storageCapacityGb"), "Dung lượng lưu trữ không hợp lệ."));
+        variant.setRamGb(parseNullableInteger(request.getParameter("ramGb"), "RAM không hợp lệ."));
         variant.setConnectivity(request.getParameter("connectivity"));
         variant.setChipOption(request.getParameter("chipOption"));
-        variant.setScreenSizeInch(parseNullableBigDecimal(request.getParameter("screenSizeInch"), "Screen size is invalid."));
-        variant.setPrice(parseRequiredBigDecimal(request.getParameter("price"), "Price is invalid."));
-        variant.setStockQuantity(parseInt(request.getParameter("stockQuantity"), "Stock quantity is invalid."));
-        variant.setWeightKg(parseRequiredBigDecimal(request.getParameter("weightKg"), "Weight is invalid."));
-        variant.setDiscountPrice(parseNullableBigDecimal(request.getParameter("discountPrice"), "Discount price is invalid."));
-        variant.setDiscountStart(parseNullableDateTime(request.getParameter("discountStart"), "Discount start is invalid."));
-        variant.setDiscountEnd(parseNullableDateTime(request.getParameter("discountEnd"), "Discount end is invalid."));
+        variant.setScreenSizeInch(parseNullableBigDecimal(request.getParameter("screenSizeInch"), "Kích thước màn hình không hợp lệ."));
+        variant.setPrice(parseRequiredBigDecimal(request.getParameter("price"), "Giá không hợp lệ."));
+        variant.setStockQuantity(parseInt(request.getParameter("stockQuantity"), "Số lượng tồn kho không hợp lệ."));
+        variant.setWeightKg(parseRequiredBigDecimal(request.getParameter("weightKg"), "Khối lượng không hợp lệ."));
+        variant.setDiscountPrice(parseNullableBigDecimal(request.getParameter("discountPrice"), "Giá giảm không hợp lệ."));
+        variant.setDiscountStart(parseNullableDateTime(request.getParameter("discountStart"), "Thời gian bắt đầu giảm giá không hợp lệ."));
+        variant.setDiscountEnd(parseNullableDateTime(request.getParameter("discountEnd"), "Thời gian kết thúc giảm giá không hợp lệ."));
         variant.setActive(parseRequiredVariantStatusToActive(request.getParameter("status")));
         return variant;
     }
@@ -155,7 +155,7 @@ public abstract class VariantServletSupport extends HttpServlet {
 
     protected boolean parseRequiredVariantStatusToActive(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Variant status is invalid.");
+            throw new IllegalArgumentException("Trạng thái biến thể không hợp lệ.");
         }
         String normalized = value.trim().toUpperCase(Locale.ROOT);
         if ("ACTIVE".equals(normalized)) {
@@ -164,7 +164,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         if ("INACTIVE".equals(normalized)) {
             return false;
         }
-        throw new IllegalArgumentException("Variant status is invalid.");
+        throw new IllegalArgumentException("Trạng thái biến thể không hợp lệ.");
     }
 
     protected int parsePage(String value) {
@@ -306,16 +306,16 @@ public abstract class VariantServletSupport extends HttpServlet {
 
     private List<SortOption> buildSortOptions() {
         return List.of(
-                new SortOption("newest", "Newest"),
-                new SortOption("oldest", "Oldest"),
+                new SortOption("newest", "Mới nhất"),
+                new SortOption("oldest", "Cũ nhất"),
                 new SortOption("sku_asc", "SKU A-Z"),
                 new SortOption("sku_desc", "SKU Z-A"),
-                new SortOption("label_asc", "Label A-Z"),
-                new SortOption("label_desc", "Label Z-A"),
-                new SortOption("price_asc", "Price low-high"),
-                new SortOption("price_desc", "Price high-low"),
-                new SortOption("stock_asc", "Stock low-high"),
-                new SortOption("stock_desc", "Stock high-low")
+                new SortOption("label_asc", "Nhãn A-Z"),
+                new SortOption("label_desc", "Nhãn Z-A"),
+                new SortOption("price_asc", "Giá thấp đến cao"),
+                new SortOption("price_desc", "Giá cao đến thấp"),
+                new SortOption("stock_asc", "Tồn kho thấp đến cao"),
+                new SortOption("stock_desc", "Tồn kho cao đến thấp")
         );
     }
 

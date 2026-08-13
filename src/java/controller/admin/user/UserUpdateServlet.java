@@ -20,7 +20,7 @@ public class UserUpdateServlet extends UserServletSupport {
         try {
             User user = buildUserFromRequest(request);
             userService.updateUser(user);
-            redirectToUserListWithMessage(request, response, FLASH_SUCCESS_KEY, "User updated successfully.");
+            redirectToUserListWithMessage(request, response, FLASH_SUCCESS_KEY, "Cập nhật người dùng thành công.");
         } catch (SQLException | IllegalArgumentException ex) {
             forwardBackToForm(request, response, ex.getMessage());
         }

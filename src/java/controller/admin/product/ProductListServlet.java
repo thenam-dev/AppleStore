@@ -28,7 +28,7 @@ public class ProductListServlet extends ProductServletSupport {
     private void showProductList(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, ServletException, IOException {
         String keyword = request.getParameter("keyword");
-        Integer categoryId = parseOptionalPositiveInt(request.getParameter("categoryId"), "Category filter is invalid.");
+        Integer categoryId = parseOptionalPositiveInt(request.getParameter("categoryId"), "Bộ lọc danh mục không hợp lệ.");
         String status = request.getParameter("status");
         String sort = normalizeProductSort(request.getParameter("sort"));
         int currentPage = parsePage(request.getParameter("page"));

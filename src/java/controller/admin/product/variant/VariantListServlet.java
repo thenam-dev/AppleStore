@@ -27,7 +27,7 @@ public class VariantListServlet extends VariantServletSupport {
 
     private void showVariantList(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, ServletException, IOException {
-        int productId = parseInt(request.getParameter("productId"), "Product id is invalid.");
+        int productId = parseInt(request.getParameter("productId"), "ID sản phẩm không hợp lệ.");
         Product managedProduct = loadManagedProduct(productId);
         String keyword = request.getParameter("keyword");
         String status = request.getParameter("status");

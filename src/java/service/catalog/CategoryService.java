@@ -61,7 +61,7 @@ public class CategoryService {
     public Category getCategoryById(int categoryId) throws SQLException {
         validateCategoryId(categoryId);
         return categoryDAO.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Category does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException("Danh mục không tồn tại."));
     }
 
     public int createCategory(Category category) throws SQLException {
@@ -69,10 +69,10 @@ public class CategoryService {
         validateCategory(category);
 
         if (categoryDAO.existsByName(category.getName())) {
-            throw new IllegalArgumentException("Category name already exists.");
+            throw new IllegalArgumentException("Tên danh mục đã tồn tại.");
         }
         if (categoryDAO.existsBySlug(category.getSlug())) {
-            throw new IllegalArgumentException("Category slug already exists.");
+            throw new IllegalArgumentException("Đường dẫn danh mục đã tồn tại.");
         }
 
         return categoryDAO.insert(category);
@@ -80,20 +80,20 @@ public class CategoryService {
 
     public void updateCategory(Category category) throws SQLException {
         if (category == null || category.getCategoryId() <= 0) {
-            throw new IllegalArgumentException("Category id is invalid.");
+            throw new IllegalArgumentException("ID danh mục không hợp lệ.");
         }
 
         normalizeCategory(category);
         validateCategory(category);
 
         if (categoryDAO.existsByNameForOtherCategory(category.getName(), category.getCategoryId())) {
-            throw new IllegalArgumentException("Category name already exists.");
+            throw new IllegalArgumentException("Tên danh mục đã tồn tại.");
         }
         if (categoryDAO.existsBySlugForOtherCategory(category.getSlug(), category.getCategoryId())) {
-            throw new IllegalArgumentException("Category slug already exists.");
+            throw new IllegalArgumentException("Đường dẫn danh mục đã tồn tại.");
         }
         if (!categoryDAO.update(category)) {
-            throw new IllegalArgumentException("Category does not exist.");
+            throw new IllegalArgumentException("Danh mục không tồn tại.");
         }
     }
 
@@ -102,13 +102,13 @@ public class CategoryService {
         category.setIsActive("ACTIVE".equals(normalizeStatus(status)));
 
         if (!categoryDAO.update(category)) {
-            throw new IllegalArgumentException("Category does not exist.");
+            throw new IllegalArgumentException("Danh mục không tồn tại.");
         }
     }
 
     private void normalizeCategory(Category category) {
         if (category == null) {
-            throw new IllegalArgumentException("Category data is required.");
+            throw new IllegalArgumentException("Dữ liệu danh mục là bắt buộc.");
         }
 
         category.setName(trimRequired(category.getName()));
@@ -117,22 +117,22 @@ public class CategoryService {
 
     private void validateCategory(Category category) {
         if (category.getName().length() > 100) {
-            throw new IllegalArgumentException("Category name must be 100 characters or less.");
+            throw new IllegalArgumentException("Tên danh mục không được vượt quá 100 ký tự.");
         }
         if (category.getSlug().length() > 100) {
-            throw new IllegalArgumentException("Category slug must be 100 characters or less.");
+            throw new IllegalArgumentException("Đường dẫn danh mục không được vượt quá 100 ký tự.");
         }
         if (!SLUG_PATTERN.matcher(category.getSlug()).matches()) {
-            throw new IllegalArgumentException("Category slug may contain only lowercase letters, numbers, and hyphens.");
+            throw new IllegalArgumentException("Đường dẫn danh mục chỉ được chứa chữ thường, số và dấu gạch nối.");
         }
         if (category.getDisplayOrder() < 0) {
-            throw new IllegalArgumentException("Display order must be 0 or greater.");
+            throw new IllegalArgumentException("Thứ tự hiển thị phải lớn hơn hoặc bằng 0.");
         }
     }
 
     private void validateCategoryId(int categoryId) {
         if (categoryId <= 0) {
-            throw new IllegalArgumentException("Category id is invalid.");
+            throw new IllegalArgumentException("ID danh mục không hợp lệ.");
         }
     }
 
@@ -153,7 +153,7 @@ public class CategoryService {
         }
         String normalized = value.trim().toUpperCase();
         if (!"ACTIVE".equals(normalized) && !"INACTIVE".equals(normalized)) {
-            throw new IllegalArgumentException("Category status filter is invalid.");
+            throw new IllegalArgumentException("Bộ lọc trạng thái danh mục không hợp lệ.");
         }
         return normalized;
     }
@@ -164,14 +164,14 @@ public class CategoryService {
         }
         String normalized = value.trim().toLowerCase();
         if (!ALLOWED_SORTS.contains(normalized)) {
-            throw new IllegalArgumentException("Category sort option is invalid.");
+            throw new IllegalArgumentException("Tùy chọn sắp xếp danh mục không hợp lệ.");
         }
         return normalized;
     }
 
     private String trimRequired(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Required value is missing.");
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
         }
         return value.trim();
     }
