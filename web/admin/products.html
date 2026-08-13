@@ -24,7 +24,7 @@
             <div>
                 <p class="admin-sidebar-label">Overview</p>
                 <nav class="admin-nav">
-                    <a href="dashboard.html">Dashboard</a>
+                    <a href="/AppleStore/admin/dashboard">Dashboard</a>
                     <a class="active" href="products.html">Products</a>
                     <a href="categories.html">Categories</a>
                     <a href="orders.html">Orders</a>
@@ -69,7 +69,7 @@
 
             <nav aria-label="Breadcrumb">
                 <ol class="breadcrumb app-breadcrumb">
-                    <li class="breadcrumb-item"><a href="dashboard.html">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="/AppleStore/admin/dashboard">Admin</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Products</li>
                 </ol>
             </nav>
@@ -133,6 +133,13 @@
                             <option>Active</option>
                             <option>Hidden</option>
                             <option>Low Stock</option>
+                        </select>
+                        <select class="form-select" name="sort">
+                            <option value="newest">Newest</option>
+                            <option value="name-asc">Name A-Z</option>
+                            <option value="price-asc">Price low-high</option>
+                            <option value="price-desc">Price high-low</option>
+                            <option value="stock-asc">Stock low-high</option>
                         </select>
                         <button class="btn btn-app-primary" type="submit">Filter</button>
                     </form>

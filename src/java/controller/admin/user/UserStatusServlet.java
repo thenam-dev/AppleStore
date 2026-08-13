@@ -20,9 +20,9 @@ public class UserStatusServlet extends UserServletSupport {
             String status = request.getParameter("status");
 
             userService.changeStatus(userId, status);
-            redirectToUserListWithMessage(request, response, "success", "User status updated.");
+            redirectToUserListWithMessage(request, response, FLASH_SUCCESS_KEY, "User status updated.");
         } catch (SQLException | IllegalArgumentException ex) {
-            redirectToUserListWithMessage(request, response, "error", ex.getMessage());
+            redirectToUserListWithMessage(request, response, FLASH_ERROR_KEY, ex.getMessage());
         }
     }
 }
