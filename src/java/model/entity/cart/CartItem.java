@@ -134,7 +134,7 @@ public class CartItem {
     public void setAddonPrice(BigDecimal addonPrice) {
         this.addonPrice = addonPrice;
     }
-
+    
     public String getImageUrl() {
         return imageUrl;
     }

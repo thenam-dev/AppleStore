@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package service.cart;
 
 import dao.cart.CartDAO;
@@ -7,8 +11,12 @@ import model.entity.cart.CartItem;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
-
-
+/**
+ * Business rule + validation cho giỏ hàng (rule 2). Service chỉ gọi DAO,
+ * không tự mở Connection hay viết SQL - mỗi hàm DAO tự quản Connection riêng
+ * (theo form CategoryDAO).
+ * @author ACER
+ */
 public class CartService {
 
     private final CartDAO cartDAO;

@@ -1,4 +1,4 @@
-/*
+ /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
@@ -27,7 +27,18 @@ import model.entity.cart.CartItem;
 import model.entity.order.Order;
 
 /**
+ * Business rule cho luồng đặt hàng. Service chỉ gọi DAO tuần tự, KHÔNG còn
+ * mở/quản lý Connection hay transaction (mỗi hàm DAO tự commit riêng theo
+ * form CategoryDAO).
  *
+ * Vì mất tính atomic xuyên suốt, checkout() tự làm "rollback nghiệp vụ"
+ * bằng cách gọi các hàm bù trừ (increaseStock, deleteOrderItem,
+ * deleteOrder...) khi một bước ở giữa thất bại, thay vì trông chờ
+ * conn.rollback(). Đây là đánh đổi đã được team chốt để đồng nhất pattern
+ * DAO toàn hệ thống; vẫn còn rủi ro race condition ở mức thấp giữa các
+ * request chạy song song vì không có SELECT ... FOR UPDATE giữ khoá xuyên
+ * suốt nhiều câu lệnh.
+ * 
  * @author namnthe180997
  */
 public class CheckoutService {

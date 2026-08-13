@@ -30,8 +30,8 @@
                             Tài khoản
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end app-dropdown-menu">
-                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/login.html">Đăng nhập</a></li>
-                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/register.html">Đăng ký</a></li>
+                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/login">Đăng nhập</a></li>
+                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/register">Đăng ký</a></li>
                             <li><a class="dropdown-item" href="${pageContext.request.contextPath}/wishlist.html">Yêu thích</a></li>
                         </ul>
                     </div>
@@ -70,8 +70,8 @@
                         <a href="${pageContext.request.contextPath}/products.html?category=watch">Apple Watch</a>
                         <a href="${pageContext.request.contextPath}/products.html?category=airpods">AirPods</a>
                         <a href="${pageContext.request.contextPath}/products.html?category=accessories">Phụ kiện</a>
-                        <a href="${pageContext.request.contextPath}/login.html">Đăng nhập</a>
-                        <a href="${pageContext.request.contextPath}/register.html">Đăng ký</a>
+                        <a href="${pageContext.request.contextPath}/login">Đăng nhập</a>
+                        <a href="${pageContext.request.contextPath}/register">Đăng ký</a>
                         <a href="${pageContext.request.contextPath}/wishlist.html">Yêu thích</a>
                         <a href="${pageContext.request.contextPath}/components/component-demo.html">Bản Demo</a>
                     </div>

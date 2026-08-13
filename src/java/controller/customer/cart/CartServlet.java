@@ -1,5 +1,6 @@
 package controller.customer.cart;
 
+import config.AppConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -7,18 +8,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.entity.cart.CartItem;
+import model.entity.user.User;
 import service.cart.CartService;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
  * Controller giỏ hàng: GET hiển thị trang cart.jsp, POST xử lý add/update/remove
  * rồi redirect lại chính trang giỏ hàng theo PRG (rule 10).
- * customerId lấy từ session do AuthFilter set sau khi đăng nhập, không tin request param.
+ * customerId được suy ra từ User trong session, không tin request param.
  */
 @WebServlet("/cart")
 public class CartServlet extends HttpServlet {
@@ -28,7 +28,11 @@ public class CartServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        int customerId = getCustomerId(request);
+        Integer customerId = getCustomerId(request);
+        if (customerId == null) {
+            redirectToLogin(request, response);
+            return;
+        }
 
         List<CartItem> items = cartService.getCartItems(customerId);
         BigDecimal cartTotal = items.stream()
@@ -45,7 +49,7 @@ public class CartServlet extends HttpServlet {
         // Đọc flash message từ session (đã set ở doPost sau khi redirect) rồi xoá đi
         readFlashMessage(request);
 
-        request.getRequestDispatcher("/customer/cart.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/customer/cart.jsp").forward(request, response);
     }
 
     @Override
@@ -53,7 +57,11 @@ public class CartServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
 
-        int customerId = getCustomerId(request);
+        Integer customerId = getCustomerId(request);
+        if (customerId == null) {
+            redirectToLogin(request, response);
+            return;
+        }
         String action = request.getParameter("action");
         HttpSession session = request.getSession();
 
@@ -127,19 +135,14 @@ public class CartServlet extends HttpServlet {
         }
     }
 
-    /** Chuyển hướng sang trang đăng nhập, kèm redirect param để quay lại đúng /cart sau khi đăng nhập thành công. */
-    private void redirectToLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String redirectAfterLogin = request.getContextPath() + "/cart";
-        response.sendRedirect(request.getContextPath() + "/login.jsp?redirect=" +
-                URLEncoder.encode(redirectAfterLogin, StandardCharsets.UTF_8));
-    }
- 
-    /** Trả về customerId từ session, hoặc null nếu khách chưa đăng nhập - AuthFilter là lớp chặn chính, đây là lớp phòng thủ thêm. */
-    private Integer getCustomerId(HttpServletRequest request) {
-        Object customerId = request.getSession().getAttribute("customerId");
-        if (customerId == null) {
-            return null;
+    /** Trả về customerId từ User trong session - AuthFilter là lớp chặn chính, đây là lớp phòng thủ thêm. */
+    private int getCustomerId(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        Object sessionUser = session == null ? null : session.getAttribute(AppConfig.SESSION_USER);
+        if (!(sessionUser instanceof User)) {
+            throw new IllegalStateException("Khách chưa đăng nhập - AuthFilter phải chặn trước khi tới CartServlet");
         }
-        return (Integer) customerId;
+
+        return ((User) sessionUser).getUserId();
     }
 }

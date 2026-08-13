@@ -397,16 +397,14 @@ function initCurrentYear() {
 }
 
 /**
- * Shared login.html / register.html flash-message handling.
+ * Shared login/register flash-message handling.
  *
- * Both pages are plain .html (not JSP), so the auth servlets communicate
- * success/error state back to them through the query string instead of
- * request attributes:
+ * The auth servlets communicate success/error state back through the query string:
  *   - error=<message>            shown as a red alert
  *   - registered=1               shown as a green "account created" alert
  *   - email / fullName / phone   re-filled into the form after a failed submit
  *   - redirectTo=<in-app path>   copied into the hidden #login-redirect-target
- *                                 field so login.html?redirectTo=/checkout.html
+ *                                 field so login?redirectTo=/checkout.html
  *                                 (set by AuthFilter/AdminFilter/CustomerFilter)
  *                                 sends the customer back where they started.
  */
@@ -451,7 +449,7 @@ function refillField(elementId, value) {
 }
 
 /**
- * Client-side "passwords match" nudge for register.html. The server
+ * Client-side "passwords match" nudge for register. The server
  * (service.AuthService) is still the source of truth for this check.
  */
 (function initRegisterPasswordMatchHint() {

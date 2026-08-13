@@ -14,7 +14,7 @@ import java.util.Optional;
  * @author namnthe180997
  */
 public class PaymentDAO {
-    
+    /** Tạo 1 phiên thanh toán mới, attempt_no tự tăng theo order (phòng khi khách thử lại). */
     public int insertPending(int orderId, BigDecimal amount, String qrCodeUrl) throws SQLException {
         int nextAttempt = findNextAttemptNo(orderId);
         String sql = """

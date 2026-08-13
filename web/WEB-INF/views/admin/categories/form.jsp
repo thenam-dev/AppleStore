@@ -87,16 +87,20 @@
                             <label class="form-label" for="displayOrder">Display order</label>
                             <input id="displayOrder" class="form-control" type="number" name="displayOrder" min="0" value="${category.displayOrder}" required>
                         </div>
-                        <div class="form-check align-self-end mt-3">
-                            <c:choose>
-                                <c:when test="${category.isActive}">
-                                    <input id="isActive" class="form-check-input" type="checkbox" name="isActive" checked>
-                                </c:when>
-                                <c:otherwise>
-                                    <input id="isActive" class="form-check-input" type="checkbox" name="isActive">
-                                </c:otherwise>
-                            </c:choose>
-                            <label class="form-check-label" for="isActive">Active</label>
+                        <div>
+                            <label class="form-label" for="status">Status</label>
+                            <select id="status" class="form-select" name="status" required>
+                                <c:forEach var="status" items="${categoryStatusOptions}">
+                                    <c:choose>
+                                        <c:when test="${(category.isActive and status eq 'ACTIVE') or (not category.isActive and status eq 'INACTIVE')}">
+                                            <option value="${fn:escapeXml(status)}" selected><c:out value="${status}" /></option>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <option value="${fn:escapeXml(status)}"><c:out value="${status}" /></option>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+                            </select>
                         </div>
                     </div>
 

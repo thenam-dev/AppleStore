@@ -124,7 +124,7 @@ public class Order {
     }
 
     public String getPaymentMethod() {
-return paymentMethod;
+        return paymentMethod;
     }
 
     public void setPaymentMethod(String paymentMethod) {

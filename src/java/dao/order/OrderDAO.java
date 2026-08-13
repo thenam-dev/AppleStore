@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package dao.order;
 
 import model.entity.cart.CartItem;
@@ -8,8 +12,11 @@ import java.sql.*;
 import java.util.Optional;
 import model.entity.order.Order;
 
+/**
+ *
+ * @author ACER
+ */
 public class OrderDAO {
-
     public int insert(Order order) throws SQLException {
         String sql = """
                 INSERT INTO orders (customer_id, delivery_address, recipient_name, recipient_phone,

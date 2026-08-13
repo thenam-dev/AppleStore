@@ -14,7 +14,7 @@ public class AppConfig {
     public static final String ROLE_SALE_STAFF = "SALE_STAFF";
     public static final String ROLE_DELIVERY = "DELIVERY";
 
-    public static final String SESSION_USER = "currentUser";
+    public static final String SESSION_USER = "user";
 
     public static final int PAGE_SIZE_ADMIN = 20;
     public static final int PAGE_SIZE_PRODUCTS = 12;

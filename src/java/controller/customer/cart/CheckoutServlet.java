@@ -1,5 +1,6 @@
 package controller.customer.cart;
 
+import config.AppConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -7,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.entity.cart.CartItem;
+import model.entity.user.User;
 import service.cart.CartService;
 import service.cart.CheckoutService;
 // ---- THÊM MỚI: Import class Promotion ----loc
@@ -39,7 +41,7 @@ public class CheckoutServlet extends HttpServlet {
 
         request.setAttribute("cartItems", items);
         request.setAttribute("cartTotal", cartTotal);
-        request.getRequestDispatcher("/customer/checkout.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/customer/checkout.jsp").forward(request, response);
     }
 
     @Override
@@ -82,7 +84,7 @@ public class CheckoutServlet extends HttpServlet {
             request.setAttribute("cartTotal", cartTotal);
             request.setAttribute("errorMsg", result.message);
             request.setAttribute("fieldErrors", result.fieldErrors);
-            request.getRequestDispatcher("/customer/checkout.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/customer/checkout.jsp").forward(request, response);
             return;
         }
         // ---- THÊM MỚI: Dọn dẹp Session giỏ hàng sau khi đặt hàng thành công ----
@@ -101,10 +103,12 @@ public class CheckoutServlet extends HttpServlet {
     }
 
     private int getCustomerId(HttpServletRequest request) {
-        Object customerId = request.getSession().getAttribute("customerId");
-        if (customerId == null) {
+        HttpSession session = request.getSession(false);
+        Object sessionUser = session == null ? null : session.getAttribute(AppConfig.SESSION_USER);
+        if (!(sessionUser instanceof User)) {
             throw new IllegalStateException("Khách chưa đăng nhập - AuthFilter phải chặn trước khi tới servlet này");
         }
-        return (Integer) customerId;
+        return ((User) sessionUser).getUserId();
     }
 }
+

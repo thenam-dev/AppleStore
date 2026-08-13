@@ -10,7 +10,7 @@
     </head>
     <body>
 
-        <jsp:include page="/common/header.jsp"/>
+        <jsp:include page="/WEB-INF/views/common/header.jsp"/>
 
         <div class="container checkout-page">
 
@@ -51,13 +51,13 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="deliveryTimeSlot">Khung giờ nhận hàng (tuỳ chọn)</label>
+                        <label for="deliveryTimeSlot">Khung giờ nhận hàng (tùy chọn)</label>
                         <input type="text" id="deliveryTimeSlot" name="deliveryTimeSlot"
-                               value="${param.deliveryTimeSlot}" placeholder="Vd: 8h - 12h">
+                               value="${param.deliveryTimeSlot}" placeholder="Ví dụ: 8h - 12h">
                     </div>
 
                     <div class="form-group">
-                        <label for="notes">Ghi chú (tuỳ chọn)</label>
+                        <label for="notes">Ghi chú (tùy chọn)</label>
                         <textarea id="notes" name="notes" maxlength="300">${param.notes}</textarea>
                     </div>
 
@@ -92,7 +92,7 @@
                         </c:forEach>
                     </table>
 
-                    <!-- KHỐI NHẬP VÀ CHỌN MÃ KHUYẾN MÃI (CHUYỂN TỪ CART SANG) -->
+                    <!-- KHỐI NHẬP VÀ CHỌN MÃ KHUYẾN MÃI -->
                     <form class="voucher-box" action="${pageContext.request.contextPath}/apply-voucher" method="post" style="margin-top: 20px; margin-bottom: 15px;">
                         <label class="form-label" for="voucher-code" style="font-weight: 600; display: block; margin-bottom: 5px;">Mã khuyến mãi</label>
 
@@ -104,12 +104,10 @@
                         </div>
 
                         <div class="mt-2 d-flex justify-content-between align-items-center" style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.9rem;">
-                            <!-- Nút dẫn sang trang chọn mã có sẵn -->
                             <a href="${pageContext.request.contextPath}/vouchers" style="text-decoration: none; color: #0d6efd;">
                                 Chọn mã có sẵn
                             </a>
 
-                            <!-- Nút gỡ bỏ mã nếu đã áp dụng -->
                             <c:if test="${not empty sessionScope.appliedPromo}">
                                 <a href="${pageContext.request.contextPath}/remove-voucher" class="text-danger" style="text-decoration: none; color: #dc3545;">Gỡ bỏ mã</a>
                             </c:if>
@@ -133,7 +131,7 @@
             </div>
         </div>
 
-        <jsp:include page="/common/footer.jsp"/>
+        <jsp:include page="/WEB-INF/views/common/footer.jsp"/>
 
     </body>
 </html>

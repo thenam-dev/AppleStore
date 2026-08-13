@@ -17,7 +17,8 @@ public class CategoryStatusServlet extends CategoryServletSupport {
 
         try {
             int categoryId = parseInt(request.getParameter("categoryId"), "Category id is invalid.");
-            categoryService.toggleCategoryStatus(categoryId);
+            String status = request.getParameter("status");
+            categoryService.changeCategoryStatus(categoryId, status);
             redirectToCategoryListWithMessage(request, response, FLASH_SUCCESS_KEY, "Category status updated.");
         } catch (SQLException | IllegalArgumentException ex) {
             redirectToCategoryListWithMessage(request, response, FLASH_ERROR_KEY, ex.getMessage());
