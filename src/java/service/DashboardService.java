@@ -6,6 +6,7 @@ package service;
 
 import dao.DashboardDAO;
 import model.DashboardStats;
+import model.entity.order.Order;
 
 /**
  *
@@ -30,7 +31,16 @@ public class DashboardService {
 
     }
 
+<<<<<<< Updated upstream
     public java.util.List<model.Order> getRecentOrders(int limit) {
         return dashboardDAO.getRecentOrders(limit);
+=======
+    public java.util.LinkedHashMap<String, Double> getRevenueByDate(String startDate, String endDate) {
+        return dashboardDAO.getRevenueByDate(startDate, endDate);
+    }
+
+    public java.util.List<Order> getRecentOrders(int limit, String startDate, String endDate) {
+        return dashboardDAO.getRecentOrders(limit, startDate, endDate);
+>>>>>>> Stashed changes
     }
 }

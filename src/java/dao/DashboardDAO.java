@@ -12,7 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import model.Order;
+import model.entity.order.Order;
+
 
 /**
  *
@@ -61,7 +62,7 @@ public class DashboardDAO {
                     if (ts != null) {
                         o.setCreatedAt(ts.toLocalDateTime());
                     }
-                    o.setFinalAmount(rs.getDouble("final_amount"));
+                    o.setFinalAmount(rs.getBigDecimal("final_amount"));
                     o.setStatus(rs.getString("status"));
                     list.add(o);
                 }
