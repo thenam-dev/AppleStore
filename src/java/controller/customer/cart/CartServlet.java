@@ -13,6 +13,8 @@ import service.cart.CartService;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -136,13 +138,25 @@ public class CartServlet extends HttpServlet {
     }
 
     /** Trả về customerId từ User trong session - AuthFilter là lớp chặn chính, đây là lớp phòng thủ thêm. */
-    private int getCustomerId(HttpServletRequest request) {
+    private Integer getCustomerId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         Object sessionUser = session == null ? null : session.getAttribute(AppConfig.SESSION_USER);
         if (!(sessionUser instanceof User)) {
-            throw new IllegalStateException("Khách chưa đăng nhập - AuthFilter phải chặn trước khi tới CartServlet");
+            return null;
         }
 
         return ((User) sessionUser).getUserId();
+    }
+
+    private void redirectToLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String redirectTarget = request.getRequestURI().substring(request.getContextPath().length());
+        String queryString = request.getQueryString();
+        if (queryString != null && !queryString.isBlank()) {
+            redirectTarget += "?" + queryString;
+        }
+
+        response.sendRedirect(request.getContextPath()
+                + "/login?redirectTo="
+                + URLEncoder.encode(redirectTarget, StandardCharsets.UTF_8));
     }
 }
