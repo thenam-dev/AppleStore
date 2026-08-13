@@ -57,46 +57,24 @@ public class AdminDashboardServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        service.DashboardService service = new service.DashboardService();
+        service.dashboard.DashboardService service = new service.dashboard.DashboardService();
         String startDate = request.getParameter("startDate");
         String endDate = request.getParameter("endDate");
-        // 1. Lấy dữ liệu
-        java.util.LinkedHashMap<String, Double> revenueMap = service.getRevenueByDate(startDate, endDate);
-        model.DashboardStats stats = service.getDashboardStats(startDate, endDate);
+        
+        // Lấy dữ liệu tổng quan
+        dto.DashboardStatsDTO stats = service.getDashboardStats(startDate, endDate);
 
-        // TỰ CỘNG DỒN doanh thu lấy từ Biểu đồ để ra Tổng (Đỡ tốn 1 lần chọc DB)
-        double totalRev = 0;
-        StringBuilder labels = new StringBuilder("[");
-        StringBuilder data = new StringBuilder("[");
-
-        for (java.util.Map.Entry<String, Double> entry : revenueMap.entrySet()) {
-            totalRev += entry.getValue(); // Cộng dồn tiền
-            labels.append("'").append(entry.getKey()).append("',");
-            data.append(entry.getValue()).append(",");
-        }
-
-        // Gán Tổng tiền vào stats
-        stats.setTotalRevenue(totalRev);
-
-        // Xóa dấu phẩy thừa ở cuối chuỗi JSON
-        if (labels.length() > 1) {
-            labels.setLength(labels.length() - 1);
-            data.setLength(data.length() - 1);
-        }
-        labels.append("]");
-        data.append("]");
-
-        // Bắn hết sang JSP
+        // Bắn sang JSP
         request.setAttribute("stats", stats);
         request.setAttribute("recentOrders", service.getRecentOrders(4, startDate, endDate));
-        request.setAttribute("chartLabels", labels.toString());
-        request.setAttribute("chartData", data.toString());
+        request.setAttribute("bestSellingProducts", service.getBestSellingProducts(3));
 
-        // 2. Set các biến Sidebar (giống file UserListServlet) để hiển thị menu bên trái
+        // Set các biến Sidebar
         request.setAttribute("adminSidebarTitle", "Dashboard");
         request.setAttribute("adminSidebarDescription", "A clean snapshot of shop performance.");
+        request.setAttribute("adminSidebarActive", "dashboard");
 
-        // 3. Forward sang file JSP
+        // Forward sang file JSP
         request.getRequestDispatcher("/WEB-INF/views/admin/dashboard-report/dashboard.jsp").forward(request, response);
     }
 

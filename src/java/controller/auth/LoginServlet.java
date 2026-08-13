@@ -1,6 +1,6 @@
 package controller.auth;
 
-import model.User;
+import model.entity.user.User;
 import service.AuthService;
 
 import jakarta.servlet.ServletException;
@@ -51,7 +51,7 @@ public class LoginServlet extends HttpServlet {
 
             String redirectUrl = isSafeRedirect(redirectTo)
                     ? redirectTo
-                    : request.getContextPath() + "/index.html";
+                    : request.getContextPath() + "/index.jsp";
             response.sendRedirect(redirectUrl);
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectWithError(request, response, ex.getMessage(), email, redirectTo);

@@ -5,8 +5,9 @@
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <%@ page import="java.text.NumberFormat" %>
 <%@ page import="java.util.Locale" %>
-<%@ page import="model.Order" %>
-<%@ page import="model.DashboardStats" %>
+<%@ page import="model.entity.order.Order" %>
+<%@ page import="dto.DashboardStatsDTO" %>
+<%@ page import="dto.BestSellingProductDTO" %>
 <%!
     private String h(Object value) {
         if (value == null) {
@@ -23,14 +24,19 @@
 <%
     String appPath = request.getContextPath();
     
-    DashboardStats stats = (DashboardStats) request.getAttribute("stats");
+    DashboardStatsDTO stats = (DashboardStatsDTO) request.getAttribute("stats");
     if (stats == null) {
-        stats = new DashboardStats();
+        stats = new DashboardStatsDTO();
     }
     
     List<Order> recentOrders = (List<Order>) request.getAttribute("recentOrders");
     if (recentOrders == null) {
         recentOrders = Collections.emptyList();
+    }
+    
+    List<BestSellingProductDTO> bestSellingProducts = (List<BestSellingProductDTO>) request.getAttribute("bestSellingProducts");
+    if (bestSellingProducts == null) {
+        bestSellingProducts = Collections.emptyList();
     }
 
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy");
@@ -48,10 +54,10 @@
     <body class="site-body admin-app">
         <main class="admin-workspace">
             <%
-                request.setAttribute("adminSidebarTitle", "Dashboard");
-                request.setAttribute("adminSidebarDescription", "A clean snapshot of shop performance and status.");
-                request.setAttribute("adminSidebarFooterTitle", "Overview");
-                request.setAttribute("adminSidebarFooterDescription", "Management workspace for dashboard and master data.");
+                request.setAttribute("adminSidebarTitle", "Tổng quan");
+                request.setAttribute("adminSidebarDescription", "Tóm tắt hiệu suất và trạng thái của cửa hàng.");
+                request.setAttribute("adminSidebarFooterTitle", "Tổng quan");
+                request.setAttribute("adminSidebarFooterDescription", "Không gian quản lý dữ liệu và hệ thống.");
                 request.setAttribute("adminSidebarShowUserQuickLinks", Boolean.TRUE);
             %>
             <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
@@ -59,48 +65,35 @@
             <section class="admin-main">    
                 <div class="admin-page-head">
                     <div>
-                        <h1>Dashboard summary</h1>
+                        <h1>Tổng quan hệ thống</h1>
                     </div>
                 </div>
-                <form action="<%= appPath %>/admin/dashboard" method="GET" class="d-flex gap-2 align-items-center">
-                    <label>Từ:</label>
-                    <input type="date" name="startDate" class="form-control" value="${param.startDate}">
-                    <label>Đến:</label>
-                    <input type="date" name="endDate" class="form-control" value="${param.endDate}">
-                    <button type="submit" class="btn btn-primary">Lọc</button>
-                </form>
+
                 <section class="admin-kpi-grid">
                     <article class="stat-card compact">
-                        <div class="stat-label">Revenue</div>
+                        <div class="stat-label">Doanh thu</div>
                         <div class="stat-value">
                             <%= currencyFormatter.format(stats.getTotalRevenue()) %>
                         </div>
-                        <p>Total delivered orders</p>
+                        <p>Đơn hàng đã giao thành công</p>
                     </article>
                     <article class="stat-card compact">
-                        <div class="stat-label">Orders</div>
+                        <div class="stat-label">Đơn hàng</div>
                         <div class="stat-value"><%= stats.getTotalOrders() %></div>
-                        <p>Across all statuses</p>
+                        <p>Đang ở mọi trạng thái</p>
                     </article>
                     <article class="stat-card compact">
-                        <div class="stat-label">Products</div>
+                        <div class="stat-label">Sản phẩm</div>
                         <div class="stat-value"><%= stats.getActiveProducts() %></div>
-                        <p>Active catalog items</p>
+                        <p>Sản phẩm đang kinh doanh</p>
                     </article>
                     <article class="stat-card compact">
-                        <div class="stat-label">Customers</div>
-                        <div class="stat-value"><%= stats.getTotalCustomers() %></div>
-                        <p>Registered accounts</p>
+                        <div class="stat-label">Người dùng</div>
+                        <div class="stat-value"><%= stats.getTotalUsers() %></div>
+                        <p>Tài khoản đã đăng ký</p>
                     </article>
                 </section>
-                <div class="admin-panel mt-4 mb-4">
-                    <div class="admin-panel-head">
-                        <h2>Biểu đồ doanh thu theo ngày</h2>
-                    </div>
-                    <div class="admin-chart-placeholder" style="padding: 20px;">
-                        <canvas id="revenueChart" style="max-height: 400px; width: 100%;"></canvas>
-                    </div>
-                </div>
+
                 <div class="admin-content-grid">
                     <div class="admin-section-stack">
                         <!-- Sales overview removed -->
@@ -108,21 +101,20 @@
                         <section class="admin-panel">
                             <div class="admin-panel-head">
                                 <div>
-                                    <h2>Recent orders</h2>
-                                    <p>High-signal table for the newest activity entering the system.</p>
+                                    <h2>Đơn hàng gần đây</h2>
+                                    <p>Danh sách các đơn hàng mới nhất vừa được tạo.</p>
                                 </div>
-                                <button class="btn btn-app-outline btn-sm" onclick="exportOrdersToExcel()">Export Excel</button>
                             </div>
                             <div class="table-responsive">
                                 <table class="table app-table" id="ordersTable">
                                     <thead>
                                         <tr>
-                                            <th scope="col">Order ID</th>
-                                            <th scope="col">Customer</th>
-                                            <th scope="col">Date</th>
-                                            <th scope="col">Total</th>
-                                            <th scope="col">Status</th>
-                                            <th scope="col" class="text-end">Action</th>
+                                            <th scope="col">Mã đơn</th>
+                                            <th scope="col">Khách hàng</th>
+                                            <th scope="col">Ngày đặt</th>
+                                            <th scope="col">Tổng tiền</th>
+                                            <th scope="col">Trạng thái</th>
+                                            <th scope="col" class="text-end">Thao tác</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -137,25 +129,25 @@
                                                     String st = order.getStatus();
                                                     if ("PENDING_PAYMENT".equals(st) || "APPROVED".equals(st)) { 
                                                 %>
-                                                <span class="status-badge status-pending">Pending</span>
+                                                <span class="status-badge status-pending">Chờ xử lý</span>
                                                 <% } else if ("CONFIRMED".equals(st) || "PREPARING".equals(st) || "DISPATCHED".equals(st)) { %>
-                                                <span class="status-badge status-processing"><%= h(st) %></span>
+                                                <span class="status-badge status-processing">Đang giao</span>
                                                 <% } else if ("DELIVERED".equals(st)) { %>
-                                                <span class="status-badge status-delivered">Delivered</span>
+                                                <span class="status-badge status-delivered">Đã giao</span>
                                                 <% } else if ("CANCELLED".equals(st) || "PAYMENT_FAILED".equals(st) || "EXPIRED".equals(st)) { %>
-                                                <span class="status-badge status-cancelled"><%= h(st) %></span>
+                                                <span class="status-badge status-cancelled">Đã hủy</span>
                                                 <% } else { %>
-                                                <span class="status-badge"><%= h(st) %></span>
+                                                <span class="status-badge">Khác</span>
                                                 <% } %>
                                             </td>
                                             <td class="text-end table-actions">
-                                                <a class="btn btn-app-outline btn-sm" href="<%= appPath %>/admin/orders/detail?id=<%= order.getOrderId() %>">Open</a>
+                                                <a class="btn btn-app-outline btn-sm" href="<%= appPath %>/admin/orders/detail?id=<%= order.getOrderId() %>">Xem</a>
                                             </td>
                                         </tr>
                                         <% } %>
                                         <% if (recentOrders.isEmpty()) { %>
                                         <tr>
-                                            <td colspan="6" class="text-center text-muted py-4">No recent orders found.</td>
+                                            <td colspan="6" class="text-center text-muted py-4">Chưa có đơn hàng nào.</td>
                                         </tr>
                                         <% } %>
                                     </tbody>
@@ -168,25 +160,25 @@
                         <section class="admin-panel">
                             <div class="admin-panel-head">
                                 <div>
-                                    <h2>Order status summary</h2>
-                                    <p>Useful for triage without opening the full order page.</p>
+                                    <h2>Trạng thái đơn hàng</h2>
+                                    <p>Thống kê số lượng đơn hàng theo từng trạng thái.</p>
                                 </div>
                             </div>
                             <ul class="admin-status-list">
                                 <li>
-                                    <span class="admin-status-label"><span class="admin-status-dot"></span>Pending confirmation</span>
+                                    <span class="admin-status-label"><span class="admin-status-dot"></span>Chờ xác nhận</span>
                                     <strong><%= stats.getPendingOrdersCount() %></strong>
                                 </li>
                                 <li>
-                                    <span class="admin-status-label"><span class="admin-status-dot warning"></span>Shipping</span>
+                                    <span class="admin-status-label"><span class="admin-status-dot warning"></span>Đang giao hàng</span>
                                     <strong><%= stats.getShippingOrdersCount() %></strong>
                                 </li>
                                 <li>
-                                    <span class="admin-status-label"><span class="admin-status-dot success"></span>Delivered</span>
+                                    <span class="admin-status-label"><span class="admin-status-dot success"></span>Giao thành công</span>
                                     <strong><%= stats.getDeliveredOrdersCount() %></strong>
                                 </li>
                                 <li>
-                                    <span class="admin-status-label"><span class="admin-status-dot danger"></span>Cancelled</span>
+                                    <span class="admin-status-label"><span class="admin-status-dot danger"></span>Đã hủy</span>
                                     <strong><%= stats.getCancelledOrdersCount() %></strong>
                                 </li>
                             </ul>
@@ -195,35 +187,26 @@
                         <section class="admin-panel">
                             <div class="admin-panel-head">
                                 <div>
-                                    <h2>Best selling products</h2>
-                                    <p>Simple ranked list for spotlight decisions.</p>
+                                    <h2>Sản phẩm bán chạy</h2>
+                                    <p>Danh sách các sản phẩm có doanh số cao nhất.</p>
                                 </div>
                             </div>
                             <ul class="admin-mini-list">
+                                <% for (BestSellingProductDTO p : bestSellingProducts) { %>
                                 <li class="admin-mini-list-item">
-                                    <img src="<%= appPath %>/assets/images/iphone-card.svg" alt="iPhone 16 Pro">
+                                    <img src="<%= appPath %><%= p.getImageUrl() != null ? p.getImageUrl() : "/assets/images/default-product.png" %>" alt="<%= h(p.getName()) %>">
                                     <div>
-                                        <strong>iPhone 16 Pro</strong>
-                                        <small>142 units sold this month</small>
+                                        <strong><%= h(p.getName()) %></strong>
+                                        <small><%= p.getTotalSold() %> sản phẩm bán ra</small>
                                     </div>
-                                    <span class="status-badge status-in-stock">Hot</span>
+                                    <span class="status-badge status-in-stock">Bán chạy</span>
                                 </li>
+                                <% } %>
+                                <% if (bestSellingProducts.isEmpty()) { %>
                                 <li class="admin-mini-list-item">
-                                    <img src="<%= appPath %>/assets/images/mac-card.svg" alt="MacBook Air M4">
-                                    <div>
-                                        <strong>MacBook Air M4</strong>
-                                        <small>88 units sold this month</small>
-                                    </div>
-                                    <span class="status-badge status-low-stock">Low stock</span>
+                                    <div class="text-muted w-100 text-center">Chưa có dữ liệu.</div>
                                 </li>
-                                <li class="admin-mini-list-item">
-                                    <img src="<%= appPath %>/assets/images/watch-card.svg" alt="Apple Watch Series 11">
-                                    <div>
-                                        <strong>Apple Watch Series 11</strong>
-                                        <small>67 units sold this month</small>
-                                    </div>
-                                    <span class="status-badge status-in-stock">Stable</span>
-                                </li>
+                                <% } %>
                             </ul>
                         </section>
 
@@ -232,42 +215,7 @@
 
             </section>
         </main>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="<%= appPath %>/assets/js/main.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script>
-                                    const labels = ${chartLabels != null ? chartLabels : '[]'};
-                                    const dataValues = ${chartData != null ? chartData : '[]'};
-
-                                    if (labels.length > 0) {
-                                        const ctx = document.getElementById('revenueChart').getContext('2d');
-                                        new Chart(ctx, {
-                                            type: 'bar', // Thích đổi thành biểu đồ đường thì sửa chữ 'bar' thành 'line'
-                                            data: {
-                                                labels: labels,
-                                                datasets: [{
-                                                        label: 'Doanh thu (VNĐ)',
-                                                        data: dataValues,
-                                                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                                                        borderColor: 'rgba(54, 162, 235, 1)',
-                                                        borderWidth: 1
-                                                    }]
-                                            },
-                                            options: {responsive: true, maintainAspectRatio: false}
-                                        });
-                                    }
-        </script>
-        <script>
-            function exportOrdersToExcel() {
-                var table = document.getElementById("ordersTable");
-                if (!table) {
-                    alert("Table not found!");
-                    return;
-                }
-                var workbook = XLSX.utils.table_to_book(table, {sheet: "Orders"});
-                XLSX.writeFile(workbook, "Recent_Orders_Report.xlsx");
-            }
-        </script>
     </body>
 </html>

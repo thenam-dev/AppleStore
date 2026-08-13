@@ -29,7 +29,8 @@
     <div>
         <p class="admin-sidebar-label">Overview</p>
         <nav class="admin-nav">
-            <a class="${activeItem eq 'dashboard' ? 'active' : ''}" href="${appPath}/admin/dashboard">Dashboard</a>
+            <a class="${activeItem eq 'dashboard' ? 'active' : ''}" href="${appPath}/admin/dashboard">Tổng quan</a>
+            <a class="${activeItem eq 'report' ? 'active' : ''}" href="${appPath}/admin/report">Báo cáo</a>
             <a class="${activeItem eq 'products' ? 'active' : ''}" href="${appPath}/admin/products">Products</a>
             <a class="${activeItem eq 'categories' ? 'active' : ''}" href="${appPath}/admin/categories">Categories</a>
             <a class="${activeItem eq 'orders' ? 'active' : ''}" href="${appPath}/admin/orders.html">Orders</a>
@@ -45,7 +46,7 @@
             <nav class="admin-nav">
                 <a href="${appPath}/admin/users?role=CUSTOMER">Customers</a>
                 <a href="${appPath}/admin/users?role=ADMIN">Admins</a>
-                <a href="${appPath}/index.jsp">Open Storefront</a>
+                <a href="${appPath}/index.jsp">Về trang chủ</a>
             </nav>
         </div>
     </c:if>
