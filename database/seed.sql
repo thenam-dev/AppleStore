@@ -41,8 +41,8 @@ INSERT INTO users (user_id, full_name, email, password_hash, phone, role, status
     (6, 'Lê Văn Chiến', 'customer3@gmail.com', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000009', 'CUSTOMER', 'ACTIVE', 1),
     (7, 'Phạm Thị Duyên', 'customer4@gmail.com', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000010', 'CUSTOMER', 'ACTIVE', 1),
     (8, 'Hoàng Văn Em', 'customer5@gmail.com', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000011', 'CUSTOMER', 'INACTIVE', 0),
-    (9, 'Nguyễn Minh Sale', 'sale@applestore.vn', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000012', 'SALE_STAFF', 'ACTIVE', 1);
-
+    (9, 'Nguyễn Minh Sale', 'sale@applestore.vn', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000012', 'SALE_STAFF', 'ACTIVE', 1),
+    (10, 'Nguyễn Luân Sale', 'sale1@applestore.vn', '210000:lAqSmZs36ZsJWkQol+ePIQ==:PWhweQHIwxxTgFI3xzy56wEIDQISuqX7+xcYp4ctdx4=', '0900000013', 'SALE_STAFF', 'ACTIVE', 1);
 -- ---------- 2.4 user_addresses ----------
 INSERT INTO user_addresses (user_id, recipient_name, recipient_phone, address_detail, is_default) VALUES
     (4, 'Nguyễn Văn An',  '0900000007', '123 Nguyễn Trãi, P.7, Q.5, TP.HCM', 1),
@@ -300,7 +300,6 @@ INSERT INTO deliveries (delivery_id, order_id, delivery_trip_id, staff_id, statu
 
 INSERT INTO deliveries (delivery_id, order_id, staff_id, status, failure_reason) VALUES
     (304, 306, 2, 'CANCELLED', 'Đơn hàng đã bị huỷ trước khi giao');
-
 -- ---------- 2.18 reviews (cho các đơn đã DELIVERED) ----------
 INSERT INTO reviews (order_item_id, order_id, customer_id, rating, review_text) VALUES
     (304, 304, 4, 5, 'Máy đẹp, giao nhanh, đóng gói cẩn thận. Rất hài lòng!'),
