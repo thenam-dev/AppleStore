@@ -54,6 +54,10 @@ public class CategoryService {
         return categoryDAO.findAllActive();
     }
 
+    public List<String> getAllowedStatuses() {
+        return List.of("ACTIVE", "INACTIVE");
+    }
+
     public Category getCategoryById(int categoryId) throws SQLException {
         validateCategoryId(categoryId);
         return categoryDAO.findById(categoryId)
@@ -93,9 +97,9 @@ public class CategoryService {
         }
     }
 
-    public void toggleCategoryStatus(int categoryId) throws SQLException {
+    public void changeCategoryStatus(int categoryId, String status) throws SQLException {
         Category category = getCategoryById(categoryId);
-        category.setIsActive(!category.getIsActive());
+        category.setIsActive("ACTIVE".equals(normalizeStatus(status)));
 
         if (!categoryDAO.update(category)) {
             throw new IllegalArgumentException("Category does not exist.");

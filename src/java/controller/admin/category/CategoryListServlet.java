@@ -48,6 +48,7 @@ public class CategoryListServlet extends CategoryServletSupport {
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("listQuery", listQuery);
         request.setAttribute("listQuerySuffix", listQuery.isBlank() ? "" : "&" + listQuery);
+        setCategoryFormOptions(request);
         moveFlashMessagesToRequest(request);
         setCategoryMetrics(request, allCategories, filteredCount);
 
@@ -67,6 +68,7 @@ public class CategoryListServlet extends CategoryServletSupport {
         request.setAttribute("totalPages", 1);
         request.setAttribute("listQuery", "");
         request.setAttribute("listQuerySuffix", "");
+        setCategoryFormOptions(request);
         request.setAttribute("sortOptions", java.util.List.of());
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }

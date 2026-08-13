@@ -93,23 +93,17 @@
                     <form class="admin-filter-bar compact" action="${appPath}/admin/categories" method="get" name="adminCategoryFilterForm">
                         <input class="form-control" type="search" name="keyword" value="${fn:escapeXml(keyword)}" placeholder="Search by category name or slug">
                         <select class="form-select" name="status">
-                            <c:choose>
-                                <c:when test="${selectedStatus eq 'ACTIVE'}">
-                                    <option value="">All status</option>
-                                    <option value="ACTIVE" selected>Active</option>
-                                    <option value="INACTIVE">Inactive</option>
-                                </c:when>
-                                <c:when test="${selectedStatus eq 'INACTIVE'}">
-                                    <option value="">All status</option>
-                                    <option value="ACTIVE">Active</option>
-                                    <option value="INACTIVE" selected>Inactive</option>
-                                </c:when>
-                                <c:otherwise>
-                                    <option value="" selected>All status</option>
-                                    <option value="ACTIVE">Active</option>
-                                    <option value="INACTIVE">Inactive</option>
-                                </c:otherwise>
-                            </c:choose>
+                            <option value="">All status</option>
+                            <c:forEach var="status" items="${categoryStatusOptions}">
+                                <c:choose>
+                                    <c:when test="${selectedStatus eq status}">
+                                        <option value="${fn:escapeXml(status)}" selected><c:out value="${status}" /></option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${fn:escapeXml(status)}"><c:out value="${status}" /></option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
                         </select>
                         <select class="form-select" name="sort">
                             <c:forEach var="sortOption" items="${sortOptions}">
@@ -161,6 +155,7 @@
                                                 <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/categories/edit?id=${category.categoryId}">Edit</a>
                                                 <form class="d-inline" action="${appPath}/admin/categories/status" method="post">
                                                     <input type="hidden" name="categoryId" value="${category.categoryId}">
+                                                    <input type="hidden" name="status" value="${category.isActive ? 'INACTIVE' : 'ACTIVE'}">
                                                     <button class="btn ${category.isActive ? 'btn-app-outline' : 'btn-app-primary'} btn-sm" type="submit">
                                                         ${category.isActive ? 'Deactivate' : 'Activate'}
                                                     </button>
