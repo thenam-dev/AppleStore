@@ -54,58 +54,6 @@ public class ProductVariantDAO {
         }
     }
     
-    public Optional<Integer> findStockQuantity(int variantId) throws SQLException {
-        String sql = "SELECT stock_quantity FROM product_variants WHERE variant_id = ? AND is_active = 1";
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, variantId);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return Optional.of(resultSet.getInt("stock_quantity"));
-                }
-                return Optional.empty();
-            }
-        }
-    }
-    
-    /**
-     * Trừ tồn kho khi tạo đơn hàng, chỉ thành công nếu tồn kho hiện tại còn
-     * đủ - điều kiện này nằm ngay trong WHERE nên atomic ở mức 1 câu lệnh SQL
-     * mà không cần SELECT ... FOR UPDATE riêng.
-     * Trả về false nếu không đủ hàng (0 dòng bị ảnh hưởng) - Service phải
-     * kiểm tra giá trị trả về để rollback nghiệp vụ (hoàn lại các bước trước
-     * đó) vì không còn transaction tự động.
-     */
-    public boolean decreaseStockIfAvailable(int variantId, int quantity) throws SQLException {
-        String sql = """
-                UPDATE product_variants
-                SET stock_quantity = stock_quantity - ?
-                WHERE variant_id = ? AND is_active = 1 AND stock_quantity >= ?
-                """;
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, quantity);
-            statement.setInt(2, variantId);
-            statement.setInt(3, quantity);
-            return statement.executeUpdate() > 0;
-        }
-    }
-
-    /** Hoàn tồn kho khi huỷ đơn / hết hạn thanh toán / cần rollback thủ công 1 bước checkout đã trừ kho. */
-    public void increaseStock(int variantId, int quantity) throws SQLException {
-        String sql = "UPDATE product_variants SET stock_quantity = stock_quantity + ? WHERE variant_id = ?";
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, quantity);
-            statement.setInt(2, variantId);
-            statement.executeUpdate();
-        }
-    }
-
-
     public int countByProduct(int productId, String keyword, String status) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM product_variants pv JOIN products p ON p.product_id = pv.product_id WHERE 1 = 1");
         List<Object> params = new ArrayList<>();
