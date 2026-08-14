@@ -17,12 +17,13 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 @WebFilter(urlPatterns = {
-        "/cart",
-        "/checkout",
-        "/payment",
-        "/order-success"
+    "/cart",
+    "/checkout",
+    "/payment",
+    "/order-success"
 })
 public class AuthFilter implements Filter {
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
