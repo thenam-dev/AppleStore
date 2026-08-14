@@ -1,6 +1,6 @@
 package controller.admin.user;
 
-import model.User;
+import model.entity.user.User;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -16,14 +16,15 @@ public class UserEditServlet extends UserServletSupport {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            int userId = parseInt(request.getParameter("id"), "User id is invalid.");
+            int userId = parseInt(request.getParameter("id"), "ID người dùng không hợp lệ.");
             User user = userService.getUserById(userId);
 
             request.setAttribute("user", user);
+            moveFlashMessagesToRequest(request);
             setUserReferenceData(request);
             request.getRequestDispatcher(FORM_VIEW).forward(request, response);
         } catch (SQLException | IllegalArgumentException ex) {
-            redirectToUserListWithMessage(request, response, "error", ex.getMessage());
+            redirectToUserListWithMessage(request, response, FLASH_ERROR_KEY, ex.getMessage());
         }
     }
 }

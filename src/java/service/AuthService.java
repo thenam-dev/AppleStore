@@ -1,7 +1,7 @@
 package service;
 
-import dao.UserDAO;
-import model.User;
+import dao.user.UserDAO;
+import model.entity.user.User;
 import util.PasswordUtil;
 
 import java.sql.SQLException;
@@ -38,30 +38,30 @@ public class AuthService {
      */
     public User register(String fullName, String email, String phone, String password, String confirmPassword)
             throws SQLException {
-        String normalizedFullName = trimRequired(fullName, "Full name is required.");
-        String normalizedEmail = trimRequired(email, "Email is required.").toLowerCase();
+        String normalizedFullName = trimRequired(fullName, "Vui lòng nhập họ tên.");
+        String normalizedEmail = trimRequired(email, "Vui lòng nhập email.").toLowerCase();
         String normalizedPhone = normalizeOptional(phone);
 
         if (normalizedFullName.length() > 100) {
-            throw new IllegalArgumentException("Full name must be 100 characters or less.");
+            throw new IllegalArgumentException("Họ tên không được vượt quá 100 ký tự.");
         }
         if (!EMAIL_PATTERN.matcher(normalizedEmail).matches() || normalizedEmail.length() > 255) {
-            throw new IllegalArgumentException("Email is invalid.");
+            throw new IllegalArgumentException("Email không hợp lệ.");
         }
         if (normalizedPhone != null && !PHONE_PATTERN.matcher(normalizedPhone).matches()) {
-            throw new IllegalArgumentException("Phone must contain 9 to 15 digits.");
+            throw new IllegalArgumentException("Số điện thoại phải gồm 9 đến 15 chữ số.");
         }
         if (password == null || password.length() < 8) {
-            throw new IllegalArgumentException("Password must be at least 8 characters.");
+            throw new IllegalArgumentException("Mật khẩu phải có ít nhất 8 ký tự.");
         }
         if (!password.equals(confirmPassword)) {
-            throw new IllegalArgumentException("Password confirmation does not match.");
+            throw new IllegalArgumentException("Mật khẩu xác nhận không khớp.");
         }
         if (userDAO.existsByEmail(normalizedEmail)) {
-            throw new IllegalArgumentException("This email is already registered.");
+            throw new IllegalArgumentException("Email này đã được đăng ký.");
         }
         if (userDAO.existsByPhone(normalizedPhone)) {
-            throw new IllegalArgumentException("This phone number is already registered.");
+            throw new IllegalArgumentException("Số điện thoại này đã được đăng ký.");
         }
 
         User user = new User();
@@ -84,33 +84,33 @@ public class AuthService {
      * @return the authenticated user (without the password hash populated)
      */
     public User login(String email, String password) throws SQLException {
-        String normalizedEmail = trimRequired(email, "Email is required.").toLowerCase();
+        String normalizedEmail = trimRequired(email, "Vui lòng nhập email.").toLowerCase();
         if (password == null || password.isEmpty()) {
-            throw new IllegalArgumentException("Password is required.");
+            throw new IllegalArgumentException("Vui lòng nhập mật khẩu.");
         }
 
         Optional<User> maybeUser = userDAO.findByEmail(normalizedEmail);
         if (maybeUser.isEmpty()) {
-            throw new IllegalArgumentException("Email or password is incorrect.");
+            throw new IllegalArgumentException("Email hoặc mật khẩu không đúng.");
         }
 
         User user = maybeUser.get();
 
         if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
             throw new IllegalStateException(
-                    "This account is temporarily locked due to too many failed login attempts. Please try again later.");
+                    "Tài khoản đang tạm khóa do đăng nhập sai quá nhiều lần. Vui lòng thử lại sau.");
         }
 
         if (!PasswordUtil.matches(password, user.getPasswordHash())) {
             handleFailedAttempt(user);
-            throw new IllegalArgumentException("Email or password is incorrect.");
+            throw new IllegalArgumentException("Email hoặc mật khẩu không đúng.");
         }
 
         if ("LOCKED".equals(user.getStatus()) || "SUSPENDED".equals(user.getStatus())) {
-            throw new IllegalStateException("This account has been " + user.getStatus().toLowerCase() + ".");
+            throw new IllegalStateException("Tài khoản này đang bị khóa hoặc tạm ngưng.");
         }
         if ("INACTIVE".equals(user.getStatus())) {
-            throw new IllegalStateException("This account is not active yet.");
+            throw new IllegalStateException("Tài khoản này chưa được kích hoạt.");
         }
 
         userDAO.recordLoginSuccess(user.getUserId());

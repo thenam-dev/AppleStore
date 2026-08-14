@@ -1,5 +1,6 @@
 package filter;
 
+import config.AppConfig;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -9,46 +10,32 @@ import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import model.User;
+import model.entity.user.User;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Set;
 
-/**
- * Chặn truy cập /admin/* nếu chưa đăng nhập hoặc không có quyền phù hợp.
- * Session attribute mong đợi: "user" (model.User) - khớp với
- * filter.CustomerFilter.
- */
 @WebFilter(urlPatterns = {"/admin/*"})
 public class AdminFilter implements Filter {
-
-    private static final Set<String> ALLOWED_ROLES = Set.of("ADMIN", "SALE_STAFF");
-
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-
         HttpSession session = httpRequest.getSession(false);
-        Object attribute = (session != null) ? session.getAttribute("user") : null;
+        Object sessionUser = session == null ? null : session.getAttribute(AppConfig.SESSION_USER);
 
-        if (!(attribute instanceof User authenticatedUser)) {
-            String target = httpRequest.getContextPath() + httpRequest.getServletPath();
-            httpResponse.sendRedirect(httpRequest.getContextPath() + "/login.html"
-                    + "?error=" + URLEncoder.encode("Please log in to continue.", StandardCharsets.UTF_8)
-                    + "&redirectTo=" + URLEncoder.encode(target, StandardCharsets.UTF_8));
+        if (!(sessionUser instanceof User)) {
+            httpResponse.sendRedirect(httpRequest.getContextPath() + "/login");
             return;
         }
 
-        if (!ALLOWED_ROLES.contains(authenticatedUser.getRole())) {
-            httpResponse.sendRedirect(httpRequest.getContextPath() + "/index.html"
-                    + "?error=" + URLEncoder.encode("You do not have permission to access this page.", StandardCharsets.UTF_8));
+        User user = (User) sessionUser;
+        String role = user.getRole() == null ? "" : user.getRole().trim().toUpperCase();
+        if (AppConfig.ROLE_ADMIN.equals(role) || AppConfig.ROLE_SALE_STAFF.equals(role)) {
+            chain.doFilter(request, response);
             return;
         }
 
-        chain.doFilter(request, response);
+        httpResponse.sendRedirect(httpRequest.getContextPath() + "/index.jsp");
     }
 }

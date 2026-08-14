@@ -1,0 +1,196 @@
+package service.user;
+
+import config.AppConfig;
+import dao.user.UserDAO;
+import model.entity.user.User;
+
+import java.sql.SQLException;
+import java.util.List;
+import java.util.regex.Pattern;
+
+public class UserService {
+    private static final int DEFAULT_PAGE = 1;
+    private static final int DEFAULT_PAGE_SIZE = AppConfig.PAGE_SIZE_ADMIN;
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final List<String> ALLOWED_ROLES = List.of(
+            AppConfig.ROLE_CUSTOMER,
+            AppConfig.ROLE_ADMIN,
+            AppConfig.ROLE_SALE_STAFF,
+            AppConfig.ROLE_DELIVERY
+    );
+    private static final List<String> ALLOWED_STATUSES = List.of("ACTIVE", "INACTIVE", "LOCKED", "SUSPENDED");
+    private static final List<String> ALLOWED_SORTS = List.of(
+            "created_desc",
+            "created_asc",
+            "name_asc",
+            "email_asc",
+            "role_asc",
+            "status_asc"
+    );
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{9,15}$");
+
+    private final UserDAO userDAO;
+
+    public UserService() {
+        this(new UserDAO());
+    }
+
+    public UserService(UserDAO userDAO) {
+        this.userDAO = userDAO;
+    }
+
+    public List<User> getUsers(String keyword, String role, String status, String sort, int page, int pageSize)
+            throws SQLException {
+        String normalizedRole = normalizeOptional(role);
+        String normalizedStatus = normalizeOptional(status);
+        String normalizedSort = normalizeSort(sort);
+
+        if (normalizedRole != null && !ALLOWED_ROLES.contains(normalizedRole)) {
+            throw new IllegalArgumentException("Bộ lọc vai trò không hợp lệ.");
+        }
+        if (normalizedStatus != null && !ALLOWED_STATUSES.contains(normalizedStatus)) {
+            throw new IllegalArgumentException("Bộ lọc trạng thái không hợp lệ.");
+        }
+
+        return userDAO.findAll(
+                keyword,
+                normalizedRole,
+                normalizedStatus,
+                normalizedSort,
+                normalizePage(page),
+                normalizePageSize(pageSize)
+        );
+    }
+
+    public int countUsers(String keyword, String role, String status) throws SQLException {
+        String normalizedRole = normalizeOptional(role);
+        String normalizedStatus = normalizeOptional(status);
+
+        if (normalizedRole != null && !ALLOWED_ROLES.contains(normalizedRole)) {
+            throw new IllegalArgumentException("Bộ lọc vai trò không hợp lệ.");
+        }
+        if (normalizedStatus != null && !ALLOWED_STATUSES.contains(normalizedStatus)) {
+            throw new IllegalArgumentException("Bộ lọc trạng thái không hợp lệ.");
+        }
+
+        return userDAO.countAll(keyword, normalizedRole, normalizedStatus);
+    }
+
+    public User getUserById(int userId) throws SQLException {
+        return userDAO.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Người dùng không tồn tại."));
+    }
+
+    public void updateUser(User user) throws SQLException {
+        normalizeUser(user);
+        validateUser(user);
+
+        if (userDAO.existsByEmailForOtherUser(user.getEmail(), user.getUserId())) {
+            throw new IllegalArgumentException("Email đã được tài khoản khác sử dụng.");
+        }
+
+        if (userDAO.existsByPhoneForOtherUser(user.getPhone(), user.getUserId())) {
+            throw new IllegalArgumentException("Số điện thoại đã được tài khoản khác sử dụng.");
+        }
+
+        if (!userDAO.update(user)) {
+            throw new IllegalArgumentException("Người dùng không tồn tại.");
+        }
+    }
+
+    public void changeStatus(int userId, String status) throws SQLException {
+        String normalizedStatus = normalizeRequired(status);
+        if (!ALLOWED_STATUSES.contains(normalizedStatus)) {
+            throw new IllegalArgumentException("Trạng thái không hợp lệ.");
+        }
+
+        if (!userDAO.updateStatus(userId, normalizedStatus)) {
+            throw new IllegalArgumentException("Người dùng không tồn tại.");
+        }
+    }
+
+    public List<String> getAllowedRoles() {
+        return ALLOWED_ROLES;
+    }
+
+    public List<String> getAllowedStatuses() {
+        return ALLOWED_STATUSES;
+    }
+
+    public List<String> getAllowedSorts() {
+        return ALLOWED_SORTS;
+    }
+
+    private void normalizeUser(User user) {
+        user.setFullName(trimRequired(user.getFullName()));
+        user.setEmail(trimRequired(user.getEmail()).toLowerCase());
+        user.setPhone(normalizeOptional(user.getPhone()));
+        user.setRole(normalizeRequired(user.getRole()));
+        user.setStatus(normalizeRequired(user.getStatus()));
+    }
+
+    private void validateUser(User user) {
+        if (user.getUserId() <= 0) {
+            throw new IllegalArgumentException("ID người dùng không hợp lệ.");
+        }
+        if (user.getFullName().length() > 100) {
+            throw new IllegalArgumentException("Họ tên không được vượt quá 100 ký tự.");
+        }
+        if (!EMAIL_PATTERN.matcher(user.getEmail()).matches() || user.getEmail().length() > 255) {
+            throw new IllegalArgumentException("Email không hợp lệ.");
+        }
+        if (user.getPhone() != null && !PHONE_PATTERN.matcher(user.getPhone()).matches()) {
+            throw new IllegalArgumentException("Số điện thoại phải gồm 9 đến 15 chữ số.");
+        }
+        if (!ALLOWED_ROLES.contains(user.getRole())) {
+            throw new IllegalArgumentException("Vai trò không hợp lệ.");
+        }
+        if (!ALLOWED_STATUSES.contains(user.getStatus())) {
+            throw new IllegalArgumentException("Trạng thái không hợp lệ.");
+        }
+    }
+
+    private String normalizeRequired(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
+        }
+        return value.trim().toUpperCase();
+    }
+
+    private String trimRequired(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
+        }
+        return value.trim();
+    }
+
+    private String normalizeOptional(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim().toUpperCase();
+    }
+
+    private String normalizeSort(String value) {
+        if (value == null || value.isBlank()) {
+            return "created_desc";
+        }
+        String normalized = value.trim().toLowerCase();
+        if (!ALLOWED_SORTS.contains(normalized)) {
+            throw new IllegalArgumentException("Tùy chọn sắp xếp không hợp lệ.");
+        }
+        return normalized;
+    }
+
+    private int normalizePage(int page) {
+        return page <= 0 ? DEFAULT_PAGE : page;
+    }
+
+    private int normalizePageSize(int pageSize) {
+        if (pageSize <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(pageSize, MAX_PAGE_SIZE);
+    }
+}

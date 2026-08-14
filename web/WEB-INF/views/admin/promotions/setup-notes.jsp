@@ -2,26 +2,26 @@
 <section class="admin-panel mt-4">
     <div class="admin-panel-head">
         <div>
-            <h2>Voucher setup notes</h2>
-            <p>Small cards that help the team map database fields cleanly.</p>
+            <h2>Ghi chú cấu hình mã giảm giá</h2>
+            <p>Các mục tóm tắt giúp nhóm đối chiếu trường dữ liệu nhanh hơn.</p>
         </div>
     </div>
     <div class="admin-summary-grid">
         <article class="admin-summary-card">
-            <span>Discount type</span>
-            <strong>Percent or fixed amount</strong>
+            <span>Loại giảm</span>
+            <strong>Phần trăm hoặc số tiền cố định</strong>
         </article>
         <article class="admin-summary-card">
-            <span>Apply scope</span>
-            <strong>Order, category, or variant</strong>
+            <span>Phạm vi áp dụng</span>
+            <strong>Đơn hàng, danh mục hoặc sản phẩm</strong>
         </article>
         <article class="admin-summary-card">
-            <span>Usage rule</span>
-            <strong>Single use or limited quantity</strong>
+            <span>Quy tắc sử dụng</span>
+            <strong>Một lần dùng hoặc giới hạn số lượt</strong>
         </article>
         <article class="admin-summary-card">
-            <span>Activation</span>
-            <strong>Start date, end date, enabled flag</strong>
+            <span>Kích hoạt</span>
+            <strong>Ngày bắt đầu, ngày kết thúc và trạng thái bật/tắt</strong>
         </article>
     </div>
 </section>

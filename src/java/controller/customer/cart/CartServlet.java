@@ -1,346 +1,162 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controller.customer.cart;
 
-import dto.CartSummaryDTO;
+import config.AppConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import model.entity.cart.CartItem;
+import model.entity.user.User;
+import service.cart.CartService;
+
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-import model.User;
-import service.CartService;
 
 /**
- *
- * @author ACER
+ * Controller giỏ hàng: GET hiển thị trang cart.jsp, POST xử lý add/update/remove
+ * rồi redirect lại chính trang giỏ hàng theo PRG (rule 10).
+ * customerId được suy ra từ User trong session, không tin request param.
  */
-    @WebServlet("/cart")
+@WebServlet("/cart")
 public class CartServlet extends HttpServlet {
-
-    private static final Logger log = Logger.getLogger(CartServlet.class.getName());
 
     private final CartService cartService = new CartService();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        req.setCharacterEncoding("UTF-8");
-        resp.setContentType("text/html;charset=UTF-8");
-
-        HttpSession session = req.getSession();
-        User user = SessionUtil.getCurrentUser(session);
-
-        String format = req.getParameter("format");
-        boolean isJson = "json".equals(format) || "XMLHttpRequest".equals(req.getHeader("X-Requested-With"));
-
-        try {
-            if (user != null) {
-                // Đã đăng nhập -> lấy dữ liệu giỏ hàng từ database
-                CartSummaryDTO cartSummary = cartService.getCart(user.getUserId());
-
-                if (isJson) {
-                    JsonUtil.writeJson(resp, ApiResponse.ok(Map.of("cartSummary", cartSummary, "isLoggedIn", true)));
-                } else {
-                    req.setAttribute("cartSummary", cartSummary);
-                    req.getRequestDispatcher("/WEB-INF/jsp/customer/cart.jsp").forward(req, resp);
-                }
-            } else {
-                // Khách vãng lai -> Dữ liệu giỏ hàng sẽ được Client-side JS tự render từ Local Storage
-                if (isJson) {
-                    JsonUtil.writeJson(resp, ApiResponse.ok(Map.of("isLoggedIn", false)));
-                } else {
-                    req.setAttribute("cartSummary", null);
-                    req.getRequestDispatcher("/WEB-INF/jsp/customer/cart.jsp").forward(req, resp);
-                }
-            }
-        } catch (SQLException e) {
-            LoggerUtil.error(log, "Lỗi kết nối cơ sở dữ liệu khi tải giỏ hàng", e);
-            if (isJson) {
-                JsonUtil.writeJson(resp, ApiResponse.error("Lỗi kết nối cơ sở dữ liệu."));
-            } else {
-                SessionUtil.flashError(session, "Không thể tải giỏ hàng của bạn lúc này. Vui lòng thử lại sau.");
-                resp.sendRedirect(req.getContextPath() + "/home");
-            }
-        }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        
-        req.setCharacterEncoding("UTF-8");
-        resp.setContentType("application/json;charset=UTF-8");
-
-        HttpSession session = req.getSession();
-        User user = SessionUtil.getCurrentUser(session);
-        String action = req.getParameter("action");
-
-        if (action == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            JsonUtil.writeJson(resp, ApiResponse.error("Yêu cầu không hợp lệ. Thiếu action."));
+        Integer customerId = getCustomerId(request);
+        if (customerId == null) {
+            redirectToLogin(request, response);
             return;
         }
 
+        List<CartItem> items = cartService.getCartItems(customerId);
+        BigDecimal cartTotal = items.stream()
+                .map(CartItem::getLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        boolean hasOverStockItem = items.stream().anyMatch(CartItem::isOverStock);
+        int cartItemCount = items.stream().mapToInt(CartItem::getQuantity).sum();
+
+        request.setAttribute("cartItems", items);
+        request.setAttribute("cartTotal", cartTotal);
+        request.setAttribute("hasOverStockItem", hasOverStockItem);
+        request.setAttribute("cartItemCount", cartItemCount);
+
+        // Đọc flash message từ session (đã set ở doPost sau khi redirect) rồi xoá đi
+        readFlashMessage(request);
+
+        request.getRequestDispatcher("/WEB-INF/views/customer/cart.jsp").forward(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+
+        Integer customerId = getCustomerId(request);
+        if (customerId == null) {
+            redirectToLogin(request, response);
+            return;
+        }
+        String action = request.getParameter("action");
+        HttpSession session = request.getSession();
+
+        CartService.Result result;
+        switch (action == null ? "" : action) {
+            case "add":
+                result = handleAdd(request, customerId);
+                break;
+            case "update":
+                result = handleUpdate(request, customerId);
+                break;
+            case "remove":
+                result = handleRemove(request, customerId);
+                break;
+            default:
+                result = new CartService.Result(false, "Hành động không hợp lệ");
+        }
+
+        if (result.isSuccess()) {
+            session.setAttribute("successMsg", result.getMessage());
+        } else {
+            session.setAttribute("errorMsg", result.getMessage());
+        }
+
+        // PRG: luôn redirect về GET /cart sau khi xử lý xong POST
+        response.sendRedirect(request.getContextPath() + "/cart");
+    }
+
+    private CartService.Result handleAdd(HttpServletRequest request, int customerId) {
         try {
-            switch (action) {
-                case "add": {
-                    // Thêm sản phẩm vào giỏ
-                    if (user == null) {
-                        JsonUtil.writeJson(resp, ApiResponse.ok(Map.of("message", "Đã thêm vào giỏ hàng cục bộ.")));
-                        return;
-                    }
-
-                    int variantId = Integer.parseInt(req.getParameter("variantId"));
-                    int quantity = Integer.parseInt(req.getParameter("quantity"));
-                    String packagingIdStr = req.getParameter("packagingId");
-                    Integer packagingId = (packagingIdStr != null && !packagingIdStr.trim().isEmpty())
-                        ? Integer.parseInt(packagingIdStr.trim())
-                        : null;
-
-                    cartService.addToCart(user.getUserId(), variantId, quantity, packagingId);
-                    CartSummaryDTO updatedSummary = cartService.getCart(user.getUserId());
-                    JsonUtil.writeJson(resp, ApiResponse.ok(Map.of("message", "Đã thêm vào giỏ hàng thành công.", "cartSummary", updatedSummary)));
-                    break;
-                }
-                case "update": {
-                    // Cập nhật số lượng
-                    if (user == null) {
-                        JsonUtil.writeJson(resp, ApiResponse.ok(Map.of("message", "Đã cập nhật giỏ hàng cục bộ.")));
-                        return;
-                    }
-
-                    int cartItemId = Integer.parseInt(req.getParameter("cartItemId"));
-                    int quantity = Integer.parseInt(req.getParameter("quantity"));
-
-                    cartService.updateQuantity(user.getUserId(), cartItemId, quantity);
-                    CartSummaryDTO updatedSummary = cartService.getCart(user.getUserId());
-                    JsonUtil.writeJson(resp, ApiResponse.ok(Map.of("message", "Cập nhật thành công.", "cartSummary", updatedSummary)));
-                    break;
-                }
-                case "remove": {
-                    // Xóa sản phẩm
-                    if (user == null) {
-                        JsonUtil.writeJson(resp, ApiResponse.ok(Map.of("message", "Đã xóa khỏi giỏ hàng cục bộ.")));
-                        return;
-                    }
-
-                    int cartItemId = Integer.parseInt(req.getParameter("cartItemId"));
-
-                    cartService.removeItem(user.getUserId(), cartItemId);
-                    CartSummaryDTO updatedSummary = cartService.getCart(user.getUserId());
-                    JsonUtil.writeJson(resp, ApiResponse.ok(Map.of("message", "Đã xóa sản phẩm khỏi giỏ hàng.", "cartSummary", updatedSummary)));
-                    break;
-                }
-                case "changeVariant": {
-                    if (user == null) {
-                        JsonUtil.writeJson(resp, ApiResponse.ok(Map.of("message", "Đã cập nhật biến thể giỏ hàng cục bộ.")));
-                        return;
-                    }
-
-                    int cartItemId = Integer.parseInt(req.getParameter("cartItemId"));
-                    int newVariantId = Integer.parseInt(req.getParameter("newVariantId"));
-
-                    cartService.changeVariant(user.getUserId(), cartItemId, newVariantId);
-                    CartSummaryDTO updatedSummary = cartService.getCart(user.getUserId());
-                    JsonUtil.writeJson(resp, ApiResponse.ok(Map.of("message", "Đã cập nhật biến thể thành công.", "cartSummary", updatedSummary)));
-                    break;
-                }
-                case "sync": {
-                    // Đồng bộ gộp giỏ hàng guest khi đăng nhập
-                    if (user == null) {
-                        JsonUtil.writeJson(resp, ApiResponse.error("Chưa đăng nhập."));
-                        return;
-                    }
-
-                    String guestCartJson = req.getParameter("guestCart");
-                    if (guestCartJson != null && !guestCartJson.trim().isEmpty()) {
-                        cartService.syncGuestCart(user.getUserId(), guestCartJson);
-                    }
-
-                    CartSummaryDTO updatedSummary = cartService.getCart(user.getUserId());
-                    JsonUtil.writeJson(resp, ApiResponse.ok(Map.of("message", "Đồng bộ thành công.", "cartSummary", updatedSummary)));
-                    break;
-                }
-                case "syncOnUnload": {
-                    // Nhận Beacon API đồng bộ ghi đè khi tắt tab
-                    if (user == null) {
-                        JsonUtil.writeJson(resp, ApiResponse.error("Chưa đăng nhập."));
-                        return;
-                    }
-
-                    String bodyJson = readRequestBody(req);
-                    Map<String, Object> parsedBody = JsonUtil.fromJson(bodyJson, Map.class);
-                    if (parsedBody != null && parsedBody.containsKey("items")) {
-                        String itemsJson = JsonUtil.toJson(parsedBody.get("items"));
-                        cartService.syncOnUnload(user.getUserId(), itemsJson);
-                    }
-
-                    JsonUtil.writeJson(resp, ApiResponse.ok(null));
-                    break;
-                }
-                case "checkStock": {
-                    // Kiểm tra tồn kho trước khi thanh toán
-                    if (user == null) {
-                        JsonUtil.writeJson(resp, ApiResponse.error("Bạn vui lòng đăng nhập để tiến hành thanh toán."));
-                        return;
-                    }
-
-                    List<Integer> cartItemIds = parseSelectionIds(req.getParameter("cartItemIds"));
-                    List<String> errors = !cartItemIds.isEmpty()
-                            ? cartService.checkCartStockBeforeCheckoutByCartItemIds(user.getUserId(), cartItemIds)
-                            : cartService.checkCartStockBeforeCheckout(user.getUserId(), parseVariantIds(req.getParameter("variantIds")));
-                    if (errors.isEmpty()) {
-                        JsonUtil.writeJson(resp, ApiResponse.ok(null));
-                    } else {
-                        resp.setStatus(HttpServletResponse.SC_CONFLICT);
-                        JsonUtil.writeJson(resp, ApiResponse.fail(
-                                HttpServletResponse.SC_CONFLICT,
-                                "Một số sản phẩm trong giỏ không còn đủ tồn kho. Vui lòng kiểm tra lại.",
-                                buildStockErrorMeta(errors)));
-                    }
-                    break;
-                }
-                default:
-                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    JsonUtil.writeJson(resp, ApiResponse.error("Hành động không được hỗ trợ."));
-                    break;
-            }
-        } catch (BusinessException e) {
-            resp.setStatus(422);
-            JsonUtil.writeJson(resp, ApiResponse.fail(422,
-                    "Dữ liệu giỏ hàng không hợp lệ.",
-                    buildValidationErrorMeta(e.getErrorCode())));
-        } catch (IllegalArgumentException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            JsonUtil.writeJson(resp, ApiResponse.fail(HttpServletResponse.SC_BAD_REQUEST,
-                    "Dữ liệu giỏ hàng không hợp lệ."));
-        } catch (Exception e) {
-            LoggerUtil.error(log, "Lỗi hệ thống khi xử lý giỏ hàng", e);
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            JsonUtil.writeJson(resp, ApiResponse.error("Lỗi hệ thống khi xử lý giỏ hàng."));
+            int variantId = Integer.parseInt(request.getParameter("variantId"));
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
+            String addonParam = request.getParameter("addonId");
+            Integer addonId = (addonParam == null || addonParam.isBlank()) ? null : Integer.parseInt(addonParam);
+            return cartService.addToCart(customerId, variantId, quantity, addonId);
+        } catch (NumberFormatException e) {
+            return new CartService.Result(false, "Dữ liệu gửi lên không hợp lệ");
         }
     }
 
-    private Map<String, Object> buildValidationErrorMeta(String errorCode) {
-        Map<String, Object> meta = new HashMap<>();
-        if (isMissingCartItemErrorCode(errorCode)) {
-            meta.put("errorCode", "cart_item_not_found");
-        } else if (isOutOfSeasonErrorCode(errorCode)) {
-            meta.put("errorCode", "out_of_season");
-        } else if (isStockRelatedErrorCode(errorCode)) {
-            meta.put("errorCode", "out_of_stock");
+    private CartService.Result handleUpdate(HttpServletRequest request, int customerId) {
+        try {
+            int cartItemId = Integer.parseInt(request.getParameter("cartItemId"));
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
+            return cartService.updateQuantity(customerId, cartItemId, quantity);
+        } catch (NumberFormatException e) {
+            return new CartService.Result(false, "Dữ liệu gửi lên không hợp lệ");
         }
-        return meta.isEmpty() ? null : meta;
     }
 
-    private boolean isMissingCartItemErrorCode(String errorCode) {
-        if (errorCode == null) {
-            return false;
+    private CartService.Result handleRemove(HttpServletRequest request, int customerId) {
+        try {
+            int cartItemId = Integer.parseInt(request.getParameter("cartItemId"));
+            return cartService.removeItem(customerId, cartItemId);
+        } catch (NumberFormatException e) {
+            return new CartService.Result(false, "Dữ liệu gửi lên không hợp lệ");
         }
-        return "cart_item_not_found".equals(errorCode)
-                || "cart_item_not_owned".equals(errorCode);
     }
 
-    private boolean isOutOfSeasonErrorCode(String errorCode) {
-        if (errorCode == null) {
-            return false;
+    private void readFlashMessage(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        Object successMsg = session.getAttribute("successMsg");
+        Object errorMsg = session.getAttribute("errorMsg");
+        if (successMsg != null) {
+            request.setAttribute("successMsg", successMsg);
+            session.removeAttribute("successMsg");
         }
-        return "out_of_season".equals(errorCode);
+        if (errorMsg != null) {
+            request.setAttribute("errorMsg", errorMsg);
+            session.removeAttribute("errorMsg");
+        }
     }
 
-    private boolean isStockRelatedErrorCode(String errorCode) {
-        if (errorCode == null) {
-            return false;
+    /** Trả về customerId từ User trong session - AuthFilter là lớp chặn chính, đây là lớp phòng thủ thêm. */
+    private Integer getCustomerId(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        Object sessionUser = session == null ? null : session.getAttribute(AppConfig.SESSION_USER);
+        if (!(sessionUser instanceof User)) {
+            return null;
         }
-        return "out_of_stock".equals(errorCode);
+
+        return ((User) sessionUser).getUserId();
     }
 
-    private Map<String, Object> buildStockErrorMeta(List<String> errors) {
-        Map<String, Object> meta = new HashMap<>();
-        meta.put("errorCode", resolveStockErrorCode(errors));
-        meta.put("errors", errors);
-        return meta;
-    }
+    private void redirectToLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String redirectTarget = request.getRequestURI().substring(request.getContextPath().length());
+        String queryString = request.getQueryString();
+        if (queryString != null && !queryString.isBlank()) {
+            redirectTarget += "?" + queryString;
+        }
 
-    private String resolveStockErrorCode(List<String> errors) {
-        if (errors == null) {
-            return "out_of_stock";
-        }
-        for (String message : errors) {
-            if (isOutOfSeasonMessage(message)) {
-                return "out_of_season";
-            }
-        }
-        return "out_of_stock";
-    }
-
-    private boolean isOutOfSeasonMessage(String message) {
-        if (message == null) {
-            return false;
-        }
-        return message.contains("hết mùa")
-                || message.contains("ngoài mùa")
-                || message.contains("vụ mới")
-                || message.contains("không còn khả dụng");
-    }
-
-    private List<Integer> parseVariantIds(String variantIdsParam) {
-        List<Integer> variantIds = new ArrayList<>();
-        if (variantIdsParam == null || variantIdsParam.trim().isEmpty()) {
-            return variantIds;
-        }
-        for (String part : variantIdsParam.split(",")) {
-            try {
-                variantIds.add(Integer.parseInt(part.trim()));
-            } catch (NumberFormatException e) {
-                LoggerUtil.warn(log, "ID biến thể không hợp lệ: " + part, e);
-            }
-        }
-        return variantIds;
-    }
-
-    private List<Integer> parseSelectionIds(String cartItemIdsParam) {
-        return parseIdList(cartItemIdsParam);
-    }
-
-    private List<Integer> parseIdList(String idsParam) {
-        List<Integer> ids = new ArrayList<>();
-        if (idsParam == null || idsParam.trim().isEmpty()) {
-            return ids;
-        }
-        for (String part : idsParam.split(",")) {
-            try {
-                int parsed = Integer.parseInt(part.trim());
-                if (parsed > 0) {
-                    ids.add(parsed);
-                }
-            } catch (NumberFormatException e) {
-                LoggerUtil.warn(log, "ID không hợp lệ: " + part, e);
-            }
-        }
-        return ids;
-    }
-
-    private String readRequestBody(HttpServletRequest req) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        String line;
-        try (java.io.BufferedReader reader = req.getReader()) {
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-        }
-        return sb.toString();
+        response.sendRedirect(request.getContextPath()
+                + "/login?redirectTo="
+                + URLEncoder.encode(redirectTarget, StandardCharsets.UTF_8));
     }
 }

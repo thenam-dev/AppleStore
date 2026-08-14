@@ -1,6 +1,6 @@
 package controller.auth;
 
-import model.User;
+import model.entity.user.User;
 import service.AuthService;
 
 import jakarta.servlet.ServletException;
@@ -16,13 +16,14 @@ import java.sql.SQLException;
 
 @WebServlet(name = "RegisterServlet", urlPatterns = {"/register"})
 public class RegisterServlet extends HttpServlet {
+    private static final String REGISTER_VIEW = "/WEB-INF/views/auth/register.jsp";
 
     private final AuthService authService = new AuthService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.sendRedirect(request.getContextPath() + "/register.html");
+        request.getRequestDispatcher(REGISTER_VIEW).forward(request, response);
     }
 
     @Override
@@ -36,21 +37,21 @@ public class RegisterServlet extends HttpServlet {
 
         try {
             User createdUser = authService.register(fullName, email, phone, password, confirmPassword);
-            String redirectUrl = request.getContextPath() + "/login.html"
+            String redirectUrl = request.getContextPath() + "/login"
                     + "?registered=1&email=" + encode(createdUser.getEmail());
             response.sendRedirect(redirectUrl);
         } catch (IllegalArgumentException ex) {
             redirectWithError(request, response, ex.getMessage(), fullName, email, phone);
         } catch (SQLException ex) {
             redirectWithError(request, response,
-                    "Unable to create the account right now. Please try again later.", fullName, email, phone);
+                    "Hiện chưa thể tạo tài khoản. Vui lòng thử lại sau.", fullName, email, phone);
         }
     }
 
     private void redirectWithError(HttpServletRequest request, HttpServletResponse response, String message,
             String fullName, String email, String phone) throws IOException {
         StringBuilder redirectUrl = new StringBuilder(request.getContextPath())
-                .append("/register.html?error=").append(encode(message));
+                .append("/register?error=").append(encode(message));
 
         if (fullName != null) {
             redirectUrl.append("&fullName=").append(encode(fullName));
