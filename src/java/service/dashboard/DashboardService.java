@@ -42,9 +42,8 @@ public class DashboardService {
         String cancelledStatus = "status IN ('CANCELLED', 'PAYMENT_FAILED', 'EXPIRED')";
         stats.setCancelledOrdersCount(dashboardDAO.getCount("orders", staffId == null ? cancelledStatus : cancelledStatus + " AND " + orderCondition));
 
-        // Tái sử dụng hàm getRevenueByDate của ReportService để tính tổng doanh thu
-        service.report.ReportService reportService = new service.report.ReportService();
-        java.util.LinkedHashMap<String, Double> revenueMap = reportService.getRevenueByDate(null, null, staffId);
+        // Tính tổng doanh thu
+        java.util.LinkedHashMap<String, Double> revenueMap = dashboardDAO.getRevenueByDate(null, null, staffId);
         double totalRev = 0;
         for (Double dailyRev : revenueMap.values()) {
             totalRev += dailyRev;
@@ -70,5 +69,13 @@ public class DashboardService {
 
     public java.util.List<dto.BestSellingProductDTO> getBestSellingProducts(int limit, Integer staffId) {
         return dashboardDAO.getBestSellingProducts(limit, staffId);
+    }
+
+    public java.util.LinkedHashMap<String, Double> getRevenueByDate(String startDate, String endDate) {
+        return dashboardDAO.getRevenueByDate(startDate, endDate, null);
+    }
+
+    public java.util.LinkedHashMap<String, Double> getRevenueByDate(String startDate, String endDate, Integer staffId) {
+        return dashboardDAO.getRevenueByDate(startDate, endDate, staffId);
     }
 }
