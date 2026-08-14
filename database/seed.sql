@@ -69,18 +69,18 @@ INSERT INTO products (product_id, created_by, category_id, name, description, mo
 
 -- ---------- 2.6 product_images ----------
 INSERT INTO product_images (product_id, file_path, display_order, is_primary) VALUES
-    (1, '/images/products/iphone-15-pro-max-1.jpg', 1, 1), (1, '/images/products/iphone-15-pro-max-2.jpg', 2, 0),
-    (2, '/images/products/iphone-15-1.jpg', 1, 1),         (2, '/images/products/iphone-15-2.jpg', 2, 0),
-    (3, '/images/products/macbook-air-m3-1.jpg', 1, 1),    (3, '/images/products/macbook-air-m3-2.jpg', 2, 0),
-    (4, '/images/products/macbook-pro-14-1.jpg', 1, 1),    (4, '/images/products/macbook-pro-14-2.jpg', 2, 0),
-    (5, '/images/products/ipad-air-11-1.jpg', 1, 1),
-    (6, '/images/products/ipad-pro-11-m4-1.jpg', 1, 1),
-    (7, '/images/products/apple-watch-s9-1.jpg', 1, 1),
-    (8, '/images/products/airpods-pro-2-1.jpg', 1, 1),
-    (9, '/images/products/airpods-max-1.jpg', 1, 1),
-    (10,'/images/products/apple-tv-4k-1.jpg', 1, 1),
-    (11,'/images/products/magsafe-charger-1.jpg', 1, 1),
-    (12,'/images/products/magic-keyboard-1.jpg', 1, 1);
+    (1, '/assets/images/iphone-card.svg', 1, 1), (1, '/assets/images/iphone-card.svg', 2, 0),
+    (2, '/assets/images/iphone-card.svg', 1, 1), (2, '/assets/images/iphone-card.svg', 2, 0),
+    (3, '/assets/images/mac-card.svg', 1, 1),    (3, '/assets/images/mac-card.svg', 2, 0),
+    (4, '/assets/images/mac-card.svg', 1, 1),    (4, '/assets/images/mac-card.svg', 2, 0),
+    (5, '/assets/images/iphone-card.svg', 1, 1),
+    (6, '/assets/images/iphone-card.svg', 1, 1),
+    (7, '/assets/images/watch-card.svg', 1, 1),
+    (8, '/assets/images/iphone-card.svg', 1, 1),
+    (9, '/assets/images/iphone-card.svg', 1, 1),
+    (10,'/assets/images/iphone-card.svg', 1, 1),
+    (11,'/assets/images/iphone-card.svg', 1, 1),
+    (12,'/assets/images/iphone-card.svg', 1, 1);
 
 -- ---------- 2.7 product_specifications ----------
 INSERT INTO product_specifications (product_id, spec_group, spec_name, spec_value, display_order) VALUES

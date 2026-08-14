@@ -11,11 +11,24 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     </head>
     <body class="site-body">
+        <!--
+            GHI CHÚ: mọi liên kết sang trang sản phẩm trong file này đều
+            trỏ qua servlet, KHÔNG trỏ thẳng tên file .jsp:
+                - Danh sách sản phẩm: ${ctx}/products (thay cho products-list.jsp)
+                - Chi tiết sản phẩm : ${ctx}/product?id={productId} (thay cho product-detail.jsp)
+            4 khối "Sản phẩm nổi bật" bên dưới vẫn là dữ liệu tĩnh (demo) nên
+            productId đang gán cứng 1,2,3,4 - khớp với productId trong các
+            form "Thêm vào giỏ" đã thêm trước đó. Khi trang chủ được nạp dữ
+            liệu thật từ HomeServlet/ProductDAO, đổi các số cứng này thành
+            ${p.productId} trong vòng lặp c:forEach.
+        -->
+        <c:set var="ctx" value="${pageContext.request.contextPath}" />
+
         <!-- Header trang -->
         <header class="site-header">
             <div class="container header-main">
-                <a class="brand" href="${pageContext.request.contextPath}/index.jsp" aria-label="Cửa hàng Apple trực tuyến">
-                    <img src="${pageContext.request.contextPath}/assets/images/logo-mark.svg" alt="Biểu tượng AOS">
+                <a class="brand" href="${ctx}/index.jsp" aria-label="Cửa hàng Apple trực tuyến">
+                    <img src="${ctx}/assets/images/logo-mark.svg" alt="Biểu tượng AOS">
                     <span>
                         <strong>Cửa hàng AOS</strong>
                         <small>Giao diện Apple</small>
@@ -23,8 +36,8 @@
                 </a>
                 <c:choose>
                     <c:when test="${not empty sessionScope.user and (sessionScope.user.role eq 'ADMIN' or sessionScope.user.role eq 'SALE_STAFF')}">
-                        <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-app-primary ms-auto me-3">
-                            Vào trang Quản trị (Admin)
+                        <a href="${ctx}/admin/dashboard" class="btn btn-app-primary ms-auto me-3">
+                            Vào trang quản trị
                         </a>
                     </c:when>
                     <c:otherwise>
@@ -37,12 +50,12 @@
                             Tài khoản
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end app-dropdown-menu">
-                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/login">Đăng nhập</a></li>
-                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/register">Đăng ký</a></li>
-                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/wishlist.html">Yêu thích</a></li>
+                            <li><a class="dropdown-item" href="${ctx}/login">Đăng nhập</a></li>
+                            <li><a class="dropdown-item" href="${ctx}/register">Đăng ký</a></li>
+                            <li><a class="dropdown-item" href="${ctx}/wishlist.html">Yêu thích</a></li>
                         </ul>
                     </div>
-                    <a class="cart-link" href="${pageContext.request.contextPath}/cart" aria-label="Xem giỏ hàng">
+                    <a class="cart-link" href="${ctx}/cart" aria-label="Xem giỏ hàng">
                         <span>Giỏ hàng</span>
                         <span class="cart-count">3</span>
                     </a>
@@ -55,32 +68,32 @@
             </div>
             <nav class="category-nav">
                 <div class="container category-nav-inner">
-                    <a href="${pageContext.request.contextPath}/products.html?category=iphone">iPhone</a>
-                    <a href="${pageContext.request.contextPath}/products.html?category=mac">Mac</a>
-                    <a href="${pageContext.request.contextPath}/products.html?category=ipad">iPad</a>
-                    <a href="${pageContext.request.contextPath}/products.html?category=watch">Apple Watch</a>
-                    <a href="${pageContext.request.contextPath}/products.html?category=airpods">AirPods</a>
-                    <a href="${pageContext.request.contextPath}/products.html?category=accessories">Phụ kiện</a>
-                    <a href="${pageContext.request.contextPath}/products.html">Tất cả sản phẩm</a>
+                    <a href="${ctx}/products?category=iphone">iPhone</a>
+                    <a href="${ctx}/products?category=mac">Mac</a>
+                    <a href="${ctx}/products?category=ipad">iPad</a>
+                    <a href="${ctx}/products?category=watch">Apple Watch</a>
+                    <a href="${ctx}/products?category=airpods">AirPods</a>
+                    <a href="${ctx}/products?category=accessories">Phụ kiện</a>
+                    <a href="${ctx}/products">Tất cả sản phẩm</a>
                 </div>
             </nav>
             <div class="mobile-drawer" data-mobile-panel>
                 <div class="container mobile-drawer-inner">
-                    <form class="mobile-search" action="${pageContext.request.contextPath}/products.html" method="get" name="mobileSearchForm">
+                    <form class="mobile-search" action="${ctx}/products" method="get" name="mobileSearchForm">
                         <label class="visually-hidden" for="mobile-search-input">Tìm kiếm sản phẩm</label>
                         <input id="mobile-search-input" class="form-control" type="search" name="keyword" placeholder="Tìm kiếm sản phẩm">
                     </form>
                     <div class="mobile-links">
-                        <a href="${pageContext.request.contextPath}/products.html?category=iphone">iPhone</a>
-                        <a href="${pageContext.request.contextPath}/products.html?category=mac">Mac</a>
-                        <a href="${pageContext.request.contextPath}/products.html?category=ipad">iPad</a>
-                        <a href="${pageContext.request.contextPath}/products.html?category=watch">Apple Watch</a>
-                        <a href="${pageContext.request.contextPath}/products.html?category=airpods">AirPods</a>
-                        <a href="${pageContext.request.contextPath}/products.html?category=accessories">Phụ kiện</a>
-                        <a href="${pageContext.request.contextPath}/login">Đăng nhập</a>
-                        <a href="${pageContext.request.contextPath}/register">Đăng ký</a>
-                        <a href="${pageContext.request.contextPath}/wishlist.html">Yêu thích</a>
-                        <a href="${pageContext.request.contextPath}/components/component-demo.html">Bản thử nghiệm</a>
+                        <a href="${ctx}/products?category=iphone">iPhone</a>
+                        <a href="${ctx}/products?category=mac">Mac</a>
+                        <a href="${ctx}/products?category=ipad">iPad</a>
+                        <a href="${ctx}/products?category=watch">Apple Watch</a>
+                        <a href="${ctx}/products?category=airpods">AirPods</a>
+                        <a href="${ctx}/products?category=accessories">Phụ kiện</a>
+                        <a href="${ctx}/login">Đăng nhập</a>
+                        <a href="${ctx}/register">Đăng ký</a>
+                        <a href="${ctx}/wishlist.html">Yêu thích</a>
+                        <a href="${ctx}/components/component-demo.html">Bản thử nghiệm</a>
                     </div>
                 </div>
             </div>
@@ -97,9 +110,9 @@
                             <p>
                                 Cửa hàng trực tuyến tinh tế với giao diện sản phẩm trực quan, cấu trúc mua sắm tiện dụng và sẵn sàng mở rộng.
                             </p>
-                            
+
                             <div class="mt-4 mb-4">
-                                <form class="hero-search d-flex gap-2" action="${pageContext.request.contextPath}/products.html" method="get" name="heroSearchForm">
+                                <form class="hero-search d-flex gap-2" action="${ctx}/products" method="get" name="heroSearchForm">
                                     <label class="visually-hidden" for="hero-search-input">Tìm kiếm sản phẩm</label>
                                     <input id="hero-search-input" class="form-control form-control-lg" type="search" name="keyword" placeholder="Tìm kiếm iPhone, MacBook, AirPods...">
                                     <button class="btn btn-app-primary btn-lg px-4" type="submit">Tìm kiếm</button>
@@ -107,7 +120,7 @@
                             </div>
 
                             <div class="hero-actions">
-                                <a class="btn btn-app-primary btn-lg" href="${pageContext.request.contextPath}/products.html">Mua sắm sản phẩm</a>
+                                <a class="btn btn-app-primary btn-lg" href="${ctx}/products">Mua sắm sản phẩm</a>
                             </div>
                         </div>
                         <div class="hero-visual">
@@ -116,7 +129,7 @@
                                     <span class="hero-chip">Sản phẩm nổi bật</span>
                                     <span class="hero-chip hero-chip-muted">Bản 256GB từ $1,149</span>
                                 </div>
-                                <img src="${pageContext.request.contextPath}/assets/images/device-hero.svg" alt="Sản phẩm Apple nổi bật">
+                                <img src="${ctx}/assets/images/device-hero.svg" alt="Sản phẩm Apple nổi bật">
                                 <div class="hero-panel-foot">
                                     <div>
                                         <small>Tiêu điểm</small>
@@ -145,42 +158,42 @@
                     </div>
                     <div class="row g-4">
                         <div class="col-md-6 col-xl-4">
-                            <a class="category-showcase-card" href="${pageContext.request.contextPath}/products.html?category=iphone">
+                            <a class="category-showcase-card" href="${ctx}/products?category=iphone">
                                 <span class="category-showcase-icon">iPhone</span>
                                 <h3>iPhone</h3>
                                 <p>Các mẫu cao cấp, phiên bản Pro và sự lựa chọn hoàn hảo cho nhu cầu hàng ngày.</p>
                             </a>
                         </div>
                         <div class="col-md-6 col-xl-4">
-                            <a class="category-showcase-card" href="${pageContext.request.contextPath}/products.html?category=mac">
+                            <a class="category-showcase-card" href="${ctx}/products?category=mac">
                                 <span class="category-showcase-icon">Mac</span>
                                 <h3>Mac</h3>
                                 <p>MacBook Air, MacBook Pro và máy tính bàn cho học tập và công việc sáng tạo.</p>
                             </a>
                         </div>
                         <div class="col-md-6 col-xl-4">
-                            <a class="category-showcase-card" href="${pageContext.request.contextPath}/products.html?category=ipad">
+                            <a class="category-showcase-card" href="${ctx}/products?category=ipad">
                                 <span class="category-showcase-icon">iPad</span>
                                 <h3>iPad</h3>
                                 <p>Máy tính bảng di động tiện dụng để ghi chú, phác thảo, giải trí và làm việc văn phòng.</p>
                             </a>
                         </div>
                         <div class="col-md-6 col-xl-4">
-                            <a class="category-showcase-card" href="${pageContext.request.contextPath}/products.html?category=watch">
+                            <a class="category-showcase-card" href="${ctx}/products?category=watch">
                                 <span class="category-showcase-icon">Đồng hồ</span>
                                 <h3>Apple Watch</h3>
                                 <p>Theo dõi thể thao, nhận thông báo và sở hữu thiết kế đồng hồ thông minh cao cấp.</p>
                             </a>
                         </div>
                         <div class="col-md-6 col-xl-4">
-                            <a class="category-showcase-card" href="${pageContext.request.contextPath}/products.html?category=airpods">
+                            <a class="category-showcase-card" href="${ctx}/products?category=airpods">
                                 <span class="category-showcase-icon">Âm thanh</span>
                                 <h3>AirPods</h3>
                                 <p>Dòng sản phẩm âm thanh không dây hoàn hảo cho việc đi lại, nghe gọi và tập trung.</p>
                             </a>
                         </div>
                         <div class="col-md-6 col-xl-4">
-                            <a class="category-showcase-card" href="${pageContext.request.contextPath}/products.html?category=accessories">
+                            <a class="category-showcase-card" href="${ctx}/products?category=accessories">
                                 <span class="category-showcase-icon">Phụ kiện</span>
                                 <h3>Phụ kiện</h3>
                                 <p>Ốp lưng, cáp sạc, giá đỡ và các tiện ích bổ sung làm hoàn thiện thiết bị của bạn.</p>
@@ -198,14 +211,14 @@
                             <span class="eyebrow">Sản phẩm nổi bật</span>
                             <h2>Các sản phẩm đáng chú ý nhất trên cửa hàng</h2>
                         </div>
-                        <a class="btn btn-app-outline" href="${pageContext.request.contextPath}/products.html">Xem tất cả sản phẩm</a>
+                        <a class="btn btn-app-outline" href="${ctx}/products">Xem tất cả sản phẩm</a>
                     </div>
                     <div class="row g-4">
                         <div class="col-md-6 col-xl-3">
                             <article class="product-card">
                                 <div class="product-card-media">
                                     <span class="app-badge badge-sale">-8%</span>
-                                    <img src="${pageContext.request.contextPath}/assets/images/iphone-card.svg" alt="iPhone 16 Pro">
+                                    <img src="${ctx}/assets/images/iphone-card.svg" alt="iPhone 16 Pro">
                                 </div>
                                 <div class="product-card-body">
                                     <div class="product-meta">
@@ -219,8 +232,13 @@
                                         <span>$1,249</span>
                                     </div>
                                     <div class="product-actions">
-                                        <a class="btn btn-app-outline w-100" href="${pageContext.request.contextPath}/product-detail.html">Xem chi tiết</a>
-                                        <button class="btn btn-app-primary w-100" type="button">Thêm vào giỏ</button>
+                                        <a class="btn btn-app-outline w-100" href="${ctx}/product?id=1">Xem chi tiết</a>
+                                        <form action="${ctx}/cart" method="post" class="w-100">
+                                            <input type="hidden" name="action" value="add">
+                                            <input type="hidden" name="productId" value="1">
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button class="btn btn-app-primary w-100" type="submit">Thêm vào giỏ</button>
+                                        </form>
                                     </div>
                                 </div>
                             </article>
@@ -229,7 +247,7 @@
                             <article class="product-card">
                                 <div class="product-card-media">
                                     <span class="app-badge badge-new">Mới</span>
-                                    <img src="${pageContext.request.contextPath}/assets/images/mac-card.svg" alt="MacBook Air M4">
+                                    <img src="${ctx}/assets/images/mac-card.svg" alt="MacBook Air M4">
                                 </div>
                                 <div class="product-card-body">
                                     <div class="product-meta">
@@ -242,8 +260,13 @@
                                         <strong>$1,399</strong>
                                     </div>
                                     <div class="product-actions">
-                                        <a class="btn btn-app-outline w-100" href="${pageContext.request.contextPath}/product-detail.html">Xem chi tiết</a>
-                                        <button class="btn btn-app-primary w-100" type="button">Thêm vào giỏ</button>
+                                        <a class="btn btn-app-outline w-100" href="${ctx}/product?id=2">Xem chi tiết</a>
+                                        <form action="${ctx}/cart" method="post" class="w-100">
+                                            <input type="hidden" name="action" value="add">
+                                            <input type="hidden" name="productId" value="2">
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button class="btn btn-app-primary w-100" type="submit">Thêm vào giỏ</button>
+                                        </form>
                                     </div>
                                 </div>
                             </article>
@@ -251,7 +274,7 @@
                         <div class="col-md-6 col-xl-3">
                             <article class="product-card">
                                 <div class="product-card-media">
-                                    <img src="${pageContext.request.contextPath}/assets/images/watch-card.svg" alt="Apple Watch Series 11">
+                                    <img src="${ctx}/assets/images/watch-card.svg" alt="Apple Watch Series 11">
                                 </div>
                                 <div class="product-card-body">
                                     <div class="product-meta">
@@ -264,8 +287,13 @@
                                         <strong>$479</strong>
                                     </div>
                                     <div class="product-actions">
-                                        <a class="btn btn-app-outline w-100" href="${pageContext.request.contextPath}/product-detail.html">Xem chi tiết</a>
-                                        <button class="btn btn-app-primary w-100" type="button">Thêm vào giỏ</button>
+                                        <a class="btn btn-app-outline w-100" href="${ctx}/product?id=3">Xem chi tiết</a>
+                                        <form action="${ctx}/cart" method="post" class="w-100">
+                                            <input type="hidden" name="action" value="add">
+                                            <input type="hidden" name="productId" value="3">
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button class="btn btn-app-primary w-100" type="submit">Thêm vào giỏ</button>
+                                        </form>
                                     </div>
                                 </div>
                             </article>
@@ -274,7 +302,7 @@
                             <article class="product-card">
                                 <div class="product-card-media">
                                     <span class="app-badge badge-sale">Combo</span>
-                                    <img src="${pageContext.request.contextPath}/assets/images/iphone-card.svg" alt="AirPods Pro 3">
+                                    <img src="${ctx}/assets/images/iphone-card.svg" alt="AirPods Pro 3">
                                 </div>
                                 <div class="product-card-body">
                                     <div class="product-meta">
@@ -288,8 +316,13 @@
                                         <span>$329</span>
                                     </div>
                                     <div class="product-actions">
-                                        <a class="btn btn-app-outline w-100" href="${pageContext.request.contextPath}/product-detail.html">Xem chi tiết</a>
-                                        <button class="btn btn-app-primary w-100" type="button">Thêm vào giỏ</button>
+                                        <a class="btn btn-app-outline w-100" href="${ctx}/product?id=4">Xem chi tiết</a>
+                                        <form action="${ctx}/cart" method="post" class="w-100">
+                                            <input type="hidden" name="action" value="add">
+                                            <input type="hidden" name="productId" value="4">
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button class="btn btn-app-primary w-100" type="submit">Thêm vào giỏ</button>
+                                        </form>
                                     </div>
                                 </div>
                             </article>
@@ -309,8 +342,8 @@
                                 Khám phá các ưu đãi đặc biệt, chương trình thu cũ đổi mới, tuần lễ ra mắt và các chính sách trả góp nổi bật.
                             </p>
                             <div class="hero-actions">
-                                <a class="btn btn-app-primary" href="${pageContext.request.contextPath}/products.html">Khám phá ưu đãi</a>
-                                <a class="btn btn-app-outline" href="${pageContext.request.contextPath}/product-detail.html">Xem sản phẩm nổi bật</a>
+                                <a class="btn btn-app-primary" href="${ctx}/products">Khám phá ưu đãi</a>
+                                <a class="btn btn-app-outline" href="${ctx}/product?id=1">Xem sản phẩm nổi bật</a>
                             </div>
                         </div>
                         <div class="promo-banner-stats">
@@ -342,7 +375,7 @@
                     <div class="row g-4">
                         <div class="col-md-6 col-xl-3">
                             <article class="spotlight-card">
-                                <img src="${pageContext.request.contextPath}/assets/images/mac-card.svg" alt="Mac mini M4">
+                                <img src="${ctx}/assets/images/mac-card.svg" alt="Mac mini M4">
                                 <div>
                                     <h3>Mac mini M4</h3>
                                     <p>Máy tính bàn hiệu năng cao vô cùng nhỏ gọn, hoàn hảo cho lập trình và thiết kế.</p>
@@ -351,7 +384,7 @@
                         </div>
                         <div class="col-md-6 col-xl-3">
                             <article class="spotlight-card">
-                                <img src="${pageContext.request.contextPath}/assets/images/watch-card.svg" alt="Apple Watch Ultra">
+                                <img src="${ctx}/assets/images/watch-card.svg" alt="Apple Watch Ultra">
                                 <div>
                                     <h3>Apple Watch Ultra</h3>
                                     <p>Đồng hồ thể thao ngoài trời với thiết kế bền bỉ cực kỳ cao cấp.</p>
@@ -360,7 +393,7 @@
                         </div>
                         <div class="col-md-6 col-xl-3">
                             <article class="spotlight-card">
-                                <img src="${pageContext.request.contextPath}/assets/images/iphone-card.svg" alt="iPad Air">
+                                <img src="${ctx}/assets/images/iphone-card.svg" alt="iPad Air">
                                 <div>
                                     <h3>iPad Air</h3>
                                     <p>Màn hình di động mỏng nhẹ, lý tưởng cho việc học tập, làm việc và giải trí.</p>
@@ -369,7 +402,7 @@
                         </div>
                         <div class="col-md-6 col-xl-3">
                             <article class="spotlight-card">
-                                <img src="${pageContext.request.contextPath}/assets/images/iphone-card.svg" alt="MagSafe Duo Kit">
+                                <img src="${ctx}/assets/images/iphone-card.svg" alt="MagSafe Duo Kit">
                                 <div>
                                     <h3>Bộ sạc MagSafe Duo</h3>
                                     <p>Gói phụ kiện sạc tiện lợi, thường được bán kèm trong các đợt khuyến mãi.</p>
@@ -469,8 +502,8 @@
         <footer class="site-footer">
             <div class="container footer-grid">
                 <div>
-                    <a class="brand brand-footer" href="${pageContext.request.contextPath}/index.jsp">
-                        <img src="${pageContext.request.contextPath}/assets/images/logo-mark.svg" alt="Biểu tượng AOS">
+                    <a class="brand brand-footer" href="${ctx}/index.jsp">
+                        <img src="${ctx}/assets/images/logo-mark.svg" alt="Biểu tượng AOS">
                         <span>
                             <strong>Cửa hàng AOS</strong>
                             <small>Trang chủ</small>
@@ -483,19 +516,19 @@
                 <div>
                     <h3 class="footer-title">Khám phá</h3>
                     <ul class="footer-links">
-                        <li><a href="${pageContext.request.contextPath}/products.html">Tất cả sản phẩm</a></li>
-                        <li><a href="${pageContext.request.contextPath}/products.html?category=iphone">iPhone</a></li>
-                        <li><a href="${pageContext.request.contextPath}/products.html?category=mac">Mac</a></li>
-                        <li><a href="${pageContext.request.contextPath}/about.html">Giới thiệu về chúng tôi</a></li>
+                        <li><a href="${ctx}/products">Tất cả sản phẩm</a></li>
+                        <li><a href="${ctx}/products?category=iphone">iPhone</a></li>
+                        <li><a href="${ctx}/products?category=mac">Mac</a></li>
+                        <li><a href="${ctx}/about.html">Giới thiệu về chúng tôi</a></li>
                     </ul>
                 </div>
                 <div>
                     <h3 class="footer-title">Chính sách</h3>
                     <ul class="footer-links">
-                        <li><a href="${pageContext.request.contextPath}/privacy.html">Chính sách bảo mật</a></li>
-                        <li><a href="${pageContext.request.contextPath}/refund.html">Đổi trả & Hoàn tiền</a></li>
-                        <li><a href="${pageContext.request.contextPath}/shipping.html">Quy trình giao nhận</a></li>
-                        <li><a href="${pageContext.request.contextPath}/support.html">Hướng dẫn & Hỗ trợ</a></li>
+                        <li><a href="${ctx}/privacy.html">Chính sách bảo mật</a></li>
+                        <li><a href="${ctx}/refund.html">Đổi trả & Hoàn tiền</a></li>
+                        <li><a href="${ctx}/shipping.html">Quy trình giao nhận</a></li>
+                        <li><a href="${ctx}/support.html">Hướng dẫn & Hỗ trợ</a></li>
                     </ul>
                 </div>
                 <div>
@@ -513,6 +546,6 @@
         </footer>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>
+        <script src="${ctx}/assets/js/main.js"></script>
     </body>
 </html>

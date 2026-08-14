@@ -9,6 +9,10 @@ import dao.catalog.ProductVariantDAO;
 import dao.order.OrderDAO;
 import dao.payment.PaymentDAO;
 
+import model.entity.promtion.Promotion;
+import service.promotion.PromotionService;
+import util.DBConnection;
+import java.sql.Connection;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -16,7 +20,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import ava.util.Map;
 import model.entity.cart.CartItem;
 import model.entity.order.Order;
 
@@ -59,12 +63,17 @@ public class CheckoutService {
 
     public static class CheckoutForm {
         public int customerId;
+            
         public String deliveryAddress;
         public String recipientName;
         public String recipientPhone;
         public String deliveryTimeSlot;
         public String notes;
         public String paymentMethod; // "CK" hoặc "COD"
+
+        // Voucher đã áp dụng ở giỏ hàng (nếu có), truyền từ CheckoutServlet.
+        public Promotion appliedPromo;
+        public BigDecimal discountAmount;
     }
 
     public static class CheckoutResult {
@@ -92,14 +101,14 @@ public class CheckoutService {
         }
 
         if (isBlank(form.deliveryAddress)) {
-            errors.put("deliveryAddress", "Vui lòng nhập địa chỉ giao hàng");
-        } else if (form.deliveryAddress.trim().length() > 500) {
-            errors.put("deliveryAddress", "Địa chỉ tối đa 500 ký tự");
-        }
+     
 
-        if (isBlank(form.paymentMethod) || !(form.paymentMethod.equals("CK") || form.paymentMethod.equals("COD"))) {
-            errors.put("paymentMethod", "Vui lòng chọn phương thức thanh toán");
+               errors.put("deliveryAddress", "Địa chỉ tối đa 500 ký tự");
         }
+       
+                   errors.put("paymentMethod", "Vui lòng chọn phương th
+              
+    
 
         return errors;
     }
@@ -151,7 +160,7 @@ public class CheckoutService {
             }
 
             BigDecimal deliveryFee = BigDecimal.ZERO;
-            BigDecimal discountAmount = BigDecimal.ZERO;
+            BigDecimal discountAmount = (form.discountAmount != null) ? form.discountAmount : BigDecimal.ZERO;
             BigDecimal finalAmount = totalAmount.add(deliveryFee).subtract(discountAmount);
 
             Order order = new Order();
@@ -187,6 +196,18 @@ public class CheckoutService {
                 int stockAfter = productVariantDAO.findStockQuantity(cartItem.getVariantId()).orElse(0);
                 orderDAO.insertInventoryLog(cartItem.getVariantId(), form.customerId, orderId, orderItemId,
                         "ORDER_RESERVE", -cartItem.getQuantity(), stockAfter);
+            }
+
+            // Ghi nhận việc dùng voucher (order_promotions + tăng used_count). Tự mở
+            // Connection riêng vì kiến trúc hiện tại không dùng Global Transaction.
+            if (form.appliedPromo != null && form.discountAmount != null) {
+                PromotionService promotionService = new PromotionService();
+                try (Connection conn = DBConnection.getConnection()) {
+                    promotionService.recordPromotionUsage(conn, orderId, form.customerId, form.appliedPromo, form.discountAmount);
+                } catch (SQLException e) {
+                    // Best-effort lưu voucher, nếu lỗi thì log lại
+                    e.printStackTrace();
+                }
             }
 
             orderDAO.insertStatusHistory(orderId, "PENDING_PAYMENT", form.customerId, "Khách tạo đơn hàng");
@@ -241,3 +262,23 @@ public class CheckoutService {
                 amount.setScale(0, java.math.RoundingMode.HALF_UP).toPlainString(), encodedContent);
     }
 }
+
+    
+     * 
+     * 
+     
+    
+            
+            
+            
+    
+
+    
+
+    
+    
+            
+            
+    
+
+    

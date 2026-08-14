@@ -32,7 +32,8 @@ public class UserDAO {
         params.add(pageSize);
         params.add(Math.max(0, (page - 1) * pageSize));
 
-        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             bindParams(statement, params);
             try (ResultSet resultSet = statement.executeQuery()) {
                 List<User> users = new ArrayList<>();
@@ -49,7 +50,8 @@ public class UserDAO {
         List<Object> params = new ArrayList<>();
         appendFilters(sql, params, keyword, role, status);
 
-        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             bindParams(statement, params);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -151,7 +153,8 @@ public class UserDAO {
                 VALUES (?, ?, ?, ?, 'CUSTOMER', 'ACTIVE', 0)
                 """;
 
-        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, user.getFullName());
             statement.setString(2, user.getEmail());
             statement.setString(3, passwordHash);

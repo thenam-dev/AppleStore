@@ -1,529 +1,419 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Online Shop | Product Detail</title>
+    <title>Cửa hàng Apple Trực tuyến | ${empty product ? 'Sản phẩm' : product.name}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body class="site-body">
-    <!-- Site header -->
-    <header class="site-header">
-        <div class="topbar">
-            <div class="container topbar-inner">
-                <p class="topbar-note">Product detail uses only basic UI JavaScript: image gallery, variant selection, and quantity controls.</p>
-                <ul class="topbar-links">
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="products.html">All Products</a></li>
-                    <li><a href="components/component-demo.html">Component Demo</a></li>
-                </ul>
-            </div>
+
+    <c:set var="ctx" value="${pageContext.request.contextPath}" />
+
+    <%-- =====================================================
+         Trang này được ProductDetailServlet (controller.customer.product,
+         urlPatterns = {"/product"}, tham số ?id=) forward tới, với attribute:
+             product          : model.entity.catalog.Product (null nếu lỗi)
+             variants         : List<ProductVariant> (mọi variant active của sp)
+             variantColors    : List<String> màu duy nhất, đúng thứ tự
+             variantStorages  : List<Integer> dung lượng (GB) duy nhất
+             defaultVariant   : ProductVariant được chọn sẵn khi vào trang
+             relatedProducts  : List<Product> gợi ý cùng danh mục
+             errorMsg         : String (nếu product null)
+         Giá/khuyến mãi/tồn kho thuộc về ProductVariant, không thuộc Product,
+         nên phần giá + nút "Thêm vào giỏ" phụ thuộc vào variant đang chọn
+         (xử lý bằng JS ở cuối trang dựa trên mảng productVariants).
+    ===================================================== --%>
+
+    <c:choose>
+    <c:when test="${empty product}">
+        <div class="container py-5">
+            <h2>Không tìm thấy sản phẩm</h2>
+            <p>${not empty errorMsg ? errorMsg : 'Sản phẩm không tồn tại hoặc đã ngừng kinh doanh.'}</p>
+            <a class="btn btn-app-primary" href="${ctx}/products">Quay lại danh sách sản phẩm</a>
         </div>
-        <div class="container header-main">
-            <a class="brand" href="index.html" aria-label="Apple Online Shop">
-                <img src="assets/images/logo-mark.svg" alt="AOS mark">
-                <span>
-                    <strong>AOS Template</strong>
-                    <small>Product Detail</small>
-                </span>
-            </a>
-            <form class="header-search" action="products.html" method="get" name="headerSearchForm">
-                <label class="visually-hidden" for="detail-search-input">Search products</label>
-                <input id="detail-search-input" class="form-control" type="search" name="keyword" placeholder="Search products">
-                <button class="btn btn-app-primary" type="submit">Search</button>
-            </form>
-            <div class="header-actions">
-                <div class="dropdown">
-                    <button class="btn btn-app-ghost dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Account
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end app-dropdown-menu">
-                        <li><a class="dropdown-item" href="login.html">Login</a></li>
-                        <li><a class="dropdown-item" href="register.html">Register</a></li>
-                        <li><a class="dropdown-item" href="wishlist.html">Wishlist</a></li>
-                    </ul>
-                </div>
-                <a class="cart-link" href="cart.html" aria-label="View cart">
-                    <span>Cart</span>
-                    <span class="cart-count">3</span>
-                </a>
-                <button class="mobile-menu-button" type="button" data-mobile-toggle aria-expanded="false" aria-label="Open mobile navigation">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-            </div>
-        </div>
-        <nav class="category-nav">
-            <div class="container category-nav-inner">
-                <a href="products.html?category=iphone">iPhone</a>
-                <a href="products.html?category=mac">Mac</a>
-                <a href="products.html?category=ipad">iPad</a>
-                <a href="products.html?category=watch">Apple Watch</a>
-                <a href="products.html?category=airpods">AirPods</a>
-                <a href="products.html?category=accessories">Accessories</a>
-            </div>
-        </nav>
-        <div class="mobile-drawer" data-mobile-panel>
-            <div class="container mobile-drawer-inner">
-                <form class="mobile-search" action="products.html" method="get" name="mobileSearchForm">
-                    <label class="visually-hidden" for="mobile-search-detail">Search products</label>
-                    <input id="mobile-search-detail" class="form-control" type="search" name="keyword" placeholder="Search products">
-                </form>
-                <div class="mobile-links">
-                    <a href="products.html?category=iphone">iPhone</a>
-                    <a href="products.html?category=mac">Mac</a>
-                    <a href="products.html?category=ipad">iPad</a>
-                    <a href="products.html?category=watch">Apple Watch</a>
-                    <a href="products.html?category=airpods">AirPods</a>
-                    <a href="products.html?category=accessories">Accessories</a>
-                    <a href="login.html">Login</a>
-                    <a href="register.html">Register</a>
-                    <a href="wishlist.html">Wishlist</a>
-                </div>
-            </div>
-        </div>
-    </header>
+    </c:when>
+    <c:otherwise>
+
+    <jsp:include page="/WEB-INF/views/common/header.jsp">
+        <jsp:param name="active" value="products" />
+    </jsp:include>
 
     <main>
         <section class="section-block">
             <div class="container">
                 <nav aria-label="Breadcrumb">
                     <ol class="breadcrumb app-breadcrumb">
-                        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                        <li class="breadcrumb-item"><a href="products.html">Products</a></li>
-                        <li class="breadcrumb-item"><a href="products.html?category=iphone">iPhone</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">iPhone 16 Pro</li>
+                        <li class="breadcrumb-item"><a href="${ctx}/index.jsp">Trang chủ</a></li>
+                        <li class="breadcrumb-item"><a href="${ctx}/products">Sản phẩm</a></li>
+                        <li class="breadcrumb-item"><a href="${ctx}/products?categoryId=${product.categoryId}">${product.categoryName}</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">${product.name}</li>
                     </ol>
                 </nav>
 
                 <div class="product-detail-layout">
                     <div class="product-gallery-shell">
                         <div class="product-main-media">
-                            <img src="assets/images/iphone-detail-front.svg" alt="iPhone 16 Pro front view" data-gallery-main>
-                        </div>
-                        <div class="thumbnail-strip">
-                            <button class="thumbnail-button active" type="button" data-gallery-thumb data-image-src="assets/images/iphone-detail-front.svg" data-image-alt="iPhone 16 Pro front view">
-                                <img src="assets/images/iphone-detail-front.svg" alt="Front view thumbnail">
-                            </button>
-                            <button class="thumbnail-button" type="button" data-gallery-thumb data-image-src="assets/images/iphone-detail-back.svg" data-image-alt="iPhone 16 Pro back view">
-                                <img src="assets/images/iphone-detail-back.svg" alt="Back view thumbnail">
-                            </button>
-                            <button class="thumbnail-button" type="button" data-gallery-thumb data-image-src="assets/images/iphone-detail-side.svg" data-image-alt="iPhone 16 Pro side profile">
-                                <img src="assets/images/iphone-detail-side.svg" alt="Side view thumbnail">
-                            </button>
+                            <%-- TODO: chưa có bảng ảnh sản phẩm, tạm dùng ảnh placeholder theo danh mục --%>
+                            <img src="${ctx}/assets/images/iphone-detail-front.svg" alt="${product.name}" data-gallery-main>
                         </div>
                     </div>
 
                     <div class="product-detail-summary">
-                        <span class="eyebrow">Flagship phone</span>
-                        <h1>iPhone 16 Pro</h1>
-                        <div class="detail-rating">
-                            <strong>4.8</strong>
-                            <span>Based on 248 reviews</span>
-                        </div>
+                        <span class="eyebrow">${product.categoryName}<c:if test="${not empty product.brand}"> &middot; ${product.brand}</c:if></span>
+                        <h1>${product.name}</h1>
+
+                        <c:if test="${product.rating != null}">
+                            <div class="detail-rating">
+                                <strong><fmt:formatNumber value="${product.rating}" pattern="0.0"/></strong>
+                                <span>Đã bán ${product.soldQuantity} sản phẩm</span>
+                            </div>
+                        </c:if>
+
+                        <c:if test="${empty variants}">
+                            <div class="alert alert-warning">Sản phẩm hiện chưa có phiên bản (màu/dung lượng) nào để bán.</div>
+                        </c:if>
+
+                        <c:if test="${not empty variants}">
                         <div class="price-stack">
                             <div class="product-price">
-                                <strong>$1,149</strong>
-                                <span>$1,249</span>
+                                <strong id="detail-current-price">$0</strong>
+                                <span id="detail-original-price" class="is-hidden">$0</span>
                             </div>
-                            <span class="app-badge badge-sale">Save $100</span>
+                            <span id="detail-save-badge" class="app-badge badge-sale is-hidden">Tiết kiệm</span>
                         </div>
+
                         <div class="detail-availability">
-                            <span class="status-badge status-in-stock">In stock</span>
-                            <span>Estimated ship: August 13, 2026</span>
+                            <span id="detail-stock-badge" class="status-badge status-in-stock">Còn hàng</span>
                         </div>
-                        <p class="detail-intro">
-                            A polished product detail shell for premium phones, with enough room for pricing, variant choice,
-                            warranty info, and backend-driven specification blocks later.
-                        </p>
+                        </c:if>
 
-                        <div class="detail-selector-group">
-                            <div class="selector-head">
-                                <strong>Color</strong>
-                                <small>Selected: <span id="detail-color-selected">Black Titanium</span></small>
-                            </div>
-                            <div class="option-group" data-option-group data-selected-target="detail-color-selected">
-                                <button class="option-chip active" type="button" aria-pressed="true">Black Titanium</button>
-                                <button class="option-chip" type="button" aria-pressed="false">Silver Titanium</button>
-                                <button class="option-chip" type="button" aria-pressed="false">Blue Titanium</button>
-                            </div>
-                        </div>
+                        <p class="detail-intro">${product.description}</p>
 
-                        <div class="detail-selector-group">
-                            <div class="selector-head">
-                                <strong>Storage</strong>
-                                <small>Selected: <span id="detail-storage-selected">256GB</span></small>
-                            </div>
-                            <div class="option-group" data-option-group data-selected-target="detail-storage-selected">
-                                <button class="option-chip" type="button" aria-pressed="false">128GB</button>
-                                <button class="option-chip active" type="button" aria-pressed="true">256GB</button>
-                                <button class="option-chip" type="button" aria-pressed="false">512GB</button>
-                                <button class="option-chip" type="button" aria-pressed="false">1TB</button>
-                            </div>
-                        </div>
+                        <form id="add-to-cart-form" action="${ctx}/cart" method="post">
+                            <input type="hidden" name="action" value="add">
+                            <input type="hidden" name="productId" value="${product.productId}">
+                            <input type="hidden" name="variantId" id="selected-variant-id"
+                                   value="${defaultVariant != null ? defaultVariant.variantId : ''}">
 
-                        <div class="detail-selector-group">
-                            <div class="selector-head">
-                                <strong>Quantity</strong>
-                                <small>Basic selector only, no backend logic yet</small>
-                            </div>
-                            <div class="quantity-control" data-quantity-control>
-                                <button type="button" data-quantity-action="decrease">-</button>
-                                <input type="number" name="quantity" value="1" min="1" max="5">
-                                <button type="button" data-quantity-action="increase">+</button>
-                            </div>
-                        </div>
+                            <c:if test="${not empty variantColors}">
+                                <div class="detail-selector-group">
+                                    <div class="selector-head">
+                                        <strong>Màu sắc</strong>
+                                        <small>Đã chọn: <span id="detail-color-selected"></span></small>
+                                    </div>
+                                    <div class="option-group" id="color-option-group">
+                                        <c:forEach items="${variantColors}" var="color">
+                                            <button class="option-chip" type="button"
+                                                    data-variant-color="${fn:escapeXml(color)}"
+                                                    aria-pressed="false">${color}</button>
+                                        </c:forEach>
+                                    </div>
+                                </div>
+                            </c:if>
 
-                        <div class="detail-actions">
-                            <button class="btn btn-app-primary btn-lg" type="button">Add to cart</button>
-                            <button class="btn btn-app-secondary btn-lg" type="button">Buy now</button>
-                            <button class="btn btn-app-outline btn-lg" type="button">Add to wishlist</button>
-                        </div>
+                            <c:if test="${not empty variantStorages}">
+                                <div class="detail-selector-group">
+                                    <div class="selector-head">
+                                        <strong>Dung lượng</strong>
+                                        <small>Đã chọn: <span id="detail-storage-selected"></span></small>
+                                    </div>
+                                    <div class="option-group" id="storage-option-group">
+                                        <c:forEach items="${variantStorages}" var="storage">
+                                            <button class="option-chip" type="button"
+                                                    data-variant-storage="${storage}"
+                                                    aria-pressed="false">${storage}GB</button>
+                                        </c:forEach>
+                                    </div>
+                                </div>
+                            </c:if>
+
+                            <div class="detail-selector-group">
+                                <div class="selector-head">
+                                    <strong>Số lượng</strong>
+                                </div>
+                                <div class="quantity-control" data-quantity-control>
+                                    <button type="button" data-quantity-action="decrease">-</button>
+                                    <input type="number" name="quantity" id="detail-quantity-input" value="1" min="1" max="5">
+                                    <button type="button" data-quantity-action="increase">+</button>
+                                </div>
+                            </div>
+
+                            <div class="detail-actions">
+                                <button id="add-to-cart-btn" class="btn btn-app-primary btn-lg" type="submit"
+                                        ${empty variants ? 'disabled' : ''}>Thêm vào giỏ</button>
+                                <button id="buy-now-btn" class="btn btn-app-secondary btn-lg" type="submit" formaction="${ctx}/checkout"
+                                        ${empty variants ? 'disabled' : ''}>Mua ngay</button>
+                                <button class="btn btn-app-outline btn-lg" type="button">Thêm vào yêu thích</button>
+                            </div>
+                        </form>
 
                         <div class="detail-meta-grid">
-                            <div class="detail-meta-card">
-                                <strong>Warranty</strong>
-                                <span>12 months store support</span>
-                            </div>
-                            <div class="detail-meta-card">
-                                <strong>Shipping</strong>
-                                <span>Standard and express options</span>
-                            </div>
-                            <div class="detail-meta-card">
-                                <strong>Pickup</strong>
-                                <span>Store pickup ready later</span>
-                            </div>
+                            <c:if test="${product.warrantyMonths > 0}">
+                                <div class="detail-meta-card">
+                                    <strong>Bảo hành</strong>
+                                    <span>${product.warrantyMonths} tháng<c:if test="${not empty product.warrantyProvider}"> &ndash; ${product.warrantyProvider}</c:if></span>
+                                </div>
+                            </c:if>
+                            <c:if test="${not empty product.productCondition}">
+                                <div class="detail-meta-card">
+                                    <strong>Tình trạng</strong>
+                                    <span>${product.productCondition}</span>
+                                </div>
+                            </c:if>
+                            <c:if test="${not empty product.importType}">
+                                <div class="detail-meta-card">
+                                    <strong>Xuất xứ</strong>
+                                    <span>${product.importType}<c:if test="${not empty product.originCountry}"> &ndash; ${product.originCountry}</c:if></span>
+                                </div>
+                            </c:if>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
+        <c:if test="${not empty variants}">
         <section class="section-block section-soft">
             <div class="container">
                 <div class="detail-section-card">
                     <ul class="nav nav-tabs app-tabs" id="productDetailTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="detail-description-tab" data-bs-toggle="tab" data-bs-target="#detail-description-pane" type="button" role="tab" aria-controls="detail-description-pane" aria-selected="true">Description</button>
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#detail-description-pane" type="button">Mô tả</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="detail-spec-tab" data-bs-toggle="tab" data-bs-target="#detail-spec-pane" type="button" role="tab" aria-controls="detail-spec-pane" aria-selected="false">Specifications</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="detail-warranty-tab" data-bs-toggle="tab" data-bs-target="#detail-warranty-pane" type="button" role="tab" aria-controls="detail-warranty-pane" aria-selected="false">Warranty</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="detail-shipping-tab" data-bs-toggle="tab" data-bs-target="#detail-shipping-pane" type="button" role="tab" aria-controls="detail-shipping-pane" aria-selected="false">Shipping</button>
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#detail-spec-pane" type="button">Thông số</button>
                         </li>
                     </ul>
                     <div class="tab-content app-tab-content detail-tab-body">
-                        <div class="tab-pane fade show active" id="detail-description-pane" role="tabpanel" aria-labelledby="detail-description-tab">
-                            iPhone 16 Pro sits here as the reference detail page. This block is intentionally clean so later it can be fed by product descriptions from the database without redesign work.
+                        <div class="tab-pane fade show active" id="detail-description-pane">
+                            ${product.description}
                         </div>
-                        <div class="tab-pane fade" id="detail-spec-pane" role="tabpanel" aria-labelledby="detail-spec-tab">
+                        <div class="tab-pane fade" id="detail-spec-pane">
                             <div class="spec-grid">
-                                <div><strong>Display</strong><span>6.3-inch Super Retina XDR</span></div>
-                                <div><strong>Chip</strong><span>A18 Pro</span></div>
-                                <div><strong>Storage</strong><span>128GB to 1TB</span></div>
-                                <div><strong>Camera</strong><span>Pro triple camera system</span></div>
+                                <c:if test="${not empty product.modelCode}"><div><strong>Model</strong><span>${product.modelCode}</span></div></c:if>
+                                <c:if test="${product.releaseYear != null}"><div><strong>Năm ra mắt</strong><span>${product.releaseYear}</span></div></c:if>
+                                <c:forEach items="${variants}" var="v">
+                                    <div><strong>${v.variantLabel != null ? v.variantLabel : v.sku}</strong>
+                                        <span>
+                                            <c:if test="${v.storageCapacityGb != null}">${v.storageCapacityGb}GB </c:if>
+                                            <c:if test="${v.ramGb != null}">/ ${v.ramGb}GB RAM </c:if>
+                                            <c:if test="${not empty v.chipOption}">/ ${v.chipOption} </c:if>
+                                            <c:if test="${not empty v.connectivity}">/ ${v.connectivity}</c:if>
+                                        </span>
+                                    </div>
+                                </c:forEach>
                             </div>
-                        </div>
-                        <div class="tab-pane fade" id="detail-warranty-pane" role="tabpanel" aria-labelledby="detail-warranty-tab">
-                            Reserve this section for official warranty policy, store support conditions, and return notes after the backend and content rules are finalized.
-                        </div>
-                        <div class="tab-pane fade" id="detail-shipping-pane" role="tabpanel" aria-labelledby="detail-shipping-tab">
-                            Standard delivery, express delivery, and pickup information can live here in a stable reusable block.
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+        </c:if>
 
+        <c:if test="${not empty relatedProducts}">
         <section class="section-block">
             <div class="container">
                 <div class="section-heading">
                     <div>
-                        <span class="eyebrow">Customer feedback</span>
-                        <h2>Real reviews that can later come from completed orders</h2>
+                        <span class="eyebrow">Sản phẩm liên quan</span>
+                        <h2>Có thể bạn cũng quan tâm</h2>
                     </div>
-                    <a class="btn btn-app-outline" href="order-history.html">Purchased items</a>
-                </div>
-                <div class="detail-review-grid">
-                    <div class="review-panel-stack">
-                        <article class="review-summary-card">
-                            <div class="review-card-head">
-                                <div class="review-meta">
-                                    <strong>4.8 out of 5</strong>
-                                    <span>248 verified reviews across current iPhone 16 variants</span>
-                                </div>
-                                <span class="rating-pill">4.8 / 5</span>
-                            </div>
-                            <ul class="rating-breakdown">
-                                <li>
-                                    <span>5 star</span>
-                                    <span class="rating-breakdown-bar"><span class="rating-breakdown-fill" style="width: 82%;"></span></span>
-                                    <strong>204</strong>
-                                </li>
-                                <li>
-                                    <span>4 star</span>
-                                    <span class="rating-breakdown-bar"><span class="rating-breakdown-fill" style="width: 12%;"></span></span>
-                                    <strong>29</strong>
-                                </li>
-                                <li>
-                                    <span>3 star</span>
-                                    <span class="rating-breakdown-bar"><span class="rating-breakdown-fill" style="width: 4%;"></span></span>
-                                    <strong>10</strong>
-                                </li>
-                                <li>
-                                    <span>2 star</span>
-                                    <span class="rating-breakdown-bar"><span class="rating-breakdown-fill" style="width: 1%;"></span></span>
-                                    <strong>3</strong>
-                                </li>
-                                <li>
-                                    <span>1 star</span>
-                                    <span class="rating-breakdown-bar"><span class="rating-breakdown-fill" style="width: 1%;"></span></span>
-                                    <strong>2</strong>
-                                </li>
-                            </ul>
-                        </article>
-
-                        <div class="review-list">
-                            <article class="review-card">
-                                <div class="review-card-head">
-                                    <div class="review-meta">
-                                        <strong>Nguyen Minh Anh</strong>
-                                        <span>Purchased Black Titanium / 256GB on Aug 3, 2026</span>
-                                    </div>
-                                    <span class="rating-pill">5 / 5</span>
-                                </div>
-                                <p>
-                                    Camera upgrade is noticeable and the battery easily lasts a full workday. The store
-                                    packaging also felt careful enough for a high-value hand-carried item.
-                                </p>
-                                <span class="status-badge status-delivered">Verified purchase</span>
-                            </article>
-
-                            <article class="review-card">
-                                <div class="review-card-head">
-                                    <div class="review-meta">
-                                        <strong>Tran Bao Chau</strong>
-                                        <span>Purchased Natural Titanium / 512GB on Jul 28, 2026</span>
-                                    </div>
-                                    <span class="rating-pill">4 / 5</span>
-                                </div>
-                                <p>
-                                    Performance is excellent and the screen is bright outdoors. I only wish the box
-                                    included clearer accessory recommendations for MagSafe charging.
-                                </p>
-                                <span class="status-badge status-in-stock">Published</span>
-                            </article>
-
-                            <article class="review-card">
-                                <div class="review-card-head">
-                                    <div class="review-meta">
-                                        <strong>Le Quoc Minh</strong>
-                                        <span>Purchased White Titanium / 256GB on Jul 20, 2026</span>
-                                    </div>
-                                    <span class="rating-pill">5 / 5</span>
-                                </div>
-                                <p>
-                                    Smooth setup, great video quality, and the variant selector on this demo page would
-                                    map nicely to real database-driven variants later.
-                                </p>
-                                <span class="status-badge status-processing">Helpful review</span>
-                            </article>
-                        </div>
-                    </div>
-
-                    <aside class="review-form-card">
-                        <div class="review-form-head">
-                            <h3>Write feedback</h3>
-                            <p>Simple UI placeholder for the post-purchase review flow.</p>
-                        </div>
-                        <form action="submit-feedback" method="post" name="productFeedbackForm" class="field-grid">
-                            <div>
-                                <label class="form-label" for="feedback-rating">Rating</label>
-                                <select id="feedback-rating" class="form-select" name="rating">
-                                    <option>5 - Excellent</option>
-                                    <option>4 - Good</option>
-                                    <option>3 - Average</option>
-                                    <option>2 - Poor</option>
-                                    <option>1 - Very poor</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="form-label" for="feedback-order-code">Order reference</label>
-                                <input id="feedback-order-code" class="form-control" type="text" name="orderCode" placeholder="AOS-240811">
-                            </div>
-                            <div>
-                                <label class="form-label" for="feedback-title">Review title</label>
-                                <input id="feedback-title" class="form-control" type="text" name="title" placeholder="What stood out most?">
-                            </div>
-                            <div>
-                                <label class="form-label" for="feedback-comment">Your feedback</label>
-                                <textarea id="feedback-comment" class="form-control" name="comment" rows="6" placeholder="Describe product quality, packaging, delivery impression, or after-sales experience."></textarea>
-                            </div>
-                            <button class="btn btn-app-primary w-100" type="submit">Submit feedback</button>
-                        </form>
-                    </aside>
-                </div>
-            </div>
-        </section>
-
-        <section class="section-block">
-            <div class="container">
-                <div class="section-heading">
-                    <div>
-                        <span class="eyebrow">Related products</span>
-                        <h2>More items from the same browsing flow</h2>
-                    </div>
-                    <a class="btn btn-app-outline" href="products.html">Back to catalog</a>
+                    <a class="btn btn-app-outline" href="${ctx}/products">Quay lại danh mục</a>
                 </div>
                 <div class="row g-4 related-grid">
-                    <div class="col-md-6 col-xl-3">
-                        <article class="product-card">
-                            <div class="product-card-media">
-                                <img src="assets/images/iphone-card.svg" alt="iPhone 16 Plus">
-                            </div>
-                            <div class="product-card-body">
-                                <div class="product-meta">
-                                    <span class="status-badge status-in-stock">In stock</span>
-                                    <button class="wishlist-button" type="button">Save</button>
+                    <c:forEach items="${relatedProducts}" var="rp">
+                        <div class="col-md-6 col-xl-3">
+                            <article class="product-card">
+                                <div class="product-card-media">
+                                    <img src="${ctx}/assets/images/iphone-card.svg" alt="${rp.name}">
                                 </div>
-                                <h3>iPhone 16 Plus</h3>
-                                <p>128GB / Blue</p>
-                                <div class="product-price">
-                                    <strong>$999</strong>
+                                <div class="product-card-body">
+                                    <h3>${rp.name}</h3>
+                                    <div class="product-price">
+                                        <strong>Từ <fmt:formatNumber value="${rp.minPrice}" pattern="#,##0"/> VND</strong>
+                                    </div>
+                                    <div class="product-actions">
+                                        <a class="btn btn-app-primary w-100" href="${ctx}/product?id=${rp.productId}">Xem chi tiết</a>
+                                    </div>
                                 </div>
-                                <div class="product-actions">
-                                    <a class="btn btn-app-outline w-100" href="product-detail.html">View detail</a>
-                                    <button class="btn btn-app-primary w-100" type="button">Add to cart</button>
-                                </div>
-                            </div>
-                        </article>
-                    </div>
-                    <div class="col-md-6 col-xl-3">
-                        <article class="product-card">
-                            <div class="product-card-media">
-                                <img src="assets/images/watch-card.svg" alt="Apple Watch Series 11">
-                            </div>
-                            <div class="product-card-body">
-                                <div class="product-meta">
-                                    <span class="status-badge status-in-stock">In stock</span>
-                                    <button class="wishlist-button" type="button">Save</button>
-                                </div>
-                                <h3>Apple Watch Series 11</h3>
-                                <p>46mm / Midnight</p>
-                                <div class="product-price">
-                                    <strong>$479</strong>
-                                </div>
-                                <div class="product-actions">
-                                    <a class="btn btn-app-outline w-100" href="product-detail.html">View detail</a>
-                                    <button class="btn btn-app-primary w-100" type="button">Add to cart</button>
-                                </div>
-                            </div>
-                        </article>
-                    </div>
-                    <div class="col-md-6 col-xl-3">
-                        <article class="product-card">
-                            <div class="product-card-media">
-                                <span class="app-badge badge-sale">Bundle</span>
-                                <img src="assets/images/iphone-card.svg" alt="AirPods Pro 3">
-                            </div>
-                            <div class="product-card-body">
-                                <div class="product-meta">
-                                    <span class="status-badge status-in-stock">In stock</span>
-                                    <button class="wishlist-button" type="button">Save</button>
-                                </div>
-                                <h3>AirPods Pro 3</h3>
-                                <p>USB-C / White</p>
-                                <div class="product-price">
-                                    <strong>$289</strong>
-                                </div>
-                                <div class="product-actions">
-                                    <a class="btn btn-app-outline w-100" href="product-detail.html">View detail</a>
-                                    <button class="btn btn-app-primary w-100" type="button">Add to cart</button>
-                                </div>
-                            </div>
-                        </article>
-                    </div>
-                    <div class="col-md-6 col-xl-3">
-                        <article class="product-card">
-                            <div class="product-card-media">
-                                <img src="assets/images/mac-card.svg" alt="MacBook Air M4">
-                            </div>
-                            <div class="product-card-body">
-                                <div class="product-meta">
-                                    <span class="status-badge status-low-stock">Low stock</span>
-                                    <button class="wishlist-button" type="button">Save</button>
-                                </div>
-                                <h3>MacBook Air M4</h3>
-                                <p>13-inch / Silver</p>
-                                <div class="product-price">
-                                    <strong>$1,399</strong>
-                                </div>
-                                <div class="product-actions">
-                                    <a class="btn btn-app-outline w-100" href="product-detail.html">View detail</a>
-                                    <button class="btn btn-app-primary w-100" type="button">Add to cart</button>
-                                </div>
-                            </div>
-                        </article>
-                    </div>
+                            </article>
+                        </div>
+                    </c:forEach>
                 </div>
             </div>
         </section>
+        </c:if>
     </main>
 
-    <footer class="site-footer">
-        <div class="container footer-grid">
-            <div>
-                <a class="brand brand-footer" href="index.html">
-                    <img src="assets/images/logo-mark.svg" alt="AOS mark">
-                    <span>
-                        <strong>AOS Template</strong>
-                        <small>Product detail / Phase 2</small>
-                    </span>
-                </a>
-                <p class="footer-copy">
-                    Product detail layout with reusable gallery and variant sections that stay easy to migrate into JSP.
-                </p>
-            </div>
-            <div>
-                <h3 class="footer-title">Store pages</h3>
-                <ul class="footer-links">
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="products.html">Product List</a></li>
-                    <li><a href="product-detail.html">Product Detail</a></li>
-                    <li><a href="components/component-demo.html">Component Demo</a></li>
-                </ul>
-            </div>
-            <div>
-                <h3 class="footer-title">Future pages</h3>
-                <ul class="footer-links">
-                    <li><a href="cart.html">Cart</a></li>
-                    <li><a href="checkout.html">Checkout</a></li>
-                    <li><a href="order-history.html">Order History</a></li>
-                </ul>
-            </div>
-            <div>
-                <h3 class="footer-title">Newsletter</h3>
-                <form action="subscribe-newsletter" method="post" name="newsletterForm" class="footer-form">
-                    <label class="visually-hidden" for="detail-newsletter">Email address</label>
-                    <input id="detail-newsletter" class="form-control" type="email" name="email" placeholder="Email address">
-                    <button class="btn btn-app-primary w-100" type="submit">Subscribe</button>
-                </form>
-            </div>
-        </div>
-        <div class="container footer-bottom">
-            <small>&copy; <span data-current-year></span> Apple Online Shop UI Template. Built for academic Java Web projects.</small>
-        </div>
-    </footer>
+    <jsp:include page="/WEB-INF/views/common/footer.jsp" />
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/main.js"></script>
+    <script src="${ctx}/assets/js/main.js"></script>
+
+    <c:if test="${not empty variants}">
+    <script>
+    (function () {
+        // Dữ liệu variant do servlet chuẩn bị, JS chỉ dùng để đổi giá/tồn kho
+        // khi khách bấm chọn màu/dung lượng khác nhau - KHÔNG có business logic
+        // nào khác ngoài việc match đúng variant tương ứng.
+        var productVariants = [
+            <c:forEach items="${variants}" var="v" varStatus="st">
+            {
+                id: ${v.variantId},
+                color: "${fn:escapeXml(v.colorName)}",
+                storage: ${v.storageCapacityGb != null ? v.storageCapacityGb : 'null'},
+                price: ${v.price},
+                discountPrice: ${v.discountPrice != null ? v.discountPrice : 'null'},
+                discountStart: "${v.discountStart}",
+                discountEnd: "${v.discountEnd}",
+                stock: ${v.stockQuantity},
+                active: ${v.active}
+            }<c:if test="${!st.last}">,</c:if>
+            </c:forEach>
+        ];
+
+        var LOW_STOCK_THRESHOLD = ${lowStockThreshold};
+        var defaultVariantId = ${defaultVariant != null ? defaultVariant.variantId : 'null'};
+
+        var selectedColor = null;
+        var selectedStorage = null;
+
+        function findVariant(color, storage) {
+            for (var i = 0; i < productVariants.length; i++) {
+                var v = productVariants[i];
+                if ((color === null || v.color === color) && (storage === null || v.storage === storage)) {
+                    return v;
+                }
+            }
+            return null;
+        }
+
+        function isDiscountActive(v) {
+            if (v.discountPrice == null) { return false; }
+            var now = new Date();
+            var start = v.discountStart ? new Date(v.discountStart) : null;
+            var end = v.discountEnd ? new Date(v.discountEnd) : null;
+            if (start && now < start) { return false; }
+            if (end && now > end) { return false; }
+            return true;
+        }
+
+        function formatPrice(value) {
+            return '$' + Math.round(value).toLocaleString('en-US');
+        }
+
+        function renderVariant(v) {
+            if (!v) { return; }
+            document.getElementById('selected-variant-id').value = v.id;
+
+            var currentPriceEl = document.getElementById('detail-current-price');
+            var originalPriceEl = document.getElementById('detail-original-price');
+            var saveBadgeEl = document.getElementById('detail-save-badge');
+
+            if (isDiscountActive(v)) {
+                currentPriceEl.textContent = formatPrice(v.discountPrice);
+                originalPriceEl.textContent = formatPrice(v.price);
+                originalPriceEl.classList.remove('is-hidden');
+                saveBadgeEl.textContent = 'Tiết kiệm ' + formatPrice(v.price - v.discountPrice);
+                saveBadgeEl.classList.remove('is-hidden');
+            } else {
+                currentPriceEl.textContent = formatPrice(v.price);
+                originalPriceEl.classList.add('is-hidden');
+                saveBadgeEl.classList.add('is-hidden');
+            }
+
+            var stockBadge = document.getElementById('detail-stock-badge');
+            var addBtn = document.getElementById('add-to-cart-btn');
+            var buyBtn = document.getElementById('buy-now-btn');
+            var qtyInput = document.getElementById('detail-quantity-input');
+
+            if (v.stock <= 0 || !v.active) {
+                stockBadge.textContent = 'Hết hàng';
+                stockBadge.className = 'status-badge status-out-stock';
+                addBtn.disabled = true;
+                buyBtn.disabled = true;
+                qtyInput.max = 1;
+            } else if (v.stock < LOW_STOCK_THRESHOLD) {
+                stockBadge.textContent = 'Sắp hết hàng';
+                stockBadge.className = 'status-badge status-low-stock';
+                addBtn.disabled = false;
+                buyBtn.disabled = false;
+                qtyInput.max = Math.min(5, v.stock);
+            } else {
+                stockBadge.textContent = 'Còn hàng';
+                stockBadge.className = 'status-badge status-in-stock';
+                addBtn.disabled = false;
+                buyBtn.disabled = false;
+                qtyInput.max = 5;
+            }
+        }
+
+        function selectColor(color, btn) {
+            selectedColor = color;
+            document.getElementById('detail-color-selected').textContent = color;
+            document.querySelectorAll('#color-option-group .option-chip').forEach(function (c) {
+                c.classList.remove('active');
+                c.setAttribute('aria-pressed', 'false');
+            });
+            btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
+            applySelection();
+        }
+
+        function selectStorage(storage, btn) {
+            selectedStorage = storage;
+            document.getElementById('detail-storage-selected').textContent = storage + 'GB';
+            document.querySelectorAll('#storage-option-group .option-chip').forEach(function (c) {
+                c.classList.remove('active');
+                c.setAttribute('aria-pressed', 'false');
+            });
+            btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
+            applySelection();
+        }
+
+        function applySelection() {
+            var match = findVariant(selectedColor, selectedStorage);
+            if (match) {
+                renderVariant(match);
+            }
+        }
+
+        document.querySelectorAll('#color-option-group .option-chip').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                selectColor(btn.getAttribute('data-variant-color'), btn);
+            });
+        });
+        document.querySelectorAll('#storage-option-group .option-chip').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                selectStorage(parseInt(btn.getAttribute('data-variant-storage'), 10), btn);
+            });
+        });
+
+        // Khởi tạo trạng thái ban đầu theo defaultVariant do servlet chọn sẵn
+        var initial = null;
+        for (var i = 0; i < productVariants.length; i++) {
+            if (productVariants[i].id === defaultVariantId) { initial = productVariants[i]; break; }
+        }
+        if (!initial && productVariants.length > 0) { initial = productVariants[0]; }
+        if (initial) {
+            var colorBtn = document.querySelector('#color-option-group .option-chip[data-variant-color="' + initial.color + '"]');
+            var storageBtn = document.querySelector('#storage-option-group .option-chip[data-variant-storage="' + initial.storage + '"]');
+            if (colorBtn) { selectColor(initial.color, colorBtn); }
+            if (storageBtn) { selectStorage(initial.storage, storageBtn); }
+            if (!colorBtn && !storageBtn) { renderVariant(initial); }
+        }
+    })();
+    </script>
+    </c:if>
+
+    </c:otherwise>
+    </c:choose>
 </body>
 </html>
-
