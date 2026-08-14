@@ -22,7 +22,7 @@
                     </span>
                 </a>
                 <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-app-primary ms-auto me-3">
-                    Vào trang quản trị
+                    Vào trang Quản trị (Admin)
                 </a>
                 <div class="header-actions">
                     <div class="dropdown">
