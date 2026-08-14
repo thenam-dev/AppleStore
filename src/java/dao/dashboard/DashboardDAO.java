@@ -21,7 +21,10 @@ public class DashboardDAO {
 
     // 2. Đếm số lượng theo bảng
     public int getCount(String table, String condition) {
-        String sql = "SELECT COUNT(*) FROM " + table + " WHERE " + condition;
+        String sql = "SELECT COUNT(*) FROM " + table;
+        if (condition != null && !condition.trim().isEmpty()) {
+            sql += " WHERE " + condition;
+        }
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             // 3. Try con để chạy lệnh
             try (ResultSet rs = ps.executeQuery()) {
@@ -38,11 +41,24 @@ public class DashboardDAO {
     // 3. Lấy đơn hàng mới nhất (Đổi TOP thành LIMIT)
 
     public List<Order> getRecentOrders(int limit) {
+        return getRecentOrders(limit, null);
+    }
+
+    public List<Order> getRecentOrders(int limit, Integer staffId) {
         List<Order> list = new ArrayList<>();
-        String sql = "SELECT order_id, recipient_name, created_at, final_amount, status FROM orders " +
-                     "ORDER BY created_at DESC LIMIT ?";
+        String sql = "SELECT order_id, recipient_name, created_at, final_amount, status FROM orders ";
+        if (staffId != null) {
+            sql += "WHERE assigned_sale_staff_id = ? ";
+        }
+        sql += "ORDER BY created_at DESC LIMIT ?";
+        
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, limit);
+            int paramIndex = 1;
+            if (staffId != null) {
+                ps.setInt(paramIndex++, staffId);
+            }
+            ps.setInt(paramIndex++, limit);
+            
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Order o = new Order();
@@ -65,6 +81,10 @@ public class DashboardDAO {
 
     // 4. Lấy danh sách sản phẩm bán chạy nhất
     public List<dto.BestSellingProductDTO> getBestSellingProducts(int limit) {
+        return getBestSellingProducts(limit, null);
+    }
+
+    public List<dto.BestSellingProductDTO> getBestSellingProducts(int limit, Integer staffId) {
         List<dto.BestSellingProductDTO> list = new ArrayList<>();
         String sql = "SELECT p.product_id, p.name, pi.file_path, SUM(oi.quantity) as total_sold " +
                      "FROM order_items oi " +
@@ -72,15 +92,24 @@ public class DashboardDAO {
                      "JOIN product_variants pv ON oi.variant_id = pv.variant_id " +
                      "JOIN products p ON pv.product_id = p.product_id " +
                      "LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_primary = 1 " +
-                     "WHERE o.status = 'DELIVERED' " +
-                     "GROUP BY p.product_id, p.name, pi.file_path " +
-                     "ORDER BY total_sold DESC " +
-                     "LIMIT ?";
+                     "WHERE o.status = 'DELIVERED' ";
+                     
+        if (staffId != null) {
+            sql += "AND o.assigned_sale_staff_id = ? ";
+        }
+        
+        sql += "GROUP BY p.product_id, p.name, pi.file_path " +
+               "ORDER BY total_sold DESC " +
+               "LIMIT ?";
                      
         try (Connection conn = DBConnection.getConnection(); 
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setInt(1, limit);
+            int paramIndex = 1;
+            if (staffId != null) {
+                ps.setInt(paramIndex++, staffId);
+            }
+            ps.setInt(paramIndex++, limit);
             
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

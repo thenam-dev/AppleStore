@@ -21,9 +21,16 @@
                         <small>Giao diện Apple</small>
                     </span>
                 </a>
-                <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-app-primary ms-auto me-3">
-                    Vào trang quản trị
-                </a>
+                <c:choose>
+                    <c:when test="${not empty sessionScope.user and (sessionScope.user.role eq 'ADMIN' or sessionScope.user.role eq 'SALE_STAFF')}">
+                        <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-app-primary ms-auto me-3">
+                            Vào trang Quản trị (Admin)
+                        </a>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="ms-auto"></div>
+                    </c:otherwise>
+                </c:choose>
                 <div class="header-actions">
                     <div class="dropdown">
                         <button class="btn btn-app-ghost dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
