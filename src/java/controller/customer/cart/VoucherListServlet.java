@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.time.format.DateTimeFormatter; // <-- THÊM THƯ VIỆN NÀY
 
 @WebServlet(name = "VoucherListServlet", urlPatterns = {"/vouchers"})
 public class VoucherListServlet extends HttpServlet {
@@ -24,10 +25,14 @@ public class VoucherListServlet extends HttpServlet {
             List<Promotion> vouchers = promotionService.getAvailableVouchersForCart();
             req.setAttribute("vouchers", vouchers);
             
+            // --- THÊM DÒNG NÀY: Khởi tạo Formatter và đẩy sang JSP ---
+            req.setAttribute("dateFormatter", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+            
             // Chuyển hướng sang giao diện chọn mã
             req.getRequestDispatcher("/WEB-INF/views/customer/voucher-list.jsp").forward(req, resp);
-        } catch (SQLException e) {
-            req.getSession().setAttribute("errorMsg", "Lỗi khi tải danh sách mã giảm giá.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            req.getSession().setAttribute("errorMsg", "Chi tiết lỗi: " + e.toString());
             resp.sendRedirect(req.getContextPath() + "/checkout");
         }
     }

@@ -12,8 +12,10 @@
 </head>
 <body class="site-body">
 
+    <c:set var="ctx" value="${pageContext.request.contextPath}" />
+
     <!-- Header (Tái sử dụng chung của Customer) -->
-    <jsp:include page="/common/header.jsp"/>
+    <jsp:include page="/WEB-INF/views/common/header.jsp"/>
 
     <main>
         <!-- Tiêu đề trang -->
@@ -21,8 +23,8 @@
             <div class="container">
                 <nav aria-label="Breadcrumb">
                     <ol class="breadcrumb app-breadcrumb">
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp">Trang chủ</a></li>
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/cart">Giỏ hàng</a></li>
+                        <li class="breadcrumb-item"><a href="${ctx}/index.jsp">Trang chủ</a></li>
+                        <li class="breadcrumb-item"><a href="${ctx}/cart">Giỏ hàng</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Khuyến mãi</li>
                     </ol>
                 </nav>
@@ -33,9 +35,13 @@
                         <p>Chọn một mã giảm giá phù hợp nhất với đơn hàng hiện tại của bạn.</p>
                     </div>
                     <div class="store-heading-actions mt-3 mt-md-0">
-                        <a class="btn btn-app-outline" href="${pageContext.request.contextPath}/checkout">Quay lại Thanh toán</a>
+                        <a class="btn btn-app-outline" href="${ctx}/checkout">Quay lại Thanh toán</a>
                     </div>
                 </div>
+
+                <c:if test="${not empty errorMsg}">
+                    <div class="alert alert-danger">${errorMsg}</div>
+                </c:if>
             </div>
         </section>
 
@@ -50,12 +56,12 @@
                             <h2>Không có mã giảm giá nào khả dụng</h2>
                             <p>Hiện tại không có chương trình khuyến mãi nào có thể áp dụng, hoặc bạn đã sử dụng hết các mã.</p>
                             <div class="hero-actions">
-                                <a class="btn btn-app-primary" href="${pageContext.request.contextPath}/checkout">Trở lại Thanh toán</a>
-                                <a class="btn btn-app-outline" href="${pageContext.request.contextPath}/products">Tiếp tục mua sắm</a>
+                                <a class="btn btn-app-primary" href="${ctx}/checkout">Trở lại Thanh toán</a>
+                                <a class="btn btn-app-outline" href="${ctx}/products">Tiếp tục mua sắm</a>
                             </div>
                         </div>
                     </c:when>
-                    
+
                     <c:otherwise>
                         <div class="d-flex flex-column gap-4">
                             <c:forEach var="promo" items="${vouchers}">
@@ -67,7 +73,7 @@
                                             <span class="status-badge status-in-stock">Có sẵn</span>
                                         </div>
                                         <p class="mb-2" style="font-size: 0.95rem;">
-                                            Giảm 
+                                            Giảm
                                             <strong>
                                                 <c:choose>
                                                     <c:when test="${promo.discountType == 'PERCENT'}">${promo.discountValue}%</c:when>
@@ -78,12 +84,12 @@
                                         </p>
                                         <div class="text-muted small d-flex flex-column gap-1">
                                             <span>Đơn tối thiểu: <strong><fmt:formatNumber value="${promo.minOrderValue}" pattern="#,##0"/> đ</strong></span>
-                                            <span>HSD: ${promo.validUntil.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))}</span>
+                                            <span>HSD: ${promo.validUntil.format(dateFormatter)}</span>
                                         </div>
                                     </div>
                                     <div class="mt-2 mt-md-0">
-                                        <!-- Form post mã thẳng về Servlet để tính tiền -->
-                                        <form action="${pageContext.request.contextPath}/apply-voucher" method="post">
+                                        <!-- SỬA: phải POST tới /apply-voucher (servlet xử lý mã), không phải /checkout -->
+                                        <form action="${ctx}/apply-voucher" method="post">
                                             <input type="hidden" name="voucherCode" value="${promo.code}">
                                             <button type="submit" class="btn btn-app-primary w-100">Dùng ngay</button>
                                         </form>
@@ -98,9 +104,9 @@
     </main>
 
     <!-- Footer -->
-    <jsp:include page="/common/footer.jsp"/>
+    <jsp:include page="/WEB-INF/views/common/footer.jsp"/>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>
+    <script src="${ctx}/assets/js/main.js"></script>
 </body>
 </html>
