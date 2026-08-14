@@ -1,4 +1,4 @@
-/*
+ /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
@@ -8,6 +8,12 @@ import dao.cart.CartDAO;
 import dao.catalog.ProductVariantDAO;
 import dao.order.OrderDAO;
 import dao.payment.PaymentDAO;
+
+// ---- THÊM MỚI: Import class cho Khuyến mãi và Database ----
+import model.entity.promtion.Promotion;
+import service.promotion.PromotionService;
+import util.DBConnection;
+import java.sql.Connection;
 
 import java.math.BigDecimal;
 import java.net.URLEncoder;
@@ -58,6 +64,7 @@ public class CheckoutService {
     }
 
     public static class CheckoutForm {
+
         public int customerId;
         public String deliveryAddress;
         public String recipientName;
@@ -65,9 +72,14 @@ public class CheckoutService {
         public String deliveryTimeSlot;
         public String notes;
         public String paymentMethod; // "CK" hoặc "COD"
+
+        // ---- THÊM MỚI: 2 biến hứng dữ liệu Voucher từ Servlet ----
+        public Promotion appliedPromo;
+        public BigDecimal discountAmount;
     }
 
     public static class CheckoutResult {
+
         public boolean success;
         public String message;
         public Map<String, String> fieldErrors = new HashMap<>();
@@ -75,7 +87,9 @@ public class CheckoutService {
         public String qrCodeUrl;
     }
 
-    /** Validate tối thiểu theo rule 6: required, length, format. */
+    /**
+     * Validate tối thiểu theo rule 6: required, length, format.
+     */
     public Map<String, String> validate(CheckoutForm form) {
         Map<String, String> errors = new HashMap<>();
 
@@ -111,9 +125,9 @@ public class CheckoutService {
     /**
      * Tạo đơn hàng từ giỏ hàng hiện tại của khách. Các bước gọi DAO tuần tự:
      * kiểm tra tồn kho -> insert orders -> insert order_items + trừ kho (atomic
-     * từng dòng nhờ decreaseStockIfAvailable) -> ghi log -> tạo payment (nếu CK)
-     * -> xoá giỏ hàng. Nếu 1 bước ở giữa thất bại, gọi các hàm bù trừ để hoàn
-     * lại các bước đã làm trước đó thay vì transaction rollback.
+     * từng dòng nhờ decreaseStockIfAvailable) -> ghi log -> tạo payment (nếu
+     * CK) -> xoá giỏ hàng. Nếu 1 bước ở giữa thất bại, gọi các hàm bù trừ để
+     * hoàn lại các bước đã làm trước đó thay vì transaction rollback.
      */
     public CheckoutResult checkout(CheckoutForm form) {
         CheckoutResult result = new CheckoutResult();
@@ -135,6 +149,7 @@ public class CheckoutService {
             // Kiểm tra sơ bộ tồn kho trước (best-effort, không khoá được xuyên suốt
             // nhiều câu lệnh vì không còn transaction) để trả lỗi sớm cho khách.
             BigDecimal totalAmount = BigDecimal.ZERO;
+
             for (CartItem cartItem : items) {
                 var stock = productVariantDAO.findStockQuantity(cartItem.getVariantId());
                 if (stock.isEmpty()) {
@@ -151,7 +166,9 @@ public class CheckoutService {
             }
 
             BigDecimal deliveryFee = BigDecimal.ZERO;
-            BigDecimal discountAmount = BigDecimal.ZERO;
+//            BigDecimal discountAmount = BigDecimal.ZERO;
+            // ---- THAY THẾ: Lấy tiền giảm giá từ Form.
+            BigDecimal discountAmount = (form.discountAmount != null) ? form.discountAmount : BigDecimal.ZERO;
             BigDecimal finalAmount = totalAmount.add(deliveryFee).subtract(discountAmount);
 
             Order order = new Order();
@@ -189,6 +206,17 @@ public class CheckoutService {
                         "ORDER_RESERVE", -cartItem.getQuantity(), stockAfter);
             }
 
+            // ---- THÊM MỚI: Gọi PromotionService để trừ mã (Tự quản lý Connection do kiến trúc không dùng Global Transaction) ----
+            if (form.appliedPromo != null && form.discountAmount != null) {
+                PromotionService promotionService = new PromotionService();
+                try (Connection conn = DBConnection.getConnection()) {
+                    promotionService.recordPromotionUsage(conn, orderId, form.customerId, form.appliedPromo, form.discountAmount);
+                } catch (SQLException e) {
+                    // Best-effort lưu voucher, nếu lỗi thì log lại
+                    e.printStackTrace();
+                }
+            }
+
             orderDAO.insertStatusHistory(orderId, "PENDING_PAYMENT", form.customerId, "Khách tạo đơn hàng");
 
             String qrUrl = null;
@@ -216,7 +244,10 @@ public class CheckoutService {
         }
     }
 
-    /** Hoàn lại tồn kho đã trừ và xoá đơn hàng vừa tạo khi 1 bước giữa chừng thất bại. */
+    /**
+     * Hoàn lại tồn kho đã trừ và xoá đơn hàng vừa tạo khi 1 bước giữa chừng
+     * thất bại.
+     */
     private void compensate(int orderId, List<int[]> decreasedStock) {
         for (int[] entry : decreasedStock) {
             try {
@@ -233,7 +264,9 @@ public class CheckoutService {
         }
     }
 
-    /** Sinh URL ảnh QR VietQR động của SePay. */
+    /**
+     * Sinh URL ảnh QR VietQR động của SePay.
+     */
     private String buildQrUrl(BigDecimal amount, String content) {
         String encodedContent = URLEncoder.encode(content, StandardCharsets.UTF_8);
         return String.format("https://qr.sepay.vn/img?acc=%s&bank=%s&amount=%s&des=%s",

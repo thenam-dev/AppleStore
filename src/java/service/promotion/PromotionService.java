@@ -1,9 +1,8 @@
 package service.promotion;
 
 import dao.promtion.PromotionDAO;
-import dao.promtion.PromotionDAO;
 import model.entity.promtion.Promotion;
-
+import java.sql.Connection;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -95,26 +94,85 @@ public class PromotionService {
         return promotionDAO.findAllWithPaging(keyword, statusFilter, sortCol, sortDir, offset, limit);
     }
 
-    // =========================================================================
-    // TODO: PHẦN DÀNH CHO CHECKOUT/CART SẼ CODE SAU
-    // =========================================================================
     /**
-     * Dùng để kiểm tra voucher hợp lệ khi người dùng nhập mã ở giỏ hàng
+     * Dùng để kiểm tra voucher hợp lệ khi người dùng nhập mã ở giỏ hàng hoặc thanh toán
      */
     public Promotion validateCouponForCheckout(String code, BigDecimal cartSubtotal) throws SQLException {
-        // Code implementation for later:
-        // 1. Find by code
-        // 2. Check ValidFrom, ValidUntil
-        // 3. Check min_order_value <= cartSubtotal
-        // 4. Check used_count < max_uses
-        return null;
+        if (code == null || code.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng nhập mã khuyến mãi.");
+        }
+
+        Promotion promo = promotionDAO.findByCode(code.trim().toUpperCase());
+        if (promo == null) {
+            throw new IllegalArgumentException("Mã khuyến mãi không tồn tại.");
+        }
+
+        if (!promo.IsActive() || promo.IsDeleted()) {
+            throw new IllegalArgumentException("Mã khuyến mãi đã hết hạn hoặc bị vô hiệu hóa.");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(promo.getValidFrom())) {
+            throw new IllegalArgumentException("Mã khuyến mãi này chưa đến thời gian sử dụng.");
+        }
+        if (now.isAfter(promo.getValidUntil())) {
+            throw new IllegalArgumentException("Mã khuyến mãi này đã hết hạn.");
+        }
+
+        if (cartSubtotal.compareTo(promo.getMinOrderValue()) < 0) {
+            throw new IllegalArgumentException("Đơn hàng chưa đạt giá trị tối thiểu " + promo.getMinOrderValue() + " để áp dụng.");
+        }
+
+        if (promo.getMaxUses() != null && promo.getUsedCount() >= promo.getMaxUses()) {
+            throw new IllegalArgumentException("Mã khuyến mãi đã hết lượt sử dụng.");
+        }
+
+        return promo;
     }
 
     /**
-     * Tính toán số tiền thực tế được giảm dựa trên loại % hay Giá tiền cố định
+     * Tính toán số tiền thực tế được giảm
      */
-    public BigDecimal calculateDiscountAmount(Promotion promo, BigDecimal baseAmount) {
-        // Code implementation for later...
-        return BigDecimal.ZERO;
+    public BigDecimal calculateDiscountAmount(Promotion promo, BigDecimal cartSubtotal, BigDecimal shippingFee, BigDecimal specificProductTotal) {
+        if (promo == null) return BigDecimal.ZERO;
+
+        BigDecimal baseAmount = BigDecimal.ZERO;
+
+        // Xác định số tiền gốc mang đi giảm giá
+        switch (promo.getBenefitTarget()) {
+            case "MERCHANDISE": baseAmount = cartSubtotal; break;
+            case "SHIPPING": baseAmount = shippingFee; break;
+            case "PRODUCT": baseAmount = (specificProductTotal != null) ? specificProductTotal : BigDecimal.ZERO; break;
+            case "PAYMENT_METHOD": baseAmount = cartSubtotal.add(shippingFee); break;
+            default: baseAmount = cartSubtotal;
+        }
+
+        if (baseAmount.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
+
+        BigDecimal discountAmount = BigDecimal.ZERO;
+
+        if ("FIXED".equals(promo.getDiscountType())) {
+            discountAmount = promo.getDiscountValue();
+        } else if ("PERCENT".equals(promo.getDiscountType())) {
+            discountAmount = baseAmount.multiply(promo.getDiscountValue()).divide(new BigDecimal("100"));
+            if (promo.getDiscountMax() != null && promo.getDiscountMax().compareTo(BigDecimal.ZERO) > 0) {
+                if (discountAmount.compareTo(promo.getDiscountMax()) > 0) {
+                    discountAmount = promo.getDiscountMax();
+                }
+            }
+        }
+
+        // Không cho phép giảm âm tiền
+        return discountAmount.compareTo(baseAmount) > 0 ? baseAmount : discountAmount;
+    }
+    
+    public void recordPromotionUsage(Connection conn, int orderId, int customerId, Promotion promo, BigDecimal discountApplied) throws SQLException {
+        if (promo == null) return;
+        promotionDAO.insertOrderPromotion(conn, orderId, promo.getPromoId(), customerId, discountApplied, promo.getCode(), promo.getBenefitTarget());
+        promotionDAO.incrementUsedCount(conn, promo.getPromoId());
+    }
+    
+    public List<Promotion> getAvailableVouchersForCart() throws SQLException {
+        return promotionDAO.findAvailableVouchersForCart();
     }
 }
