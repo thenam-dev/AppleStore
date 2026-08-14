@@ -7,7 +7,7 @@
             <p class="topbar-note">Mua sắm Apple trực tuyến với giỏ hàng và thanh toán dành cho khách hàng.</p>
             <ul class="topbar-links">
                 <li><a href="${appPath}/index.jsp">Trang chủ</a></li>
-                <li><a href="${appPath}/products.html">Sản phẩm</a></li>
+                <li><a href="${appPath}/products">Sản phẩm</a></li>
                 <c:choose>
                     <c:when test="${empty sessionScope.user}">
                         <li><a href="${appPath}/login">Đăng nhập</a></li>
@@ -29,7 +29,7 @@
                 <small>Cửa hàng trực tuyến</small>
             </span>
         </a>
-        <form class="header-search" action="${appPath}/products.html" method="get" name="headerSearchForm">
+        <form class="header-search" action="${appPath}/products" method="get" name="headerSearchForm">
             <label class="visually-hidden" for="shared-header-search-input">Tìm kiếm sản phẩm</label>
             <input id="shared-header-search-input" class="form-control" type="search" name="keyword" placeholder="Tìm kiếm sản phẩm">
             <button class="btn btn-app-primary" type="submit">Tìm</button>
@@ -61,7 +61,7 @@
         <div class="container mobile-drawer-inner">
             <div class="mobile-links">
                 <a href="${appPath}/index.jsp">Trang chủ</a>
-                <a href="${appPath}/products.html">Sản phẩm</a>
+                <a href="${appPath}/products">Sản phẩm</a>
                 <a href="${appPath}/cart">Giỏ hàng</a>
                 <c:choose>
                     <c:when test="${empty sessionScope.user}">
