@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 
 public class ReportDAO {
 
-    public LinkedHashMap<String, Double> getRevenueByDate(String startDate, String endDate) {
+    public LinkedHashMap<String, Double> getRevenueByDate(String startDate, String endDate, Integer staffId) {
         LinkedHashMap<String, Double> map = new LinkedHashMap<>();
         
         String sql = "SELECT DATE(created_at) as order_date, SUM(final_amount) as daily_revenue " +
@@ -20,14 +20,22 @@ public class ReportDAO {
             sql += " AND created_at BETWEEN ? AND ?";
         }
         
+        if (staffId != null) {
+            sql += " AND assigned_sale_staff_id = ?";
+        }
+        
         sql += " GROUP BY DATE(created_at) ORDER BY DATE(created_at) ASC";
         
         try (Connection conn = DBConnection.getConnection(); 
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
+            int paramIndex = 1;
             if (hasDateFilter) {
-                ps.setString(1, startDate + " 00:00:00");
-                ps.setString(2, endDate + " 23:59:59");
+                ps.setString(paramIndex++, startDate + " 00:00:00");
+                ps.setString(paramIndex++, endDate + " 23:59:59");
+            }
+            if (staffId != null) {
+                ps.setInt(paramIndex++, staffId);
             }
             
             try (ResultSet rs = ps.executeQuery()) {

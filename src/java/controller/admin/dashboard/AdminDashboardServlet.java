@@ -23,13 +23,22 @@ public class AdminDashboardServlet extends HttpServlet {
             throws ServletException, IOException {
         service.dashboard.DashboardService service = new service.dashboard.DashboardService();
         
+        model.entity.user.User user = (model.entity.user.User) request.getSession().getAttribute(config.AppConfig.SESSION_USER);
+        
+        // Mặc định staffId = null. Khi truyền null xuống DAO, hệ thống sẽ lấy TẤT CẢ dữ liệu (Dành cho ADMIN)
+        Integer staffId = null;
+        
+        if (user != null && config.AppConfig.ROLE_SALE_STAFF.equals(user.getRole())) {
+            staffId = user.getUserId();
+        }
+
         // Lấy dữ liệu tổng quan
-        dto.DashboardStatsDTO stats = service.getDashboardStats();
+        dto.DashboardStatsDTO stats = service.getDashboardStats(staffId);
 
         // Bắn sang JSP
         request.setAttribute("stats", stats);
-        request.setAttribute("recentOrders", service.getRecentOrders(4));
-        request.setAttribute("bestSellingProducts", service.getBestSellingProducts(3));
+        request.setAttribute("recentOrders", service.getRecentOrders(4, staffId));
+        request.setAttribute("bestSellingProducts", service.getBestSellingProducts(3, staffId));
 
         // Set các biến Sidebar
         request.setAttribute("adminSidebarActive", "dashboard");
