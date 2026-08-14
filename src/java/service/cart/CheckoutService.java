@@ -20,7 +20,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import ava.util.Map;
+import java.util.Map;
 import model.entity.cart.CartItem;
 import model.entity.order.Order;
 
@@ -106,7 +106,7 @@ public class CheckoutService {
                errors.put("deliveryAddress", "Địa chỉ tối đa 500 ký tự");
         }
        
-                   errors.put("paymentMethod", "Vui lòng chọn phương th
+                   errors.put("paymentMethod", "Vui lòng chọn phương thức");
               
     
 
@@ -264,8 +264,8 @@ public class CheckoutService {
 }
 
     
-     * 
-     * 
+     
+ 
      
     
             
