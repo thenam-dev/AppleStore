@@ -82,4 +82,24 @@ public class PaymentDAO {
             statement.executeUpdate();
         }
     }
+    
+     /**
+     * DEMO-ONLY: đánh dấu phiên PENDING mới nhất của 1 đơn thành COMPLETED khi
+     * khách tự bấm "Tôi đã chuyển khoản" ở payment.jsp. KHÔNG thay thế webhook
+     * xác thực thật từ SePay - chỉ dùng để demo trọn luồng cho đồ án.
+     */
+    public boolean markLatestCompleted(int orderId) throws SQLException {
+        String sql = """
+                UPDATE payment_transactions
+                SET status = 'COMPLETED', completed_at = NOW()
+                WHERE order_id = ? AND status = 'PENDING'
+                ORDER BY attempt_no DESC
+                LIMIT 1
+                """;
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            return statement.executeUpdate() > 0;
+        }
+    }
 }
