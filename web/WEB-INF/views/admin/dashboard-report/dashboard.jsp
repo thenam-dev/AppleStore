@@ -21,9 +21,12 @@
             <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
 
             <section class="admin-main">    
-                <div class="admin-page-head">
+                <div class="admin-page-head d-flex justify-content-between align-items-center">
                     <div>
                         <h1>Tổng quan hệ thống & Báo cáo</h1>
+                    </div>
+                    <div>
+                        <button onclick="exportToCSV()" class="btn btn-success">Xuất dữ liệu (CSV)</button>
                     </div>
                 </div>
 
@@ -33,6 +36,8 @@
                     <label>Đến:</label>
                     <input type="date" name="endDate" class="form-control" value="${param.endDate}">
                     <button type="submit" class="btn btn-primary">Lọc</button>
+                    <button type="button" onclick="setQuickDateRange(30)" class="btn btn-outline-secondary">30 ngày</button>
+                    <button type="button" onclick="setQuickDateRange(7)" class="btn btn-outline-secondary">7 ngày</button>
                 </form>
 
                 <section class="admin-kpi-grid">
@@ -60,12 +65,26 @@
                     </article>
                 </section>
 
-                <div class="admin-panel mt-4 mb-4">
-                    <div class="admin-panel-head">
-                        <h2>Biểu đồ doanh thu theo thời gian</h2>
+                <div class="row mt-4 mb-4">
+                    <div class="col-lg-8">
+                        <div class="admin-panel h-100">
+                            <div class="admin-panel-head">
+                                <h2>Biểu đồ doanh thu theo thời gian</h2>
+                            </div>
+                            <div class="admin-chart-placeholder" style="padding: 20px;">
+                                <canvas id="revenueChart" style="max-height: 400px; width: 100%;"></canvas>
+                            </div>
+                        </div>
                     </div>
-                    <div class="admin-chart-placeholder" style="padding: 20px;">
-                        <canvas id="revenueChart" style="max-height: 400px; width: 100%;"></canvas>
+                    <div class="col-lg-4">
+                        <div class="admin-panel h-100">
+                            <div class="admin-panel-head">
+                                <h2>Tỉ lệ trạng thái đơn hàng</h2>
+                            </div>
+                            <div class="admin-chart-placeholder" style="padding: 20px; display: flex; justify-content: center; align-items: center; height: 100%;">
+                                <canvas id="orderStatusChart" style="max-height: 300px; width: 100%;"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -181,9 +200,9 @@
                                     </c:choose>
                                     <div>
                                         <strong><c:out value="${p.name}" /></strong>
-                                        <small><c:out value="${p.totalSold}" /> sản phẩm bán ra</small>
+                                        <small><c:out value="${p.totalSold}" /> sản phẩm bán ra | <c:out value="${p.orderCount}" /> đơn</small>
                                     </div>
-                                    <span class="status-badge status-in-stock">Bán chạy</span>
+                                    <span class="status-badge status-in-stock"><fmt:formatNumber value="${p.totalRevenue}" type="currency" currencyCode="VND" /></span>
                                 </li>
                                 </c:forEach>
                                 <c:if test="${empty bestSellingProducts}">
@@ -205,7 +224,9 @@
         <script>
             const labels = ${chartLabels != null ? chartLabels : '[]'};
             const dataValues = ${chartData != null ? chartData : '[]'};
+            const statusStatsData = ${orderStatusStatsJson != null ? orderStatusStatsJson : '[]'};
 
+            // Revenue Chart
             if (labels.length > 0) {
                 const ctx = document.getElementById('revenueChart').getContext('2d');
                 new Chart(ctx, {
@@ -222,6 +243,87 @@
                     },
                     options: {responsive: true, maintainAspectRatio: false}
                 });
+            }
+
+            // Order Status Doughnut Chart
+            if (statusStatsData.length > 0) {
+                const statusCtx = document.getElementById('orderStatusChart').getContext('2d');
+                const statusLabelsVi = {
+                    'PENDING_PAYMENT': 'Chờ TT', 'APPROVED': 'Đã duyệt', 'CONFIRMED': 'Chờ duyệt',
+                    'PREPARING': 'Chuẩn bị', 'DISPATCHED': 'Đang giao', 'DELIVERED': 'Thành công',
+                    'CANCELLED': 'Đã hủy', 'PAYMENT_FAILED': 'TT Thất bại', 'EXPIRED': 'Hết hạn'
+                };
+                new Chart(statusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: statusStatsData.map(d => statusLabelsVi[d.status] || d.status),
+                        datasets: [{
+                            data: statusStatsData.map(d => d.count),
+                            backgroundColor: ['#f6c23e', '#4e73df', '#36b9cc', '#1cc88a', '#e74a3b', '#858796', '#5a5c69']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+
+            // Quick Date Range
+            function setQuickDateRange(days) {
+                const end = new Date();
+                const start = new Date();
+                start.setDate(end.getDate() - days);
+
+                const formatDate = (date) => {
+                    let month = '' + (date.getMonth() + 1), day = '' + date.getDate(), year = date.getFullYear();
+                    if (month.length < 2) month = '0' + month;
+                    if (day.length < 2) day = '0' + day;
+                    return [year, month, day].join('-');
+                };
+                document.getElementsByName('startDate')[0].value = formatDate(start);
+                document.getElementsByName('endDate')[0].value = formatDate(end);
+                document.forms[0].submit();
+            }
+
+            // Export to CSV
+            function exportToCSV() {
+                const rows = [
+                    ["Báo Cáo Bán Hàng Sản Phẩm - AppleStore"],
+                    ["Giai đoạn", (document.getElementsByName('startDate')[0].value || "Tất cả") + " đến " + (document.getElementsByName('endDate')[0].value || "Tất cả")],
+                    [],
+                    ["Mã SP", "Tên Sản Phẩm", "Số lượng bán ra", "Số đơn hàng", "Tổng doanh thu"]
+                ];
+
+                const jspData = [
+                    <c:forEach var="p" items="${bestSellingProducts}">
+                        ["${p.productId}", "<c:out value='${p.name}' />", "${p.totalSold}", "${p.orderCount}", "${p.totalRevenue}"],
+                    </c:forEach>
+                ];
+
+                if (jspData.length === 0) {
+                    alert('Không có dữ liệu bán hàng nào để xuất!');
+                    return;
+                }
+
+                rows.push(...jspData);
+                let csvContent = "";
+                rows.forEach(function(rowArray) {
+                    let row = rowArray.map(val => {
+                        if (typeof val === 'string') return '"' + val.replace(/"/g, '""') + '"';
+                        return val;
+                    }).join(",");
+                    csvContent += row + "\r\n";
+                });
+
+                const BOM = "\uFEFF";
+                const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                if (link.download !== undefined) {
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", "AppleStore_BaoCao_" + new Date().toISOString().slice(0,10) + ".csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
             }
         </script>
     </body>

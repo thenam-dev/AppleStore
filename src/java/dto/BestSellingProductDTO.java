@@ -5,15 +5,19 @@ public class BestSellingProductDTO {
     private String name;
     private String imageUrl;
     private int totalSold;
+    private double totalRevenue;
+    private int orderCount;
 
     public BestSellingProductDTO() {
     }
 
-    public BestSellingProductDTO(int productId, String name, String imageUrl, int totalSold) {
+    public BestSellingProductDTO(int productId, String name, String imageUrl, int totalSold, double totalRevenue, int orderCount) {
         this.productId = productId;
         this.name = name;
         this.imageUrl = imageUrl;
         this.totalSold = totalSold;
+        this.totalRevenue = totalRevenue;
+        this.orderCount = orderCount;
     }
 
     public int getProductId() {
@@ -46,5 +50,21 @@ public class BestSellingProductDTO {
 
     public void setTotalSold(int totalSold) {
         this.totalSold = totalSold;
+    }
+
+    public double getTotalRevenue() {
+        return totalRevenue;
+    }
+
+    public void setTotalRevenue(double totalRevenue) {
+        this.totalRevenue = totalRevenue;
+    }
+
+    public int getOrderCount() {
+        return orderCount;
+    }
+
+    public void setOrderCount(int orderCount) {
+        this.orderCount = orderCount;
     }
 }
