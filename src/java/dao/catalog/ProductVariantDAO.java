@@ -29,6 +29,7 @@ public class ProductVariantDAO {
             WHERE 1 = 1
             """;
 
+    /** Lấy danh sách biến thể của một sản phẩm theo keyword, trạng thái, sort và phân trang. */
     public List<ProductVariant> findByProduct(int productId, String keyword, String status, String sort, int page, int pageSize)
             throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT ")
@@ -54,6 +55,7 @@ public class ProductVariantDAO {
         }
     }
     
+    /** Đếm biến thể của một sản phẩm sau khi áp dụng keyword và trạng thái. */
     public int countByProduct(int productId, String keyword, String status) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM product_variants pv JOIN products p ON p.product_id = pv.product_id WHERE 1 = 1");
         List<Object> params = new ArrayList<>();
@@ -71,6 +73,7 @@ public class ProductVariantDAO {
         }
     }
 
+    /** Tìm biến thể theo ID, trả về Optional.empty nếu k   hông có bản ghi. */
     public Optional<ProductVariant> findById(int variantId) throws SQLException {
         String sql = "SELECT " + VARIANT_COLUMNS + ' ' + VARIANT_FROM + " AND pv.variant_id = ?";
 
@@ -86,6 +89,7 @@ public class ProductVariantDAO {
         }
     }
 
+    /** Thêm biến thể mới vào bảng product_variants và trả về variant_id được sinh ra. */
     public int insert(ProductVariant variant) throws SQLException {
         String sql = """
                 INSERT INTO product_variants (
@@ -108,6 +112,7 @@ public class ProductVariantDAO {
         }
     }
 
+    /** Cập nhật toàn bộ thông tin chính của biến thể theo variant_id. */
     public boolean update(ProductVariant variant) throws SQLException {
         String sql = """
                 UPDATE product_variants
@@ -126,6 +131,7 @@ public class ProductVariantDAO {
         }
     }
 
+    /** Cập nhật riêng trạng thái hoạt động của biến thể. */
     public boolean updateStatus(int variantId, boolean isActive) throws SQLException {
         String sql = "UPDATE product_variants SET is_active = ? WHERE variant_id = ?";
 
@@ -137,6 +143,7 @@ public class ProductVariantDAO {
         }
     }
 
+    /** Kiểm tra SKU đã tồn tại hay chưa khi tạo biến thể mới. */
     public boolean existsBySku(String sku) throws SQLException {
         String sql = "SELECT 1 FROM product_variants WHERE sku = ? LIMIT 1";
 
@@ -149,6 +156,7 @@ public class ProductVariantDAO {
         }
     }
 
+    /** Kiểm tra SKU có trùng với biến thể khác khi cập nhật hay không. */
     public boolean existsBySkuForOtherVariant(int variantId, String sku) throws SQLException {
         String sql = "SELECT 1 FROM product_variants WHERE sku = ? AND variant_id <> ? LIMIT 1";
 
@@ -162,6 +170,7 @@ public class ProductVariantDAO {
         }
     }
     
+    /** Lấy tồn kho hiện tại của biến thể đang active để validate giỏ hàng/checkout. */
     public Optional<Integer> findStockQuantity(int variantId) throws SQLException {
         String sql = "SELECT stock_quantity FROM product_variants WHERE variant_id = ? AND is_active = 1";
 
@@ -185,6 +194,7 @@ public class ProductVariantDAO {
      * kiểm tra giá trị trả về để rollback nghiệp vụ (hoàn lại các bước trước
      * đó) vì không còn transaction tự động.
      */
+    /** Trừ tồn kho một cách an toàn, chỉ thành công khi biến thể còn đủ hàng. */
     public boolean decreaseStockIfAvailable(int variantId, int quantity) throws SQLException {
         String sql = """
                 UPDATE product_variants
@@ -202,6 +212,7 @@ public class ProductVariantDAO {
     }
 
     /** Hoàn tồn kho khi huỷ đơn / hết hạn thanh toán / cần rollback thủ công 1 bước checkout đã trừ kho. */
+    /** Hoàn lại tồn kho khi cần rollback hoặc hủy phần giữ hàng. */
     public void increaseStock(int variantId, int quantity) throws SQLException {
         String sql = "UPDATE product_variants SET stock_quantity = stock_quantity + ? WHERE variant_id = ?";
 
@@ -213,6 +224,7 @@ public class ProductVariantDAO {
         }
     }
 
+    /** Gắn điều kiện productId, keyword và trạng thái vào SQL danh sách biến thể. */
     private void appendFilters(StringBuilder sql, List<Object> params, int productId, String keyword, String status) {
         sql.append(" AND pv.product_id = ?");
         params.add(productId);
@@ -239,6 +251,7 @@ public class ProductVariantDAO {
         }
     }
 
+    /** Chuyển sort key thành ORDER BY cố định để tránh SQL động không kiểm soát. */
     private String resolveOrderBy(String sort) {
         if ("oldest".equals(sort)) {
             return "pv.variant_id ASC";
@@ -270,6 +283,7 @@ public class ProductVariantDAO {
         return "pv.variant_id DESC";
     }
 
+    /** Bind dữ liệu biến thể vào PreparedStatement dùng chung cho insert/update. */
     private void setMutationParams(PreparedStatement statement, ProductVariant variant) throws SQLException {
         statement.setInt(1, variant.getProductId());
         statement.setString(2, variant.getSku());
@@ -290,6 +304,7 @@ public class ProductVariantDAO {
         statement.setBoolean(17, variant.isActive());
     }
 
+    /** Map một dòng ResultSet thành entity ProductVariant. */
     private ProductVariant mapVariant(ResultSet resultSet) throws SQLException {
         ProductVariant variant = new ProductVariant();
         variant.setVariantId(resultSet.getInt("variant_id"));
@@ -321,12 +336,14 @@ public class ProductVariantDAO {
         return variant;
     }
 
+    /** Bind danh sách tham số vào PreparedStatement theo thứ tự đã build SQL. */
     private void bindParams(PreparedStatement statement, List<Object> params) throws SQLException {
         for (int i = 0; i < params.size(); i++) {
             statement.setObject(i + 1, params.get(i));
         }
     }
 
+    /** Bind chuỗi nullable vào PreparedStatement. */
     private void setNullableString(PreparedStatement statement, int index, String value) throws SQLException {
         if (value == null || value.isBlank()) {
             statement.setNull(index, java.sql.Types.VARCHAR);
@@ -335,6 +352,7 @@ public class ProductVariantDAO {
         statement.setString(index, value);
     }
 
+    /** Bind số nguyên nullable vào PreparedStatement. */
     private void setNullableInteger(PreparedStatement statement, int index, Integer value) throws SQLException {
         if (value == null) {
             statement.setNull(index, java.sql.Types.INTEGER);
@@ -343,6 +361,7 @@ public class ProductVariantDAO {
         statement.setInt(index, value);
     }
 
+    /** Bind BigDecimal nullable vào PreparedStatement. */
     private void setNullableBigDecimal(PreparedStatement statement, int index, BigDecimal value) throws SQLException {
         if (value == null) {
             statement.setNull(index, java.sql.Types.DECIMAL);
@@ -351,6 +370,7 @@ public class ProductVariantDAO {
         statement.setBigDecimal(index, value);
     }
 
+    /** Bind LocalDateTime nullable vào PreparedStatement dưới dạng Timestamp. */
     private void setNullableLocalDateTime(PreparedStatement statement, int index, java.time.LocalDateTime value)
             throws SQLException {
         if (value == null) {
@@ -360,6 +380,7 @@ public class ProductVariantDAO {
         statement.setTimestamp(index, Timestamp.valueOf(value));
     }
 
+    /** Chuyển Timestamp từ JDBC sang LocalDateTime cho entity. */
     private java.time.LocalDateTime toLocalDateTime(Timestamp timestamp) {
         if (timestamp == null) {
             return null;

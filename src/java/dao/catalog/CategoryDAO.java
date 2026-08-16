@@ -18,6 +18,7 @@ public class CategoryDAO {
             category_id, name, slug, display_order, is_active
             """;
 
+    /** Lấy toàn bộ danh mục theo thứ tự hiển thị để phục vụ thống kê hoặc dropdown. */
     public List<Category> findAll() throws SQLException {
         String sql = "SELECT " + CATEGORY_COLUMNS + " FROM categories ORDER BY display_order ASC, category_id ASC";
 
@@ -32,6 +33,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Lấy danh mục theo phân trang đơn giản, giữ tương thích với các màn cũ. */
     public List<Category> findAll(int page, int pageSize) throws SQLException {
         String sql = """
                 SELECT
@@ -58,6 +60,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Lấy danh sách danh mục có tìm kiếm, lọc trạng thái, sắp xếp và phân trang. */
     public List<Category> findAll(String keyword, String status, String sort, int page, int pageSize)
             throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT ")
@@ -82,6 +85,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Đếm toàn bộ danh mục trong bảng categories. */
     public int countAll() throws SQLException {
         String sql = "SELECT COUNT(*) FROM categories";
 
@@ -95,6 +99,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Đếm danh mục sau khi áp dụng keyword và trạng thái. */
     public int countAll(String keyword, String status) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM categories WHERE 1 = 1");
         List<Object> params = new ArrayList<>();
@@ -112,6 +117,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Lấy danh mục đang hoạt động để dùng làm dữ liệu tham chiếu ở module khác. */
     public List<Category> findAllActive() throws SQLException {
         String sql = """
                 SELECT
@@ -132,6 +138,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Tìm một danh mục theo ID, trả về Optional.empty nếu không có bản ghi. */
     public Optional<Category> findById(int categoryId) throws SQLException {
         String sql = "SELECT " + CATEGORY_COLUMNS + " FROM categories WHERE category_id = ?";
 
@@ -148,6 +155,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Thêm danh mục mới và trả về khóa chính vừa được database sinh ra. */
     public int insert(Category category) throws SQLException {
         String sql = """
                 INSERT INTO categories (name, slug, display_order, is_active)
@@ -171,6 +179,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Cập nhật thông tin danh mục theo ID và trả về true nếu có dòng bị ảnh hưởng. */
     public boolean update(Category category) throws SQLException {
         String sql = """
                 UPDATE categories
@@ -189,6 +198,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Kiểm tra tên danh mục đã tồn tại hay chưa khi tạo mới. */
     public boolean existsByName(String name) throws SQLException {
         String sql = "SELECT 1 FROM categories WHERE name = ? LIMIT 1";
 
@@ -201,6 +211,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Kiểm tra slug đã tồn tại hay chưa khi tạo mới. */
     public boolean existsBySlug(String slug) throws SQLException {
         String sql = "SELECT 1 FROM categories WHERE slug = ? LIMIT 1";
 
@@ -213,6 +224,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Kiểm tra tên có bị trùng với danh mục khác khi cập nhật hay không. */
     public boolean existsByNameForOtherCategory(String name, int categoryId) throws SQLException {
         String sql = "SELECT 1 FROM categories WHERE name = ? AND category_id <> ? LIMIT 1";
 
@@ -226,6 +238,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Kiểm tra slug có bị trùng với danh mục khác khi cập nhật hay không. */
     public boolean existsBySlugForOtherCategory(String slug, int categoryId) throws SQLException {
         String sql = "SELECT 1 FROM categories WHERE slug = ? AND category_id <> ? LIMIT 1";
 
@@ -239,6 +252,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Map một dòng ResultSet thành entity Category. */
     private Category mapCategory(ResultSet resultSet) throws SQLException {
         Category category = new Category();
         category.setCategoryId(resultSet.getInt("category_id"));
@@ -249,6 +263,7 @@ public class CategoryDAO {
         return category;
     }
 
+    /** Gắn điều kiện WHERE cho keyword và trạng thái vào câu SQL động. */
     private void appendFilters(StringBuilder sql, List<Object> params, String keyword, String status) {
         if (keyword != null && !keyword.isBlank()) {
             sql.append(" AND (LOWER(name) LIKE ? OR LOWER(slug) LIKE ?)");
@@ -266,6 +281,7 @@ public class CategoryDAO {
         }
     }
 
+    /** Chọn mệnh đề ORDER BY an toàn từ danh sách sort được hỗ trợ. */
     private String resolveOrderBy(String sort) {
         if ("display_desc".equals(sort)) {
             return "display_order DESC, category_id DESC";
@@ -285,6 +301,7 @@ public class CategoryDAO {
         return "display_order ASC, category_id ASC";
     }
 
+    /** Bind danh sách tham số vào PreparedStatement theo đúng thứ tự đã build SQL. */
     private void bindParams(PreparedStatement statement, List<Object> params) throws SQLException {
         for (int i = 0; i < params.size(); i++) {
             statement.setObject(i + 1, params.get(i));

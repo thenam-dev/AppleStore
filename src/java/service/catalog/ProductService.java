@@ -39,15 +39,18 @@ public class ProductService {
     private final ProductDAO productDAO;
     private final CategoryDAO categoryDAO;
 
+    /** Khởi tạo service với DAO mặc định cho luồng CRUD sản phẩm. */
     public ProductService() {
         this(new ProductDAO(), new CategoryDAO());
     }
 
+    /** Cho phép inject DAO để dễ kiểm thử hoặc thay đổi nguồn dữ liệu. */
     public ProductService(ProductDAO productDAO, CategoryDAO categoryDAO) {
         this.productDAO = productDAO;
         this.categoryDAO = categoryDAO;
     }
 
+    /** Lấy danh sách sản phẩm theo keyword, danh mục, trạng thái, sort và phân trang. */
     public List<Product> getProducts(String keyword, Integer categoryId, String status, String sort, int page, int pageSize)
             throws SQLException {
         return productDAO.findAll(
@@ -60,20 +63,24 @@ public class ProductService {
         );
     }
 
+    /** Đếm sản phẩm sau khi áp dụng bộ lọc trên màn danh sách. */
     public int countProducts(String keyword, Integer categoryId, String status) throws SQLException {
         return productDAO.countAll(keyword, normalizeCategoryId(categoryId), normalizeOptionalStatus(status));
     }
 
+    /** Đếm sản phẩm theo một trạng thái cụ thể để hiển thị KPI. */
     public int countProductsByStatus(String status) throws SQLException {
         return productDAO.countAll(null, null, normalizeRequiredStatus(status));
     }
 
+    /** Lấy sản phẩm theo ID và báo lỗi nghiệp vụ nếu không tồn tại. */
     public Product getProductById(int productId) throws SQLException {
         validateProductId(productId);
         return productDAO.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại."));
     }
 
+    /** Tạo sản phẩm mới sau khi chuẩn hóa, validate, kiểm tra danh mục và chống trùng tên/model. */
     public int createProduct(Product product) throws SQLException {
         normalizeProduct(product);
         validateProduct(product);
@@ -89,6 +96,7 @@ public class ProductService {
         return productDAO.insert(product);
     }
 
+    /** Cập nhật sản phẩm sau khi validate ID, dữ liệu, danh mục và chống trùng với sản phẩm khác. */
     public void updateProduct(Product product) throws SQLException {
         validateProductId(product.getProductId());
         normalizeProduct(product);
@@ -106,6 +114,7 @@ public class ProductService {
         }
     }
 
+    /** Đổi trạng thái sản phẩm sang ACTIVE, INACTIVE hoặc DISCONTINUED. */
     public void changeStatus(int productId, String status) throws SQLException {
         validateProductId(productId);
         String normalizedStatus = normalizeRequiredStatus(status);
@@ -114,22 +123,27 @@ public class ProductService {
         }
     }
 
+    /** Trả về các trạng thái sản phẩm hợp lệ cho UI và validate. */
     public List<String> getAllowedStatuses() {
         return ALLOWED_STATUSES;
     }
 
+    /** Trả về các tình trạng sản phẩm hợp lệ. */
     public List<String> getAllowedConditions() {
         return ALLOWED_CONDITIONS;
     }
 
+    /** Trả về các mã thị trường được phép chọn trong form sản phẩm. */
     public List<String> getAllowedImportTypes() {
         return ALLOWED_IMPORT_TYPES;
     }
 
+    /** Trả về danh sách sort hợp lệ để service chặn tham số lạ. */
     public List<String> getAllowedSorts() {
         return ALLOWED_SORTS;
     }
 
+    /** Chuẩn hóa dữ liệu sản phẩm trước khi validate và lưu DB. */
     private void normalizeProduct(Product product) {
         if (product == null) {
             throw new IllegalArgumentException("Dữ liệu sản phẩm là bắt buộc.");
@@ -152,6 +166,7 @@ public class ProductService {
         product.setStatus(normalizeRequiredStatus(product.getStatus()));
     }
 
+    /** Kiểm tra toàn bộ ràng buộc nghiệp vụ của sản phẩm. */
     private void validateProduct(Product product) {
         if (product.getCategoryId() <= 0) {
             throw new IllegalArgumentException("Danh mục không hợp lệ.");
@@ -193,18 +208,21 @@ public class ProductService {
         }
     }
 
+    /** Đảm bảo danh mục gắn với sản phẩm có tồn tại trong database. */
     private void validateCategoryExists(int categoryId) throws SQLException {
         if (categoryDAO.findById(categoryId).isEmpty()) {
             throw new IllegalArgumentException("Danh mục không tồn tại.");
         }
     }
 
+    /** Đảm bảo ID sản phẩm hợp lệ trước khi update, đổi trạng thái hoặc tìm kiếm. */
     private void validateProductId(int productId) {
         if (productId <= 0) {
             throw new IllegalArgumentException("ID sản phẩm không hợp lệ.");
         }
     }
 
+    /** Chuẩn hóa categoryId của bộ lọc, cho phép null khi không lọc danh mục. */
     private Integer normalizeCategoryId(Integer categoryId) {
         if (categoryId == null) {
             return null;
@@ -215,6 +233,7 @@ public class ProductService {
         return categoryId;
     }
 
+    /** Chuẩn hóa trạng thái tùy chọn, trả về null nếu người dùng không lọc trạng thái. */
     private String normalizeOptionalStatus(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -222,6 +241,7 @@ public class ProductService {
         return normalizeRequiredStatus(value);
     }
 
+    /** Chuẩn hóa trạng thái bắt buộc và kiểm tra nó thuộc danh sách được phép. */
     private String normalizeRequiredStatus(String value) {
         String normalized = normalizeRequired(value);
         if (!ALLOWED_STATUSES.contains(normalized)) {
@@ -230,6 +250,7 @@ public class ProductService {
         return normalized;
     }
 
+    /** Chuẩn hóa sort và chặn giá trị không nằm trong danh sách hỗ trợ. */
     private String normalizeSort(String value) {
         if (value == null || value.isBlank()) {
             return "newest";
@@ -241,6 +262,7 @@ public class ProductService {
         return normalized;
     }
 
+    /** Chuẩn hóa chuỗi bắt buộc thành chữ hoa sau khi kiểm tra không rỗng. */
     private String normalizeRequired(String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
@@ -248,6 +270,7 @@ public class ProductService {
         return value.trim().toUpperCase();
     }
 
+    /** Cắt khoảng trắng và bắt buộc chuỗi phải có nội dung. */
     private String trimRequired(String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
@@ -255,6 +278,7 @@ public class ProductService {
         return value.trim();
     }
 
+    /** Cắt khoảng trắng cho chuỗi tùy chọn và chuyển chuỗi rỗng thành null. */
     private String normalizeOptional(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -262,10 +286,12 @@ public class ProductService {
         return value.trim();
     }
 
+    /** Chuẩn hóa số trang, mặc định về trang đầu nếu giá trị không hợp lệ. */
     private int normalizePage(int page) {
         return page <= 0 ? DEFAULT_PAGE : page;
     }
 
+    /** Chuẩn hóa kích thước trang và giới hạn tối đa để bảo vệ truy vấn. */
     private int normalizePageSize(int pageSize) {
         if (pageSize <= 0) {
             return DEFAULT_PAGE_SIZE;

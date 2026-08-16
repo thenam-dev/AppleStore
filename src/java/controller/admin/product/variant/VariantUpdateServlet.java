@@ -13,6 +13,7 @@ import java.sql.SQLException;
 
 @WebServlet(name = "VariantUpdateServlet", urlPatterns = {"/admin/products/variants/update"})
 public class VariantUpdateServlet extends VariantServletSupport {
+    /** Nhận dữ liệu form biến thể, phân nhánh tạo mới hoặc cập nhật rồi quay lại danh sách biến thể. */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -46,6 +47,7 @@ public class VariantUpdateServlet extends VariantServletSupport {
         }
     }
 
+    /** Giữ lại dữ liệu đã nhập và quay lại form khi validate hoặc lưu biến thể thất bại. */
     private void forwardBackToForm(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {
         ProductVariant variant = buildVariantFromRequestForRedisplay(request);

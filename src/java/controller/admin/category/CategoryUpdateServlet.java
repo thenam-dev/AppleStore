@@ -12,6 +12,7 @@ import java.sql.SQLException;
 
 @WebServlet(name = "CategoryUpdateServlet", urlPatterns = {"/admin/categories/update"})
 public class CategoryUpdateServlet extends CategoryServletSupport {
+    /** Nhận dữ liệu form danh mục, phân nhánh tạo mới hoặc cập nhật rồi redirect về danh sách. */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -33,6 +34,7 @@ public class CategoryUpdateServlet extends CategoryServletSupport {
         }
     }
 
+    /** Giữ lại dữ liệu người dùng đã nhập và quay lại form khi validate hoặc lưu DB thất bại. */
     private void forwardBackToForm(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {
         Category category = new Category();
