@@ -53,7 +53,7 @@ public class PromotionListServlet extends HttpServlet {
             req.setAttribute("dateFormatter", dateFormatter);
 
             req.setAttribute("promotions", promotions);
-            req.setAttribute("currentPage", page);
+            req.setAttribute("currentPage", page);  
             req.setAttribute("totalPages", totalPages);
             req.setAttribute("keyword", keyword);
             req.setAttribute("statusFilter", statusFilter);

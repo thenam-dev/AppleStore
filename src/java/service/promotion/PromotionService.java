@@ -85,7 +85,7 @@ public class PromotionService {
     public int getExpiringSoonCount() throws SQLException {
         return promotionDAO.countExpiringSoon();
     }
-    
+
     public int countAll(String keyword, String statusFilter) throws SQLException {
         return promotionDAO.countAll(keyword, statusFilter);
     }
@@ -95,7 +95,8 @@ public class PromotionService {
     }
 
     /**
-     * Dùng để kiểm tra voucher hợp lệ khi người dùng nhập mã ở giỏ hàng hoặc thanh toán
+     * Dùng để kiểm tra voucher hợp lệ khi người dùng nhập mã ở giỏ hàng hoặc
+     * thanh toán
      */
     public Promotion validateCouponForCheckout(String code, BigDecimal cartSubtotal) throws SQLException {
         if (code == null || code.trim().isEmpty()) {
@@ -134,20 +135,33 @@ public class PromotionService {
      * Tính toán số tiền thực tế được giảm
      */
     public BigDecimal calculateDiscountAmount(Promotion promo, BigDecimal cartSubtotal, BigDecimal shippingFee, BigDecimal specificProductTotal) {
-        if (promo == null) return BigDecimal.ZERO;
+        if (promo == null) {
+            return BigDecimal.ZERO;
+        }
 
         BigDecimal baseAmount = BigDecimal.ZERO;
 
         // Xác định số tiền gốc mang đi giảm giá
         switch (promo.getBenefitTarget()) {
-            case "MERCHANDISE": baseAmount = cartSubtotal; break;
-            case "SHIPPING": baseAmount = shippingFee; break;
-            case "PRODUCT": baseAmount = (specificProductTotal != null) ? specificProductTotal : BigDecimal.ZERO; break;
-            case "PAYMENT_METHOD": baseAmount = cartSubtotal.add(shippingFee); break;
-            default: baseAmount = cartSubtotal;
+            case "MERCHANDISE":
+                baseAmount = cartSubtotal;
+                break;
+            case "SHIPPING":
+                baseAmount = shippingFee;
+                break;
+            case "PRODUCT":
+                baseAmount = (specificProductTotal != null) ? specificProductTotal : BigDecimal.ZERO;
+                break;
+            case "PAYMENT_METHOD":
+                baseAmount = cartSubtotal.add(shippingFee);
+                break;
+            default:
+                baseAmount = cartSubtotal;
         }
 
-        if (baseAmount.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
+        if (baseAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
 
         BigDecimal discountAmount = BigDecimal.ZERO;
 
@@ -165,13 +179,15 @@ public class PromotionService {
         // Không cho phép giảm âm tiền
         return discountAmount.compareTo(baseAmount) > 0 ? baseAmount : discountAmount;
     }
-    
+
     public void recordPromotionUsage(Connection conn, int orderId, int customerId, Promotion promo, BigDecimal discountApplied) throws SQLException {
-        if (promo == null) return;
+        if (promo == null) {
+            return;
+        }
         promotionDAO.insertOrderPromotion(conn, orderId, promo.getPromoId(), customerId, discountApplied, promo.getCode(), promo.getBenefitTarget());
         promotionDAO.incrementUsedCount(conn, promo.getPromoId());
     }
-    
+
     public List<Promotion> getAvailableVouchersForCart() throws SQLException {
         return promotionDAO.findAvailableVouchersForCart();
     }
