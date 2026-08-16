@@ -169,11 +169,11 @@
                         </div>
                     </div>
 
-                    <div class="admin-summary-card">
+<!--                    <div class="admin-summary-card">
                         <span>Ghi chú</span>
                         <strong>Biến thể, hình ảnh và thông số được quản lý riêng</strong>
                         <small class="admin-note">Biến thể đã có module CRUD riêng để biểu mẫu sản phẩm tập trung vào dữ liệu chính.</small>
-                    </div>
+                    </div>-->
 
                     <div class="admin-form-actions mt-4">
                         <a class="btn btn-app-outline" href="${appPath}/admin/products">Hủy</a>
