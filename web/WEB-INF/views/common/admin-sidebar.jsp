@@ -29,7 +29,7 @@
         <p class="admin-sidebar-label">Quản trị</p>
         <nav class="admin-nav">
             <a class="${activeItem eq 'dashboard' ? 'active' : ''}" href="${appPath}/admin/dashboard">Tổng quan</a>
-            <a class="${activeItem eq 'report' ? 'active' : ''}" href="${appPath}/admin/report">Báo cáo</a>
+
             <a class="${activeItem eq 'products' ? 'active' : ''}" href="${appPath}/admin/products">Sản phẩm</a>
             <a class="${activeItem eq 'categories' ? 'active' : ''}" href="${appPath}/admin/categories">Danh mục</a>
             <a class="${activeItem eq 'users' ? 'active' : ''}" href="${appPath}/admin/users">Người dùng</a>
