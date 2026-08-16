@@ -24,6 +24,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
 
     protected final CategoryService categoryService = new CategoryService();
 
+    /** Gom tham số request thành entity Category dùng cho thao tác tạo mới hoặc cập nhật. */
     protected Category buildCategoryFromRequest(HttpServletRequest request) {
         Category category = new Category();
         category.setCategoryId(parseIntOrDefault(request.getParameter("categoryId"), 0));
@@ -34,10 +35,12 @@ public abstract class CategoryServletSupport extends HttpServlet {
         return category;
     }
 
+    /** Đưa danh sách trạng thái hợp lệ lên request để JSP render select option. */
     protected void setCategoryFormOptions(HttpServletRequest request) {
         request.setAttribute("categoryStatusOptions", categoryService.getAllowedStatuses());
     }
 
+    /** Parse số nguyên bắt buộc và ném lỗi nghiệp vụ với thông báo thân thiện nếu sai định dạng. */
     protected int parseInt(String value, String errorMessage) {
         try {
             return Integer.parseInt(value);
@@ -46,6 +49,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         }
     }
 
+    /** Parse số nguyên tùy chọn, trả về giá trị mặc định nếu dữ liệu rỗng hoặc sai định dạng. */
     protected int parseIntOrDefault(String value, int defaultValue) {
         try {
             return Integer.parseInt(value);
@@ -54,6 +58,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         }
     }
 
+    /** Tính số liệu tổng quan của danh mục để hiển thị các thẻ thống kê trên màn list. */
     protected void setCategoryMetrics(HttpServletRequest request, List<Category> allCategories, int filteredCount) {
         long activeCount = allCategories.stream().filter(Category::getIsActive).count();
 
@@ -65,6 +70,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         request.setAttribute("sortOptions", buildSortOptions());
     }
 
+    /** Tạo category mặc định cho form thêm mới. */
     protected Category createDefaultCategory() {
         Category category = new Category();
         category.setDisplayOrder(0);
@@ -72,26 +78,31 @@ public abstract class CategoryServletSupport extends HttpServlet {
         return category;
     }
 
+    /** Điều hướng người dùng về trang danh sách danh mục. */
     protected void redirectToCategoryList(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         response.sendRedirect(request.getContextPath() + CATEGORY_LIST_PATH);
     }
 
+    /** Lưu flash message vào session rồi redirect về danh sách danh mục theo pattern PRG. */
     protected void redirectToCategoryListWithMessage(HttpServletRequest request, HttpServletResponse response,
                                                      String flashKey, String message) throws IOException {
         setFlashMessage(request, flashKey, message);
         redirectToCategoryList(request, response);
     }
 
+    /** Chuyển thông báo tạm trong session sang request để JSP hiển thị một lần. */
     protected void moveFlashMessagesToRequest(HttpServletRequest request) {
         moveFlashMessageToRequest(request, FLASH_SUCCESS_KEY);
         moveFlashMessageToRequest(request, FLASH_ERROR_KEY);
     }
 
+    /** Chuẩn hóa tham số page, mặc định về trang 1 nếu thiếu hoặc không hợp lệ. */
     protected int parsePage(String value) {
         return parsePositiveIntOrDefault(value, 1);
     }
 
+    /** Tính tổng số trang dựa trên tổng bản ghi và kích thước trang. */
     protected int calculateTotalPages(int totalItems, int pageSize) {
         if (pageSize <= 0) {
             return 1;
@@ -99,6 +110,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         return Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
     }
 
+    /** Chuẩn hóa bộ lọc trạng thái danh mục từ request. */
     protected String normalizeStatusFilter(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -110,6 +122,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         throw new IllegalArgumentException("Bộ lọc trạng thái danh mục không hợp lệ.");
     }
 
+    /** Chuyển trạng thái bắt buộc ACTIVE/INACTIVE thành cờ isActive cho entity Category. */
     protected boolean parseRequiredCategoryStatusToActive(String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Trạng thái danh mục không hợp lệ.");
@@ -124,6 +137,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         throw new IllegalArgumentException("Trạng thái danh mục không hợp lệ.");
     }
 
+    /** Chuyển trạng thái tùy chọn thành cờ isActive, dùng default khi dữ liệu không hợp lệ. */
     protected boolean parseCategoryStatusToActiveOrDefault(String value, boolean defaultValue) {
         if (value == null || value.isBlank()) {
             return defaultValue;
@@ -138,6 +152,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         return defaultValue;
     }
 
+    /** Chuẩn hóa tùy chọn sắp xếp danh mục, mặc định theo thứ tự hiển thị tăng dần. */
     protected String normalizeCategorySort(String sort) {
         if (sort == null || sort.isBlank()) {
             return "display_asc";
@@ -145,6 +160,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         return sort.trim().toLowerCase(Locale.ROOT);
     }
 
+    /** Tạo query string giữ lại bộ lọc/sắp xếp khi người dùng chuyển trang. */
     protected String buildCategoryListQueryString(String keyword, String status, String sort) {
         StringBuilder query = new StringBuilder();
         appendQueryParam(query, "keyword", keyword);
@@ -153,6 +169,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         return query.toString();
     }
 
+    /** Parse số nguyên dương, trả về mặc định nếu giá trị thiếu, âm hoặc sai định dạng. */
     private int parsePositiveIntOrDefault(String value, int defaultValue) {
         try {
             int parsed = Integer.parseInt(value);
@@ -162,6 +179,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         }
     }
 
+    /** Lưu flash message vào session nếu nội dung thông báo không rỗng. */
     private void setFlashMessage(HttpServletRequest request, String flashKey, String message) {
         if (message == null || message.isBlank()) {
             return;
@@ -169,6 +187,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         request.getSession().setAttribute(flashKey, message);
     }
 
+    /** Lấy một flash message từ session sang request rồi xóa khỏi session. */
     private void moveFlashMessageToRequest(HttpServletRequest request, String flashKey) {
         HttpSession session = request.getSession(false);
         if (session == null) {
@@ -181,6 +200,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
         session.removeAttribute(flashKey);
     }
 
+    /** Nối một tham số vào query string và encode giá trị để an toàn khi redirect/phân trang. */
     private void appendQueryParam(StringBuilder query, String key, String value) {
         if (value == null || value.isBlank()) {
             return;
@@ -193,6 +213,7 @@ public abstract class CategoryServletSupport extends HttpServlet {
                 .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
     }
 
+    /** Tạo danh sách lựa chọn sắp xếp cho màn danh sách danh mục. */
     private List<SortOption> buildSortOptions() {
         return List.of(
                 new SortOption("display_asc", "Thứ tự hiển thị tăng dần"),
@@ -208,15 +229,18 @@ public abstract class CategoryServletSupport extends HttpServlet {
         private final String value;
         private final String label;
 
+        /** Tạo một lựa chọn sắp xếp gồm giá trị gửi lên server và nhãn hiển thị. */
         public SortOption(String value, String label) {
             this.value = value;
             this.label = label;
         }
 
+        /** Trả về giá trị sort dùng trong query parameter. */
         public String getValue() {
             return value;
         }
 
+        /** Trả về nhãn sort hiển thị trên giao diện. */
         public String getLabel() {
             return label;
         }

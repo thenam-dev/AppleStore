@@ -13,6 +13,7 @@ import java.sql.SQLException;
 
 @WebServlet(name = "VariantEditServlet", urlPatterns = {"/admin/products/variants/edit"})
 public class VariantEditServlet extends VariantServletSupport {
+    /** Mở form thêm mới hoặc chỉnh sửa biến thể, luôn gắn với một sản phẩm cha. */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

@@ -12,6 +12,7 @@ import java.sql.SQLException;
 
 @WebServlet(name = "UserUpdateServlet", urlPatterns = {"/admin/users/update"})
 public class UserUpdateServlet extends UserServletSupport {
+    /** Nhận dữ liệu form user, gọi service cập nhật rồi redirect về danh sách. */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -26,6 +27,7 @@ public class UserUpdateServlet extends UserServletSupport {
         }
     }
 
+    /** Giữ lại dữ liệu đã nhập và quay lại form khi validate hoặc cập nhật user thất bại. */
     private void forwardBackToForm(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {
         User user = new User();

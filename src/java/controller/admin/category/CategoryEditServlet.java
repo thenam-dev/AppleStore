@@ -12,6 +12,7 @@ import java.sql.SQLException;
 
 @WebServlet(name = "CategoryEditServlet", urlPatterns = {"/admin/categories/edit"})
 public class CategoryEditServlet extends CategoryServletSupport {
+    /** Mở form tạo mới hoặc form chỉnh sửa danh mục dựa trên tham số id. */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

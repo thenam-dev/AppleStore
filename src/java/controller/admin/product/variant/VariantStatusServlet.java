@@ -10,6 +10,7 @@ import java.sql.SQLException;
 
 @WebServlet(name = "VariantStatusServlet", urlPatterns = {"/admin/products/variants/status"})
 public class VariantStatusServlet extends VariantServletSupport {
+    /** Đổi trạng thái hoạt động của biến thể từ màn danh sách variant. */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
