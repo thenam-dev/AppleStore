@@ -30,6 +30,14 @@
                     </div>
                 </div>
 
+                <c:if test="${not empty sessionScope.errorMessage}">
+                    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                        <c:out value="${sessionScope.errorMessage}" />
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <c:remove var="errorMessage" scope="session" />
+                </c:if>
+
                 <form action="${appPath}/admin/dashboard" method="GET" class="d-flex gap-2 align-items-center mb-4">
                     <label>Từ:</label>
                     <input type="date" name="startDate" class="form-control" value="${param.startDate}">
