@@ -14,6 +14,7 @@ import java.util.List;
 
 @WebServlet(name = "CategoryListServlet", urlPatterns = {"/admin/categories"})
 public class CategoryListServlet extends CategoryServletSupport {
+    /** Xử lý yêu cầu mở màn danh sách danh mục và chuyển sang luồng fallback nếu có lỗi dữ liệu hoặc DB. */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -24,6 +25,7 @@ public class CategoryListServlet extends CategoryServletSupport {
         }
     }
 
+    /** Lấy bộ lọc, phân trang, thống kê rồi forward dữ liệu sang trang list.jsp. */
     private void showCategoryList(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, ServletException, IOException {
         String keyword = request.getParameter("keyword");
@@ -55,6 +57,7 @@ public class CategoryListServlet extends CategoryServletSupport {
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }
 
+    /** Chuẩn bị dữ liệu rỗng để vẫn hiển thị được danh sách khi truy vấn danh mục thất bại. */
     private void showCategoryListFallback(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {
         request.setAttribute("categories", Collections.emptyList());

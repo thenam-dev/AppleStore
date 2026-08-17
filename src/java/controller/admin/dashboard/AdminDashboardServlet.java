@@ -35,10 +35,32 @@ public class AdminDashboardServlet extends HttpServlet {
         // Lấy dữ liệu tổng quan
         dto.DashboardStatsDTO stats = service.getDashboardStats(staffId);
 
+        // Lấy dữ liệu báo cáo (Revenue Chart)
+        String startDate = request.getParameter("startDate");
+        String endDate = request.getParameter("endDate");
+        java.util.LinkedHashMap<String, Double> revenueMap = service.getRevenueByDate(startDate, endDate, staffId);
+        
+        StringBuilder labels = new StringBuilder("[");
+        StringBuilder data = new StringBuilder("[");
+
+        for (java.util.Map.Entry<String, Double> entry : revenueMap.entrySet()) {
+            labels.append("'").append(entry.getKey()).append("',");
+            data.append(entry.getValue()).append(",");
+        }
+
+        if (labels.length() > 1) {
+            labels.setLength(labels.length() - 1);
+            data.setLength(data.length() - 1);
+        }
+        labels.append("]");
+        data.append("]");
+
         // Bắn sang JSP
         request.setAttribute("stats", stats);
         request.setAttribute("recentOrders", service.getRecentOrders(4, staffId));
         request.setAttribute("bestSellingProducts", service.getBestSellingProducts(3, staffId));
+        request.setAttribute("chartLabels", labels.toString());
+        request.setAttribute("chartData", data.toString());
 
         // Set các biến Sidebar
         request.setAttribute("adminSidebarActive", "dashboard");

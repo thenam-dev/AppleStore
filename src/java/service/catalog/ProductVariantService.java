@@ -39,15 +39,18 @@ public class ProductVariantService {
     private final ProductVariantDAO productVariantDAO;
     private final ProductDAO productDAO;
 
+    /** Khởi tạo service biến thể với DAO mặc định. */
     public ProductVariantService() {
         this(new ProductVariantDAO(), new ProductDAO());
     }
 
+    /** Cho phép inject DAO để dễ kiểm thử hoặc thay thế nguồn dữ liệu. */
     public ProductVariantService(ProductVariantDAO productVariantDAO, ProductDAO productDAO) {
         this.productVariantDAO = productVariantDAO;
         this.productDAO = productDAO;
     }
 
+    /** Lấy danh sách biến thể của một sản phẩm theo filter, sort và phân trang. */
     public List<ProductVariant> getVariants(int productId, String keyword, String status, String sort, int page, int pageSize)
             throws SQLException {
         return productVariantDAO.findByProduct(
@@ -60,6 +63,7 @@ public class ProductVariantService {
         );
     }
 
+    /** Đếm biến thể của một sản phẩm sau khi áp dụng keyword và trạng thái. */
     public int countVariants(int productId, String keyword, String status) throws SQLException {
         return productVariantDAO.countByProduct(
                 normalizeProductId(productId),
@@ -68,16 +72,19 @@ public class ProductVariantService {
         );
     }
 
+    /** Đếm biến thể theo trạng thái để hiển thị KPI trên màn variant. */
     public int countVariantsByStatus(int productId, String status) throws SQLException {
         return productVariantDAO.countByProduct(normalizeProductId(productId), null, normalizeRequiredStatus(status));
     }
 
+    /** Lấy biến thể theo ID và báo lỗi nghiệp vụ nếu không tồn tại. */
     public ProductVariant getVariantById(int variantId) throws SQLException {
         validateVariantId(variantId);
         return productVariantDAO.findById(variantId)
                 .orElseThrow(() -> new IllegalArgumentException("Biến thể không tồn tại."));
     }
 
+    /** Tạo biến thể mới sau khi chuẩn hóa, validate, kiểm tra product cha và chống trùng SKU. */
     public int createVariant(ProductVariant variant) throws SQLException {
         normalizeVariant(variant);
         validateVariant(variant);
@@ -90,6 +97,7 @@ public class ProductVariantService {
         return productVariantDAO.insert(variant);
     }
 
+    /** Cập nhật biến thể sau khi validate ID, product cha và chống trùng SKU với biến thể khác. */
     public void updateVariant(ProductVariant variant) throws SQLException {
         validateVariantId(variant.getVariantId());
         normalizeVariant(variant);
@@ -104,6 +112,7 @@ public class ProductVariantService {
         }
     }
 
+    /** Đổi trạng thái active/inactive của một biến thể. */
     public void changeStatus(int variantId, boolean isActive) throws SQLException {
         validateVariantId(variantId);
         if (!productVariantDAO.updateStatus(variantId, isActive)) {
@@ -111,18 +120,22 @@ public class ProductVariantService {
         }
     }
 
+    /** Trả về trạng thái biến thể hợp lệ cho UI và validate. */
     public List<String> getAllowedStatuses() {
         return ALLOWED_STATUSES;
     }
 
+    /** Trả về các tùy chọn kết nối hợp lệ như WIFI hoặc WIFI_CELLULAR. */
     public List<String> getAllowedConnectivities() {
         return ALLOWED_CONNECTIVITIES;
     }
 
+    /** Trả về danh sách sort hợp lệ cho màn biến thể. */
     public List<String> getAllowedSorts() {
         return ALLOWED_SORTS;
     }
 
+    /** Chuẩn hóa chuỗi và trạng thái của biến thể trước khi validate. */
     private void normalizeVariant(ProductVariant variant) {
         if (variant == null) {
             throw new IllegalArgumentException("Dữ liệu biến thể là bắt buộc.");
@@ -136,6 +149,7 @@ public class ProductVariantService {
         variant.setChipOption(normalizeOptional(variant.getChipOption()));
     }
 
+    /** Kiểm tra toàn bộ ràng buộc nghiệp vụ của biến thể sản phẩm. */
     private void validateVariant(ProductVariant variant) {
         if (variant.getProductId() <= 0) {
             throw new IllegalArgumentException("Sản phẩm không hợp lệ.");
@@ -197,12 +211,14 @@ public class ProductVariantService {
         }
     }
 
+    /** Đảm bảo product cha tồn tại trước khi tạo hoặc cập nhật biến thể. */
     private void validateProductExists(int productId) throws SQLException {
         if (productDAO.findById(productId).isEmpty()) {
             throw new IllegalArgumentException("Sản phẩm không tồn tại.");
         }
     }
 
+    /** Chuẩn hóa và validate productId dùng trong các truy vấn variant. */
     private int normalizeProductId(int productId) {
         if (productId <= 0) {
             throw new IllegalArgumentException("ID sản phẩm không hợp lệ.");
@@ -210,12 +226,14 @@ public class ProductVariantService {
         return productId;
     }
 
+    /** Đảm bảo variantId là số dương trước khi cập nhật hoặc đổi trạng thái. */
     private void validateVariantId(int variantId) {
         if (variantId <= 0) {
             throw new IllegalArgumentException("ID biến thể không hợp lệ.");
         }
     }
 
+    /** Chuẩn hóa keyword tìm kiếm variant, cho phép null khi không tìm kiếm. */
     private String normalizeKeyword(String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return null;
@@ -223,6 +241,7 @@ public class ProductVariantService {
         return keyword.trim();
     }
 
+    /** Chuẩn hóa trạng thái tùy chọn, trả về null nếu không lọc trạng thái. */
     private String normalizeOptionalStatus(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -230,6 +249,7 @@ public class ProductVariantService {
         return normalizeRequiredStatus(value);
     }
 
+    /** Chuẩn hóa trạng thái bắt buộc và kiểm tra thuộc danh sách hợp lệ. */
     private String normalizeRequiredStatus(String value) {
         String normalized = normalizeRequiredUpper(value);
         if (!ALLOWED_STATUSES.contains(normalized)) {
@@ -238,6 +258,7 @@ public class ProductVariantService {
         return normalized;
     }
 
+    /** Chuẩn hóa sort và chặn sort key không được hỗ trợ. */
     private String normalizeSort(String value) {
         if (value == null || value.isBlank()) {
             return "newest";
@@ -249,6 +270,7 @@ public class ProductVariantService {
         return normalized;
     }
 
+    /** Chuẩn hóa SKU bắt buộc theo dạng viết hoa. */
     private String normalizeRequiredSku(String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
@@ -256,6 +278,7 @@ public class ProductVariantService {
         return value.trim().toUpperCase(Locale.ROOT);
     }
 
+    /** Chuẩn hóa chuỗi bắt buộc thành chữ hoa, dùng cho connectivity. */
     private String normalizeRequiredUpper(String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
@@ -263,6 +286,7 @@ public class ProductVariantService {
         return value.trim().toUpperCase(Locale.ROOT);
     }
 
+    /** Cắt khoảng trắng và bắt buộc chuỗi phải có nội dung. */
     private String trimRequired(String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Vui lòng nhập đầy đủ thông tin bắt buộc.");
@@ -270,6 +294,7 @@ public class ProductVariantService {
         return value.trim();
     }
 
+    /** Cắt khoảng trắng cho chuỗi tùy chọn và chuyển chuỗi rỗng thành null. */
     private String normalizeOptional(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -277,6 +302,7 @@ public class ProductVariantService {
         return value.trim();
     }
 
+    /** Chuẩn hóa chuỗi tùy chọn thành chữ hoa nếu có dữ liệu. */
     private String normalizeOptionalUpper(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -284,10 +310,12 @@ public class ProductVariantService {
         return value.trim().toUpperCase(Locale.ROOT);
     }
 
+    /** Chuẩn hóa số trang, mặc định về trang đầu nếu không hợp lệ. */
     private int normalizePage(int page) {
         return page <= 0 ? DEFAULT_PAGE : page;
     }
 
+    /** Chuẩn hóa kích thước trang và giới hạn tối đa để tránh truy vấn quá lớn. */
     private int normalizePageSize(int pageSize) {
         if (pageSize <= 0) {
             return DEFAULT_PAGE_SIZE;

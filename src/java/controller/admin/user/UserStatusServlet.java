@@ -10,6 +10,7 @@ import java.sql.SQLException;
 
 @WebServlet(name = "UserStatusServlet", urlPatterns = {"/admin/users/status"})
 public class UserStatusServlet extends UserServletSupport {
+    /** Đổi trạng thái tài khoản người dùng từ màn danh sách. */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

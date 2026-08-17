@@ -23,9 +23,17 @@
             <section class="admin-main">    
                 <div class="admin-page-head">
                     <div>
-                        <h1>Tổng quan hệ thống</h1>
+                        <h1>Tổng quan hệ thống & Báo cáo</h1>
                     </div>
                 </div>
+
+                <form action="${appPath}/admin/dashboard" method="GET" class="d-flex gap-2 align-items-center mb-4">
+                    <label>Từ:</label>
+                    <input type="date" name="startDate" class="form-control" value="${param.startDate}">
+                    <label>Đến:</label>
+                    <input type="date" name="endDate" class="form-control" value="${param.endDate}">
+                    <button type="submit" class="btn btn-primary">Lọc</button>
+                </form>
 
                 <section class="admin-kpi-grid">
                     <article class="stat-card compact">
@@ -51,6 +59,15 @@
                         <p>Tài khoản đã đăng ký</p>
                     </article>
                 </section>
+
+                <div class="admin-panel mt-4 mb-4">
+                    <div class="admin-panel-head">
+                        <h2>Biểu đồ doanh thu theo thời gian</h2>
+                    </div>
+                    <div class="admin-chart-placeholder" style="padding: 20px;">
+                        <canvas id="revenueChart" style="max-height: 400px; width: 100%;"></canvas>
+                    </div>
+                </div>
 
                 <div class="admin-content-grid">
                     <div class="admin-section-stack">
@@ -184,5 +201,28 @@
         </main>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="${appPath}/assets/js/main.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const labels = ${chartLabels != null ? chartLabels : '[]'};
+            const dataValues = ${chartData != null ? chartData : '[]'};
+
+            if (labels.length > 0) {
+                const ctx = document.getElementById('revenueChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                                label: 'Doanh thu (VNĐ)',
+                                data: dataValues,
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                    },
+                    options: {responsive: true, maintainAspectRatio: false}
+                });
+            }
+        </script>
     </body>
 </html>

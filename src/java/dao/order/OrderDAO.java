@@ -5,10 +5,13 @@
 package dao.order;
 
 import model.entity.cart.CartItem;
+import model.entity.order.OrderItem;
 import util.DBConnection;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import model.entity.order.Order;
 
@@ -80,6 +83,26 @@ public class OrderDAO {
                 throw new SQLException("Failed to retrieve the generated order item id.");
             }
         }
+    }
+
+    /**
+     * Lấy toàn bộ order_items thuộc 1 đơn hàng - dùng cho trang xác nhận đơn
+     * (/order-success) và sau này là trang lịch sử mua hàng / chi tiết đơn.
+     */
+    public List<OrderItem> findItemsByOrderId(int orderId) throws SQLException {
+        List<OrderItem> items = new ArrayList<>();
+        String sql = "SELECT * FROM order_items WHERE order_id = ? ORDER BY order_item_id ASC";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    items.add(mapOrderItem(resultSet));
+                }
+            }
+        }
+        return items;
     }
 
     /** Xoá order_items khi cần rollback thủ công 1 đơn hàng vì thiếu tồn kho giữa chừng (không còn transaction tự động). */
@@ -171,6 +194,8 @@ public class OrderDAO {
         order.setDeliveryAddress(resultSet.getString("delivery_address"));
         order.setRecipientName(resultSet.getString("recipient_name"));
         order.setRecipientPhone(resultSet.getString("recipient_phone"));
+        order.setDeliveryTimeSlot(resultSet.getString("delivery_time_slot"));
+        order.setNotes(resultSet.getString("notes"));
         order.setStatus(resultSet.getString("status"));
         order.setTotalAmount(resultSet.getBigDecimal("total_amount"));
         order.setDeliveryFee(resultSet.getBigDecimal("delivery_fee"));
@@ -182,5 +207,26 @@ public class OrderDAO {
             order.setCreatedAt(createdAt.toLocalDateTime());
         }
         return order;
+    }
+
+    private OrderItem mapOrderItem(ResultSet resultSet) throws SQLException {
+        OrderItem item = new OrderItem();
+        item.setOrderItemId(resultSet.getInt("order_item_id"));
+        item.setOrderId(resultSet.getInt("order_id"));
+
+        int variantId = resultSet.getInt("variant_id");
+        item.setVariantId(resultSet.wasNull() ? null : variantId);
+
+        int serialId = resultSet.getInt("serial_id");
+        item.setSerialId(resultSet.wasNull() ? null : serialId);
+
+        item.setProductNameSnapshot(resultSet.getString("product_name_snapshot"));
+        item.setVariantLabelSnapshot(resultSet.getString("variant_label_snapshot"));
+        item.setQuantity(resultSet.getInt("quantity"));
+        item.setUnitPrice(resultSet.getBigDecimal("unit_price"));
+        item.setSubtotal(resultSet.getBigDecimal("subtotal"));
+        item.setAddonLabelSnapshot(resultSet.getString("addon_label_snapshot"));
+        item.setAddonPriceSnapshot(resultSet.getBigDecimal("addon_price_snapshot"));
+        return item;
     }
 }

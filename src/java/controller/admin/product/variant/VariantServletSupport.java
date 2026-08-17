@@ -32,12 +32,14 @@ public abstract class VariantServletSupport extends HttpServlet {
     protected final ProductVariantService productVariantService = new ProductVariantService();
     protected final ProductService productService = new ProductService();
 
+    /** Đưa trạng thái, kết nối và tùy chọn sort của biến thể lên request cho JSP. */
     protected void setVariantReferenceData(HttpServletRequest request) {
         request.setAttribute("variantStatusOptions", productVariantService.getAllowedStatuses());
         request.setAttribute("variantConnectivityOptions", productVariantService.getAllowedConnectivities());
         request.setAttribute("sortOptions", buildSortOptions());
     }
 
+    /** Tạo biến thể mặc định cho form thêm mới của một sản phẩm. */
     protected ProductVariant createDefaultVariant(int productId) {
         ProductVariant variant = new ProductVariant();
         variant.setProductId(productId);
@@ -46,6 +48,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         return variant;
     }
 
+    /** Parse request thành ProductVariant đầy đủ để service validate và lưu DB. */
     protected ProductVariant buildVariantFromRequest(HttpServletRequest request) {
         ProductVariant variant = new ProductVariant();
         variant.setVariantId(parseIntOrDefault(request.getParameter("variantId"), 0));
@@ -69,6 +72,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         return variant;
     }
 
+    /** Parse request theo hướng mềm hơn để hiển thị lại form khi dữ liệu nhập bị lỗi. */
     protected ProductVariant buildVariantFromRequestForRedisplay(HttpServletRequest request) {
         ProductVariant variant = new ProductVariant();
         variant.setVariantId(parseIntOrDefault(request.getParameter("variantId"), 0));
@@ -92,19 +96,23 @@ public abstract class VariantServletSupport extends HttpServlet {
         return variant;
     }
 
+    /** Tải sản phẩm cha đang được quản lý để hiển thị tiêu đề và kiểm tra productId hợp lệ. */
     protected Product loadManagedProduct(int productId) throws java.sql.SQLException {
         return productService.getProductById(productId);
     }
 
+    /** Gắn sản phẩm cha vào request cho các JSP variant. */
     protected void setManagedProduct(HttpServletRequest request, Product product) {
         request.setAttribute("managedProduct", product);
     }
 
+    /** Format thời gian giảm giá sang dạng input datetime-local của HTML. */
     protected void setVariantFormDateFields(HttpServletRequest request, ProductVariant variant) {
         request.setAttribute("discountStartValue", formatDateTimeInput(variant.getDiscountStart()));
         request.setAttribute("discountEndValue", formatDateTimeInput(variant.getDiscountEnd()));
     }
 
+    /** Parse số nguyên bắt buộc và ném lỗi nghiệp vụ nếu sai định dạng. */
     protected int parseInt(String value, String errorMessage) {
         try {
             return Integer.parseInt(value);
@@ -113,6 +121,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         }
     }
 
+    /** Parse số nguyên tùy chọn, trả về mặc định khi thiếu hoặc sai định dạng. */
     protected int parseIntOrDefault(String value, int defaultValue) {
         try {
             return Integer.parseInt(value);
@@ -121,6 +130,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         }
     }
 
+    /** Parse số nguyên nullable dùng cho RAM, dung lượng và các trường tùy chọn. */
     protected Integer parseNullableInteger(String value, String errorMessage) {
         if (value == null || value.isBlank()) {
             return null;
@@ -128,6 +138,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         return parseInt(value.trim(), errorMessage);
     }
 
+    /** Parse số thập phân bắt buộc dùng cho giá và khối lượng. */
     protected BigDecimal parseRequiredBigDecimal(String value, String errorMessage) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(errorMessage);
@@ -135,6 +146,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         return parseBigDecimal(value.trim(), errorMessage);
     }
 
+    /** Parse số thập phân nullable dùng cho giá giảm hoặc kích thước màn hình. */
     protected BigDecimal parseNullableBigDecimal(String value, String errorMessage) {
         if (value == null || value.isBlank()) {
             return null;
@@ -142,6 +154,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         return parseBigDecimal(value.trim(), errorMessage);
     }
 
+    /** Parse thời gian nullable từ input datetime-local. */
     protected LocalDateTime parseNullableDateTime(String value, String errorMessage) {
         if (value == null || value.isBlank()) {
             return null;
@@ -153,6 +166,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         }
     }
 
+    /** Chuyển ACTIVE/INACTIVE từ form thành cờ isActive của biến thể. */
     protected boolean parseRequiredVariantStatusToActive(String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Trạng thái biến thể không hợp lệ.");
@@ -167,10 +181,12 @@ public abstract class VariantServletSupport extends HttpServlet {
         throw new IllegalArgumentException("Trạng thái biến thể không hợp lệ.");
     }
 
+    /** Chuẩn hóa trang hiện tại, mặc định là trang 1. */
     protected int parsePage(String value) {
         return parsePositiveIntOrDefault(value, 1);
     }
 
+    /** Tính tổng số trang cho danh sách biến thể. */
     protected int calculateTotalPages(int totalItems, int pageSize) {
         if (pageSize <= 0) {
             return 1;
@@ -178,6 +194,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         return Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
     }
 
+    /** Chuẩn hóa lựa chọn sắp xếp biến thể từ query parameter. */
     protected String normalizeVariantSort(String sort) {
         if (sort == null || sort.isBlank()) {
             return "newest";
@@ -185,6 +202,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         return sort.trim().toLowerCase(Locale.ROOT);
     }
 
+    /** Tạo query string giữ lại keyword, status và sort khi phân trang variant. */
     protected String buildVariantListQueryString(String keyword, String status, String sort) {
         StringBuilder query = new StringBuilder();
         appendQueryParam(query, "keyword", keyword);
@@ -193,11 +211,13 @@ public abstract class VariantServletSupport extends HttpServlet {
         return query.toString();
     }
 
+    /** Điều hướng về danh sách biến thể của đúng sản phẩm cha. */
     protected void redirectToVariantList(HttpServletRequest request, HttpServletResponse response, int productId)
             throws IOException {
         response.sendRedirect(request.getContextPath() + VARIANT_LIST_PATH + "?productId=" + productId);
     }
 
+    /** Lưu flash message rồi redirect về danh sách biến thể theo pattern PRG. */
     protected void redirectToVariantListWithMessage(HttpServletRequest request, HttpServletResponse response,
                                                     int productId, String flashKey, String message)
             throws IOException {
@@ -205,17 +225,20 @@ public abstract class VariantServletSupport extends HttpServlet {
         redirectToVariantList(request, response, productId);
     }
 
+    /** Lưu flash message rồi quay về danh sách sản phẩm khi không xác định được productId hợp lệ. */
     protected void redirectToProductListWithMessage(HttpServletRequest request, HttpServletResponse response,
                                                     String flashKey, String message) throws IOException {
         setFlashMessage(request, flashKey, message);
         response.sendRedirect(request.getContextPath() + PRODUCT_LIST_PATH);
     }
 
+    /** Chuyển flash message từ session sang request để JSP hiển thị một lần. */
     protected void moveFlashMessagesToRequest(HttpServletRequest request) {
         moveFlashMessageToRequest(request, FLASH_SUCCESS_KEY);
         moveFlashMessageToRequest(request, FLASH_ERROR_KEY);
     }
 
+    /** Parse số nguyên dương, trả về mặc định nếu thiếu hoặc không hợp lệ. */
     private int parsePositiveIntOrDefault(String value, int defaultValue) {
         try {
             int parsed = Integer.parseInt(value);
@@ -225,6 +248,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         }
     }
 
+    /** Parse BigDecimal và ném lỗi nghiệp vụ nếu định dạng không hợp lệ. */
     private BigDecimal parseBigDecimal(String value, String errorMessage) {
         try {
             return new BigDecimal(value);
@@ -233,6 +257,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         }
     }
 
+    /** Lưu thông báo tạm vào session nếu message có nội dung. */
     private void setFlashMessage(HttpServletRequest request, String flashKey, String message) {
         if (message == null || message.isBlank()) {
             return;
@@ -240,6 +265,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         request.getSession().setAttribute(flashKey, message);
     }
 
+    /** Lấy một flash message từ session sang request rồi xóa khỏi session. */
     private void moveFlashMessageToRequest(HttpServletRequest request, String flashKey) {
         HttpSession session = request.getSession(false);
         if (session == null) {
@@ -252,6 +278,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         session.removeAttribute(flashKey);
     }
 
+    /** Nối một tham số vào query string và encode giá trị cho an toàn. */
     private void appendQueryParam(StringBuilder query, String key, String value) {
         if (value == null || value.isBlank()) {
             return;
@@ -264,6 +291,7 @@ public abstract class VariantServletSupport extends HttpServlet {
                 .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
     }
 
+    /** Format LocalDateTime sang chuỗi phù hợp với input datetime-local. */
     private String formatDateTimeInput(LocalDateTime value) {
         if (value == null) {
             return "";
@@ -271,6 +299,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         return DATE_TIME_INPUT_FORMAT.format(value);
     }
 
+    /** Parse số nguyên nullable nhưng không ném lỗi, dùng khi redisplay form lỗi. */
     private Integer parseNullableIntegerOrNull(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -282,6 +311,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         }
     }
 
+    /** Parse BigDecimal nullable nhưng không ném lỗi, dùng để giữ form khi nhập sai. */
     private BigDecimal parseNullableBigDecimalOrNull(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -293,6 +323,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         }
     }
 
+    /** Parse datetime nullable nhưng không ném lỗi, dùng cho redisplay form. */
     private LocalDateTime parseNullableDateTimeOrNull(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -304,6 +335,7 @@ public abstract class VariantServletSupport extends HttpServlet {
         }
     }
 
+    /** Tạo danh sách lựa chọn sắp xếp cho màn biến thể. */
     private List<SortOption> buildSortOptions() {
         return List.of(
                 new SortOption("newest", "Mới nhất"),
@@ -323,15 +355,18 @@ public abstract class VariantServletSupport extends HttpServlet {
         private final String value;
         private final String label;
 
+        /** Tạo một lựa chọn sort gồm value gửi lên server và label hiển thị. */
         public SortOption(String value, String label) {
             this.value = value;
             this.label = label;
         }
 
+        /** Trả về giá trị sort dùng trong query parameter. */
         public String getValue() {
             return value;
         }
 
+        /** Trả về nhãn sort hiển thị trên giao diện. */
         public String getLabel() {
             return label;
         }

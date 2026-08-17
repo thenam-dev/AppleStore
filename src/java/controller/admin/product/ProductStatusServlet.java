@@ -10,6 +10,7 @@ import java.sql.SQLException;
 
 @WebServlet(name = "ProductStatusServlet", urlPatterns = {"/admin/products/status"})
 public class ProductStatusServlet extends ProductServletSupport {
+    /** Đổi trạng thái sản phẩm theo action gửi từ bảng danh sách. */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

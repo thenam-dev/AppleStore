@@ -109,7 +109,7 @@
                                                     <input type="hidden" name="cartItemId" value="${item.cartItemId}">
                                                     <input type="number" name="quantity" value="${item.quantity}"
                                                            min="1" max="${item.stockQuantity}">
-                                                    <button type="submit" class="btn btn-app-outline btn-sm">Cập nhật</button>
+                                                    <button type="submit" class="btn btn-app-outline btn-sm" style="font-size: small">Cập nhật</button>
                                                 </form>
 
                                                 <span>
