@@ -72,7 +72,7 @@ public class HomeServlet extends HttpServlet {
         request.setAttribute("newList", newList);
         request.setAttribute("bestSellerList", bestSellerList);
         // Chuyển hướng tới giao diện
-        request.getRequestDispatcher("/WEB-INF/views/guest/home.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/common/home.jsp").forward(request, response);
     }
 
     /**
