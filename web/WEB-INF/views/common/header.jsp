@@ -1,18 +1,3 @@
-<%--
-  header.jsp — thanh điều hướng dùng chung cho toàn bộ site (khách + khách hàng đã đăng nhập).
-  Cách dùng:
-      <c:set var="activeMenu" value="iphone" scope="request"/>  <%-- tuỳ chọn, tô sáng menu đang đứng --%>
-      <jsp:include page="/WEB-INF/views/common/header.jsp"/>
-  LƯU Ý: c:set phải kèm scope="request" thì jsp:include mới thấy được - mặc định c:set là
-  page scope, không lọt qua ranh giới jsp:include (đây từng là bug thực tế, xem lịch sử sửa).
-  Biến servlet có thể chuẩn bị trước, không bắt buộc:
-      activeMenu           : "home" | "iphone" | "mac" | "ipad" | "watch" | "accessory"
-      keyword               : từ khoá đang tìm, để đổ lại vào ô tìm kiếm (đã có sẵn khi ở /products)
-      requestScope.cartItemCount : số badge giỏ hàng (CartServlet set khi ở trang /cart)
-      sessionScope.user     : User đang đăng nhập (key AppConfig.SESSION_USER), null nếu là khách
-  File này tự include icons.jsp nên mọi trang include header.jsp đều dùng được sprite icon.
-  File dùng chung — sửa phải báo team (rule 11).
---%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
