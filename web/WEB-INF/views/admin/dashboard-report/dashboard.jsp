@@ -38,11 +38,11 @@
                     <c:remove var="errorMessage" scope="session" />
                 </c:if>
 
-                <form action="${appPath}/admin/dashboard" method="GET" class="d-flex gap-2 align-items-center mb-4">
+                <form action="${appPath}/admin/dashboard" method="GET" class="d-flex gap-2 align-items-center mb-4" onsubmit="return validateDateRange(this);">
                     <label>Từ:</label>
-                    <input type="date" name="startDate" class="form-control" value="${param.startDate}">
+                    <input type="date" id="startDate" name="startDate" class="form-control" value="${param.startDate}">
                     <label>Đến:</label>
-                    <input type="date" name="endDate" class="form-control" value="${param.endDate}">
+                    <input type="date" id="endDate" name="endDate" class="form-control" value="${param.endDate}">
                     <button type="submit" class="btn btn-primary">Lọc</button>
                     <button type="button" onclick="setQuickDateRange(30)" class="btn btn-outline-secondary">30 ngày</button>
                     <button type="button" onclick="setQuickDateRange(7)" class="btn btn-outline-secondary">7 ngày</button>
@@ -272,6 +272,42 @@
                     },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
                 });
+            }
+
+            // Validate and restrict date range dynamically
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+
+            function updateDateConstraints() {
+                if (startDateInput.value) {
+                    endDateInput.min = startDateInput.value;
+                } else {
+                    endDateInput.min = '';
+                }
+                
+                if (endDateInput.value) {
+                    startDateInput.max = endDateInput.value;
+                } else {
+                    startDateInput.max = '';
+                }
+            }
+
+            // Apply constraints on page load and when values change
+            startDateInput.addEventListener('change', updateDateConstraints);
+            endDateInput.addEventListener('change', updateDateConstraints);
+            updateDateConstraints(); // run once on load
+
+            // Form validation (fallback for browsers that bypass min/max)
+            function validateDateRange(form) {
+                const start = form.startDate.value;
+                const end = form.endDate.value;
+                if (start && end) {
+                    if (new Date(start) > new Date(end)) {
+                        alert("Ngày kết thúc không được nhỏ hơn ngày bắt đầu!");
+                        return false;
+                    }
+                }
+                return true;
             }
 
             // Quick Date Range
