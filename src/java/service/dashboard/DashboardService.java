@@ -78,4 +78,8 @@ public class DashboardService {
     public java.util.LinkedHashMap<String, Double> getRevenueByDate(String startDate, String endDate, Integer staffId) {
         return dashboardDAO.getRevenueByDate(startDate, endDate, staffId);
     }
+
+    public java.util.LinkedHashMap<String, Integer> getOrderStatusStats(String startDate, String endDate, Integer staffId) {
+        return dashboardDAO.getOrderStatusStats(startDate, endDate, staffId);
+    }
 }

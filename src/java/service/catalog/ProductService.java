@@ -6,9 +6,11 @@ import dao.catalog.ProductDAO;
 import model.entity.catalog.Product;
 
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 
 public class ProductService {
+
     private static final int DEFAULT_PAGE = 1;
     private static final int DEFAULT_PAGE_SIZE = AppConfig.PAGE_SIZE_ADMIN;
     private static final int MAX_PAGE_SIZE = 100;
@@ -297,5 +299,37 @@ public class ProductService {
             return DEFAULT_PAGE_SIZE;
         }
         return Math.min(pageSize, MAX_PAGE_SIZE);
+    }
+
+    // Gọi DAO lấy sản phẩm nổi bật
+    public List<Product> getFeaturedProducts(int limit) {
+        try {
+            return productDAO.findFeaturedProducts(limit);
+        } catch (SQLException e) {
+            // Log lỗi nếu cần thiết
+            e.printStackTrace();
+            // Trả về danh sách rỗng để trang chủ không bị sập (crash)
+            return Collections.emptyList();
+        }
+    }
+
+    // Gọi DAO lấy sản phẩm mới nhất
+    public List<Product> getNewProducts(int limit) {
+        try {
+            return productDAO.findNewProducts(limit);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    // Gọi DAO lấy sản phẩm bán chạy nhất
+    public List<Product> getBestSellerProducts(int limit) {
+        try {
+            return productDAO.findBestSellerProducts(limit);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
     }
 }

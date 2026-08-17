@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class Product implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     private int productId;
@@ -31,6 +32,7 @@ public class Product implements Serializable {
     private BigDecimal minPrice;
     private int totalStock;
     private int variantCount;
+    private String primaryImageUrl;
 
     public int getProductId() {
         return productId;
@@ -222,5 +224,13 @@ public class Product implements Serializable {
 
     public void setVariantCount(int variantCount) {
         this.variantCount = variantCount;
+    }
+
+    public String getPrimaryImageUrl() {
+        return primaryImageUrl;
+    }
+
+    public void setPrimaryImageUrl(String primaryImageUrl) {
+        this.primaryImageUrl = primaryImageUrl;
     }
 }
