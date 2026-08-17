@@ -63,7 +63,7 @@ public class CheckoutService {
 
     public static class CheckoutForm {
         public int customerId;
-            
+
         public String deliveryAddress;
         public String recipientName;
         public String recipientPhone;
@@ -100,15 +100,20 @@ public class CheckoutService {
             errors.put("recipientPhone", "Số điện thoại không đúng định dạng (10 số, bắt đầu bằng 0)");
         }
 
+        // SỬA: bản trước bị thiếu nhánh else-if kiểm tra độ dài, và message
+        // "Địa chỉ tối đa 500 ký tự" bị gán nhầm cho trường hợp rỗng.
         if (isBlank(form.deliveryAddress)) {
-     
-
-               errors.put("deliveryAddress", "Địa chỉ tối đa 500 ký tự");
+            errors.put("deliveryAddress", "Vui lòng nhập địa chỉ giao hàng");
+        } else if (form.deliveryAddress.trim().length() > 500) {
+            errors.put("deliveryAddress", "Địa chỉ tối đa 500 ký tự");
         }
-       
-                   errors.put("paymentMethod", "Vui lòng chọn phương thức");
-              
-    
+
+        // SỬA: bản trước dòng này chạy VÔ ĐIỀU KIỆN (không nằm trong if nào),
+        // nên luôn báo lỗi "Vui lòng chọn phương thức" dù đã chọn CK/COD hợp lệ.
+        // Đây chính là nguyên nhân toàn bộ luồng checkout bị chặn.
+        if (isBlank(form.paymentMethod) || !(form.paymentMethod.equals("CK") || form.paymentMethod.equals("COD"))) {
+            errors.put("paymentMethod", "Vui lòng chọn phương thức thanh toán");
+        }
 
         return errors;
     }
@@ -262,23 +267,3 @@ public class CheckoutService {
                 amount.setScale(0, java.math.RoundingMode.HALF_UP).toPlainString(), encodedContent);
     }
 }
-
-    
-     
- 
-     
-    
-            
-            
-            
-    
-
-    
-
-    
-    
-            
-            
-    
-
-    

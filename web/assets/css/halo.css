@@ -46,8 +46,8 @@ body.admin{background:var(--porcelain)}
 img{max-width:100%}
 button{font:inherit;cursor:pointer}
 a{color:inherit;text-decoration:none}
-h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:0;line-height:1.1;letter-spacing:0}
-.t-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:0;text-transform:uppercase;color:var(--ash)}
+h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:0;line-height:1.1;letter-spacing:-.01em}
+.t-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ash)}
 .mono{font-family:var(--mono)}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:var(--r-xs)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -59,7 +59,7 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
   display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:7px 16px;
   background:linear-gradient(90deg,#12161C,#1E252F 30%,#12161C);
   border-top:1px solid rgba(201,181,140,.28);border-bottom:1px solid rgba(201,181,140,.28);
-  font-family:var(--mono);font-size:10px;letter-spacing:0;text-transform:uppercase;color:var(--titan);
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--titan);
 }
 .etch span{opacity:.72}
 .etch .dot{width:3px;height:3px;border-radius:50%;background:var(--titan);opacity:.6}
@@ -86,7 +86,7 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 
 /* ---------- 4. NHÃN TRẠNG THÁI ---------- */
 .badge{display:inline-flex;align-items:center;gap:6px;height:23px;padding:0 10px;border-radius:var(--r-pill);
-  font-family:var(--mono);font-size:10px;letter-spacing:0;text-transform:uppercase;font-weight:500}
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
 .badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
 .badge.ok{background:var(--ok-bg);color:var(--ok)}
 .badge.off{background:#EEF0F3;color:#79818C}
@@ -115,9 +115,12 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .err-msg{display:flex;gap:6px;font-size:12px;color:var(--danger);margin-top:6px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 18px}
-.field.full{grid-column:1/-1}
-.frame{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
 .switch{width:42px;height:24px;border-radius:var(--r-pill);background:#DCDFE4;position:relative;display:inline-block}
+
+/* ---------- TẠM: .frame chưa có trong bản gốc, login/register/change-password.jsp
+   đang dùng nhưng thiếu định nghĩa. Thêm tạm để không vỡ layout — báo team
+   (rule 11) để họ chốt lại style chính thức, có thể xóa khối này sau. ---------- */
+.frame{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:var(--sh-1)}
 .switch.on{background:var(--ok)}
 .switch.on::after{left:21px}
@@ -136,8 +139,7 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .panel-pad{padding:18px}
 
 .table{width:100%;border-collapse:collapse;font-size:13.5px}
-.table-scroll{overflow-x:auto}
-.table th{text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:0;text-transform:uppercase;
+.table th{text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
   color:var(--ash);font-weight:500;padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
 .table th a{color:inherit}
 .table th a:hover{color:var(--ink)}
@@ -196,7 +198,7 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .sf-top{background:var(--ink);color:#fff}
 .sf-nav{display:flex;align-items:center;gap:26px;padding:14px 26px}
 .sf-logo{display:flex;align-items:center;gap:9px}
-.sf-logo .wm{font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:0;font-size:15px}
+.sf-logo .wm{font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px}
 .sf-nav .links{display:flex;gap:22px;font-size:13.5px;color:#C3C9D2}
 .sf-nav .links a.on{color:#fff}
 .sf-nav .links a:hover{color:var(--titan)}
@@ -216,11 +218,11 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 
 .sf-foot{background:var(--ink);color:#98A0AB;padding:34px 26px 22px;font-size:13px}
 .sf-foot .cols{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:26px}
-.sf-foot h4{color:#fff;font-size:12px;letter-spacing:0;text-transform:uppercase;margin-bottom:12px;font-stretch:100%}
+.sf-foot h4{color:#fff;font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px;font-stretch:100%}
 .sf-foot ul{padding:0;margin:0}
 .sf-foot li{list-style:none;margin-bottom:7px}
 .sf-foot .copy{border-top:1px solid var(--line-d);margin-top:24px;padding-top:16px;
-  font-family:var(--mono);font-size:10px;letter-spacing:0;color:#5C6470}
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:#5C6470}
 
 .hero{position:relative;background:var(--ink);color:#fff;padding:54px 26px 46px;overflow:hidden}
 .hero::after{content:"";position:absolute;inset:0;pointer-events:none;
@@ -228,8 +230,8 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
   transform:translateX(-30%);animation:sweep 7s ease-in-out infinite}
 @keyframes sweep{0%,100%{transform:translateX(-40%)}50%{transform:translateX(40%)}}
 .hero .inner{position:relative;z-index:2;display:grid;grid-template-columns:1.25fr .75fr;gap:36px;align-items:center}
-.hero .kicker{font-family:var(--mono);font-size:10px;letter-spacing:0;color:var(--titan);text-transform:uppercase}
-.hero h2{font-size:clamp(38px,5.6vw,68px);font-weight:800;font-stretch:120%;text-transform:uppercase;letter-spacing:0;margin:14px 0 0}
+.hero .kicker{font-family:var(--mono);font-size:10px;letter-spacing:.26em;color:var(--titan);text-transform:uppercase}
+.hero h2{font-size:clamp(38px,5.6vw,68px);font-weight:800;font-stretch:120%;text-transform:uppercase;letter-spacing:-.02em;margin:14px 0 0}
 .hero h2 em{font-style:normal;display:block;background:linear-gradient(92deg,var(--titan-2),var(--titan) 45%,#9E8B63);
   -webkit-background-clip:text;background-clip:text;color:transparent}
 .hero .rule{height:1px;background:linear-gradient(90deg,var(--titan),transparent);margin:22px 0}
@@ -237,7 +239,7 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .hero .cta{display:flex;gap:10px;flex-wrap:wrap}
 .spec-col{border-left:1px solid var(--line-d);padding-left:22px}
 .spec-col dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:11px 16px;
-  font-family:var(--mono);font-size:11px;letter-spacing:0;text-transform:uppercase}
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
 .spec-col dt{color:#616A76}
 .spec-col dd{margin:0;color:var(--titan)}
 
@@ -290,17 +292,12 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .note-box b{color:#3D3728}
 
 /* ---------- 10. GIAO DIỆN QUẢN TRỊ ---------- */
-div.adm{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+.adm{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
 .adm-side{background:var(--ink);color:#fff;padding:18px 0}
 .adm-side .brand{display:flex;align-items:center;gap:10px;padding:0 18px 20px;border-bottom:1px solid var(--line-d);margin-bottom:14px}
-.adm-side .brand .wm{font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:0;font-size:13px}
-.adm-side .brand small{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:0;color:#5C6470}
-.adm-side .home-action{padding:0 14px 14px;margin-bottom:4px;border-bottom:1px solid var(--line-d)}
-.adm-side a.home-link{justify-content:center;border:1px solid rgba(201,181,140,.36);border-left:1px solid rgba(201,181,140,.36);
-  border-radius:var(--r-pill);background:linear-gradient(120deg,var(--titan-2),var(--titan));color:#2A2213;font-weight:700;
-  padding:10px 14px;box-shadow:0 10px 24px -18px rgba(201,181,140,.72)}
-.adm-side a.home-link:hover{color:#2A2213;box-shadow:0 14px 26px -18px rgba(201,181,140,.9)}
-.adm-side .grp{padding:14px 18px 6px;font-family:var(--mono);font-size:9px;letter-spacing:0;color:#5C6470;text-transform:uppercase}
+.adm-side .brand .wm{font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:13px}
+.adm-side .brand small{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;color:#5C6470}
+.adm-side .grp{padding:14px 18px 6px;font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:#5C6470;text-transform:uppercase}
 .adm-side a{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:13.5px;color:#B9C0CA;border-left:2px solid transparent}
 .adm-side a.on{color:#fff;background:#151A21;border-left-color:var(--titan)}
 .adm-side a:hover{color:#fff}
@@ -312,7 +309,7 @@ div.adm{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .stat{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:16px 18px;position:relative;overflow:hidden}
 .stat::after{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--titan)}
-.stat .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:0;text-transform:uppercase;color:var(--ash)}
+.stat .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash)}
 .stat .val{font-family:var(--display);font-stretch:114%;font-weight:700;font-size:27px;margin-top:6px}
 .stat .delta{font-size:12px;color:var(--ok);margin-top:2px}
 .stat .delta.down{color:var(--danger)}
@@ -325,7 +322,7 @@ div.adm{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
   .spec-col{border-left:0;border-top:1px solid var(--line-d);padding:20px 0 0}
   .cat-rail{grid-template-columns:repeat(3,1fr)}
   .split{grid-template-columns:1fr}
-  div.adm{grid-template-columns:1fr}
+  .adm{grid-template-columns:1fr}
   .adm-side{display:none}
 }
 @media(max-width:860px){
