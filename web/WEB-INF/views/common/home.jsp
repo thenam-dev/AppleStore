@@ -154,6 +154,11 @@
                         <a class="btn btn-app-outline" href="${ctx}/products">Xem tất cả sản phẩm</a>
                     </div>
                     <div class="row g-4">
+                        <c:if test="${empty featuredList}">
+                            <div class="col-12 text-center py-5">
+                                <p class="text-muted">Chưa có sản phẩm nổi bật nào được thiết lập. Vui lòng thêm trong trang Quản trị.</p>
+                            </div>
+                        </c:if>
                         <c:forEach var="p" items="${featuredList}">
                             <div class="col-md-6 col-xl-3">
                                 <article class="product-card">
@@ -236,7 +241,12 @@
                             <p>Cập nhật ngay những xu hướng và công nghệ mới nhất từ Apple.</p>
                         </div>
                         <div class="row g-4">
-                            <c:forEach var="p" items="${newList}">
+                        <c:if test="${empty newList}">
+                            <div class="col-12 text-center py-5">
+                                <p class="text-muted">Chưa có sản phẩm mới nào được cập nhật.</p>
+                            </div>
+                        </c:if>
+                        <c:forEach var="p" items="${newList}">
                                 <div class="col-md-6 col-xl-3">
                                     <a href="${ctx}/product?id=${p.productId}" class="text-decoration-none text-dark d-block h-100">
                                         <article class="spotlight-card h-100">
@@ -265,6 +275,11 @@
                             <p>Những sản phẩm hiệu năng cao bạn không nên bỏ lỡ tại cửa hàng của chúng tôi.</p>
                         </div>
                         <div class="row g-4">
+                            <c:if test="${empty bestSellerList}">
+                                <div class="col-12 text-center py-5">
+                                    <p class="text-muted">Chưa có dữ liệu sản phẩm bán chạy.</p>
+                                </div>
+                            </c:if>
                             <c:forEach var="p" items="${bestSellerList}" varStatus="status">
                                 <div class="col-lg-4">
                                     <a href="${ctx}/product?id=${p.productId}" class="text-decoration-none text-dark d-block h-100">

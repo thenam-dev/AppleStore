@@ -35,6 +35,9 @@
             <button class="btn btn-app-primary" type="submit">Tìm</button>
         </form>
         <div class="header-actions">
+            <c:if test="${not empty sessionScope.user and (sessionScope.user.role eq 'ADMIN' or sessionScope.user.role eq 'SALE_STAFF')}">
+                <a href="${appPath}/admin/dashboard" class="btn btn-app-primary btn-sm">Vào quản trị</a>
+            </c:if>
             <c:choose>
                 <c:when test="${empty sessionScope.user}">
                     <a class="btn btn-app-outline" href="${appPath}/login">Đăng nhập</a>
