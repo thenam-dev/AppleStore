@@ -31,11 +31,22 @@ public class AdminFilter implements Filter {
 
         User user = (User) sessionUser;
         String role = user.getRole() == null ? "" : user.getRole().trim().toUpperCase();
-        if (AppConfig.ROLE_ADMIN.equals(role) || AppConfig.ROLE_SALE_STAFF.equals(role)) {
+        String adminPath = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length());
+        if (AppConfig.ROLE_ADMIN.equals(role)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        if (AppConfig.ROLE_SALE_STAFF.equals(role) && isSaleStaffAdminPath(adminPath)) {
             chain.doFilter(request, response);
             return;
         }
 
         httpResponse.sendRedirect(httpRequest.getContextPath() + "/index.jsp");
+    }
+
+    private boolean isSaleStaffAdminPath(String path) {
+        return "/admin/dashboard".equals(path)
+                || path.startsWith("/admin/orders");
     }
 }

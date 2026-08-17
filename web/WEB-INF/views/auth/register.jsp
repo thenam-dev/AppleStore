@@ -1,138 +1,91 @@
+<%--
+  register.jsp — đăng ký.
+  Servlet cần set: form{fullName,phone,email}, errors : Map lỗi từng ô
+--%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<c:set var="appPath" value="${pageContext.request.contextPath}" />
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
 <!DOCTYPE html>
 <html lang="vi">
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AppleStore | Đăng ký</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="${appPath}/assets/css/style.css">
+        <c:set var="pageTitle" value="Đăng ký · HALO"/>
+        <jsp:include page="/WEB-INF/views/common/head.jsp"/>
     </head>
-    <body class="site-body">
-        <header class="site-header">
-            <div class="topbar">
-                <div class="container topbar-inner">
-                    <p class="topbar-note">Tạo tài khoản để thanh toán nhanh hơn và theo dõi đơn hàng dễ hơn.</p>
-                    <ul class="topbar-links">
-                        <li><a href="${appPath}/index.jsp">Trang chủ</a></li>
-                        <li><a href="${appPath}/login">Đăng nhập</a></li>
-                        <li><a href="${appPath}/products.html">Sản phẩm</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="container header-main">
-                <a class="brand" href="${appPath}/index.jsp" aria-label="AppleStore">
-                    <img src="${appPath}/assets/images/logo-mark.svg" alt="Biểu tượng AOS">
-                    <span>
-                        <strong>AppleStore</strong>
-                        <small>Tạo tài khoản</small>
-                    </span>
+    <body>
+        <jsp:include page="/WEB-INF/views/common/icons.jsp"/>
+
+        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--porcelain);padding:24px">
+            <div class="frame" style="max-width:520px;width:100%;padding:30px 26px">
+                <a href="${ctx}/index.jsp" style="display:flex;align-items:center;gap:9px;margin-bottom:22px">
+                    <svg width="26" height="26" style="color:var(--titan)"><use href="#logo-halo"/></svg>
+                    <span style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px">HALO</span>
                 </a>
-                <form class="header-search" action="${appPath}/products.html" method="get" name="headerSearchForm">
-                    <label class="visually-hidden" for="register-search-input">Tìm kiếm sản phẩm</label>
-                    <input id="register-search-input" class="form-control" type="search" name="keyword" placeholder="Tìm kiếm sản phẩm">
-                    <button class="btn btn-app-primary" type="submit">Tìm</button>
+
+                <h2 style="font-size:22px;text-transform:uppercase;margin-bottom:6px">Đăng ký</h2>
+                <p style="color:var(--ash);font-size:13px;margin:0 0 20px">Tạo tài khoản để nhận mã giảm 500.000 ₫ cho đơn đầu tiên.</p>
+
+                <jsp:include page="/WEB-INF/views/common/flash.jsp"/>
+
+                <form method="post" action="${ctx}/register">
+                    <div class="grid-2">
+                        <div class="field ${not empty errors.fullName ? 'err' : ''}">
+                            <label>Họ và tên <span class="req">*</span></label>
+                            <input class="input" type="text" name="fullName" maxlength="100" value="<c:out value='${form.fullName}'/>">
+                            <c:if test="${not empty errors.fullName}">
+                                <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.fullName}"/></div>
+                                </c:if>
+                        </div>
+                        <div class="field ${not empty errors.phone ? 'err' : ''}">
+                            <label>Số điện thoại <span class="req">*</span></label>
+                            <input class="input" type="tel" name="phone" maxlength="10" value="<c:out value='${form.phone}'/>">
+                            <c:if test="${not empty errors.phone}">
+                                <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.phone}"/></div>
+                                </c:if>
+                        </div>
+                    </div>
+
+                    <div class="field ${not empty errors.email ? 'err' : ''}">
+                        <label>Email <span class="req">*</span></label>
+                        <input class="input" type="email" name="email" maxlength="100" value="<c:out value='${form.email}'/>">
+                        <c:if test="${not empty errors.email}">
+                            <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.email}"/></div>
+                            </c:if>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="field ${not empty errors.password ? 'err' : ''}">
+                            <label>Mật khẩu <span class="req">*</span></label>
+                            <input class="input" type="password" name="password">
+                            <c:choose>
+                                <c:when test="${not empty errors.password}">
+                                    <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.password}"/></div>
+                                    </c:when>
+                                    <c:otherwise><div class="help">Từ 8 ký tự, có chữ và số</div></c:otherwise>
+                            </c:choose>
+                        </div>
+                        <div class="field ${not empty errors.confirmPassword ? 'err' : ''}">
+                            <label>Nhập lại mật khẩu <span class="req">*</span></label>
+                            <input class="input" type="password" name="confirmPassword">
+                            <c:if test="${not empty errors.confirmPassword}">
+                                <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.confirmPassword}"/></div>
+                                </c:if>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--graphite);margin:4px 0 18px">
+                        <input type="checkbox" name="agree" id="ag" value="1" required style="margin-top:2px">
+                        <label for="ag" style="margin:0;font-weight:400">
+                            Tôi đồng ý với <a href="${ctx}/page/terms" style="border-bottom:1px solid var(--line)">điều khoản sử dụng</a>
+                            và <a href="${ctx}/page/privacy" style="border-bottom:1px solid var(--line)">chính sách bảo mật</a> của HALO.
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn titan block">Tạo tài khoản</button>
                 </form>
-                <div class="header-actions">
-                    <a class="btn btn-app-outline" href="${appPath}/login">Đăng nhập</a>
-                    <a class="cart-link" href="${appPath}/cart" aria-label="Xem giỏ hàng">
-                        <span>Giỏ hàng</span>
-                        <span class="cart-count">3</span>
-                    </a>
-                    <button class="mobile-menu-button" type="button" data-mobile-toggle aria-expanded="false" aria-label="Mở menu di động">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-                </div>
+                <p style="text-align:center;font-size:13px;color:var(--ash);margin:16px 0 0">
+                    Đã có tài khoản? <a href="${ctx}/login" style="color:var(--ink);border-bottom:1px solid var(--line)">Đăng nhập</a>
+                </p>
             </div>
-            <div class="mobile-drawer" data-mobile-panel>
-                <div class="container mobile-drawer-inner">
-                    <div class="mobile-links">
-                        <a href="${appPath}/index.jsp">Trang chủ</a>
-                        <a href="${appPath}/products.html">Sản phẩm</a>
-                        <a href="${appPath}/login">Đăng nhập</a>
-                        <a href="${appPath}/cart">Giỏ hàng</a>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <main>
-            <section class="section-block auth-section">
-                <div class="container">
-                    <div class="auth-layout">
-                        <div class="auth-showcase">
-                            <span class="eyebrow">Tài khoản mới</span>
-                            <h1>Tạo tài khoản khách hàng để quản lý hồ sơ, yêu thích và địa chỉ giao hàng.</h1>
-                            <p>
-                                Biểu mẫu này tạo tài khoản khách hàng thật qua Servlet và cơ sở dữ liệu,
-                                đồng thời giữ trải nghiệm liền mạch với cửa hàng.
-                            </p>
-                            <div class="auth-benefit-list">
-                                <div class="auth-benefit-item">
-                                    <strong>Thanh toán nhanh hơn</strong>
-                                    <span>Lưu thông tin một lần và dùng lại cho các đơn hàng sau.</span>
-                                </div>
-                                <div class="auth-benefit-item">
-                                    <strong>Lịch sử đơn hàng</strong>
-                                    <span>Xem lại giao dịch và trạng thái đơn hàng trong cùng một khu vực tài khoản.</span>
-                                </div>
-                                <div class="auth-benefit-item">
-                                    <strong>Danh sách yêu thích</strong>
-                                    <span>Lưu các sản phẩm Apple bạn muốn xem lại sau.</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="auth-card">
-                            <div class="auth-card-head">
-                                <h2>Đăng ký</h2>
-                                <p>Tạo hồ sơ khách hàng với các thông tin cần thiết cho tài khoản mới.</p>
-                            </div>
-                            <div class="auth-alert alert" data-auth-alert hidden></div>
-                            <form action="${appPath}/register" method="post" name="registerForm" class="auth-form">
-                                <div>
-                                    <label class="form-label" for="register-fullname">Họ và tên</label>
-                                    <input id="register-fullname" class="form-control" type="text" name="fullName" placeholder="Nguyen Van A" required maxlength="100">
-                                </div>
-                                <div>
-                                    <label class="form-label" for="register-email">Email</label>
-                                    <input id="register-email" class="form-control" type="email" name="email" placeholder="name@example.com" required>
-                                </div>
-                                <div>
-                                    <label class="form-label" for="register-phone">Số điện thoại</label>
-                                    <input id="register-phone" class="form-control" type="tel" name="phone" placeholder="0901234567" pattern="[0-9]{9,15}">
-                                </div>
-                                <div>
-                                    <label class="form-label" for="register-password">Mật khẩu</label>
-                                    <input id="register-password" class="form-control" type="password" name="password" placeholder="Tạo mật khẩu" required minlength="8">
-                                </div>
-                                <div>
-                                    <label class="form-label" for="register-confirm-password">Xác nhận mật khẩu</label>
-                                    <input id="register-confirm-password" class="form-control" type="password" name="confirmPassword" placeholder="Nhập lại mật khẩu" required minlength="8">
-                                </div>
-                                <button class="btn btn-app-primary btn-lg w-100" type="submit">Tạo tài khoản</button>
-                            </form>
-                            <div class="auth-footer-note">
-                                <span>Đã có tài khoản?</span>
-                                <a href="${appPath}/login">Đăng nhập tại đây</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <footer class="site-footer">
-            <div class="container footer-bottom footer-bottom-single">
-                <small>&copy; <span data-current-year></span> AppleStore. Màn hình đăng ký dành cho khách hàng.</small>
-            </div>
-        </footer>
-
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="${appPath}/assets/js/main.js"></script>
+        </div>
     </body>
 </html>

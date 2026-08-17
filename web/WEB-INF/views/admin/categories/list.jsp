@@ -2,205 +2,149 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="appPath" value="${pageContext.request.contextPath}" />
-<c:set var="adminSidebarTitle" scope="request" value="Quản lý danh mục" />
-<c:set var="adminSidebarDescription" scope="request" value="Quản lý cấu trúc danh mục, hiển thị và thứ tự sắp xếp." />
-<c:set var="adminSidebarFooterTitle" scope="request" value="Module danh mục" />
-<c:set var="adminSidebarFooterDescription" scope="request" value="Danh sách, tạo mới, chỉnh sửa và bật/tắt trạng thái." />
-<c:set var="adminSidebarActive" scope="request" value="categories" />
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AppleStore Quản trị | Danh mục</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="${appPath}/assets/css/style.css">
+  <c:set var="pageTitle" value="Danh mục · Quản trị HALO" />
+  <jsp:include page="/WEB-INF/views/common/head.jsp" />
 </head>
-<body class="site-body admin-app">
-    <main class="admin-workspace">
-        <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
+<body class="admin">
+<jsp:include page="/WEB-INF/views/common/icons.jsp" />
 
-        <section class="admin-main">
-            <div class="admin-topbar">
-                <div class="admin-topbar-actions">
-                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/categories">Đặt lại</a>
-                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products">Danh sách sản phẩm</a>
-                </div>
+<div class="adm">
+  <c:set var="activeAdmin" value="categories" />
+  <jsp:include page="/WEB-INF/views/common/admin-sidebar.jsp" />
+
+  <div class="adm-main">
+    <div class="adm-bar">
+      <h2>Danh mục</h2>
+      <span style="font-size:13px;color:var(--ash)">Kết quả lọc: ${filteredCategories}</span>
+    </div>
+
+    <div class="adm-body">
+      <jsp:include page="/WEB-INF/views/common/flash.jsp" />
+
+      <section class="stats">
+        <article class="stat">
+          <div class="lab">Tổng danh mục</div>
+          <div class="val">${totalCategories}</div>
+          <div class="delta">Toàn bộ bản ghi</div>
+        </article>
+        <article class="stat">
+          <div class="lab">Đang hoạt động</div>
+          <div class="val">${activeCategories}</div>
+          <div class="delta">Có thể gán sản phẩm</div>
+        </article>
+        <article class="stat">
+          <div class="lab">Không hoạt động</div>
+          <div class="val">${inactiveCategories}</div>
+          <div class="delta down">Đang ẩn</div>
+        </article>
+        <article class="stat">
+          <div class="lab">Kết quả lọc</div>
+          <div class="val">${filteredCategories}</div>
+          <div class="delta">Theo bộ lọc hiện tại</div>
+        </article>
+      </section>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Bảng danh mục</h3>
+          <div class="r">
+            <a class="btn ghost sm" href="${appPath}/admin/products">Sản phẩm</a>
+            <a class="btn sm" href="${appPath}/admin/categories/edit"><svg width="15" height="15"><use href="#i-plus" /></svg>Tạo danh mục</a>
+          </div>
+        </div>
+
+        <form class="toolbar" action="${appPath}/admin/categories" method="get" name="adminCategoryFilterForm">
+          <div class="search">
+            <svg width="17" height="17"><use href="#i-search" /></svg>
+            <label class="sr-only" for="admin-category-search">Tìm danh mục</label>
+            <input id="admin-category-search" class="input" type="search" name="keyword" maxlength="100"
+                   value="${fn:escapeXml(keyword)}" placeholder="Tên danh mục hoặc slug">
+          </div>
+          <select class="select" name="status" aria-label="Trạng thái">
+            <option value="">Tất cả trạng thái</option>
+            <c:forEach var="status" items="${categoryStatusOptions}">
+              <option value="${fn:escapeXml(status)}" ${selectedStatus eq status ? 'selected' : ''}>
+                ${status eq 'ACTIVE' ? 'Đang hoạt động' : status eq 'INACTIVE' ? 'Không hoạt động' : status}
+              </option>
+            </c:forEach>
+          </select>
+          <select class="select" name="sort" aria-label="Sắp xếp">
+            <c:forEach var="sortOption" items="${sortOptions}">
+              <option value="${fn:escapeXml(sortOption.value)}" ${selectedSort eq sortOption.value ? 'selected' : ''}>
+                <c:out value="${sortOption.label}" />
+              </option>
+            </c:forEach>
+          </select>
+          <input type="hidden" name="page" value="1">
+          <button class="btn sm" type="submit">Áp dụng</button>
+          <a class="btn ghost sm" href="${appPath}/admin/categories">Đặt lại</a>
+        </form>
+
+        <c:choose>
+          <c:when test="${empty categories}">
+            <div class="empty">
+              <div class="ring"><svg width="26" height="26"><use href="#i-grid" /></svg></div>
+              <h3>Không tìm thấy danh mục</h3>
+              <p>Thử xoá bộ lọc hoặc tạo danh mục mới cho catalog.</p>
+              <a class="btn" href="${appPath}/admin/categories/edit">Tạo danh mục</a>
             </div>
-
-            <nav aria-label="Đường dẫn">
-                <ol class="breadcrumb app-breadcrumb">
-                    <li class="breadcrumb-item"><a href="${appPath}/admin/dashboard">Quản trị</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Danh mục</li>
-                </ol>
-            </nav>
-
-            <div class="admin-page-head">
-                <div>
-                    <span class="eyebrow">Quản lý danh mục</span>
-                    <h1>Danh mục sản phẩm</h1>
-                    <p>Quản lý danh mục dùng để phân loại sản phẩm và hỗ trợ bộ lọc ngoài cửa hàng.</p>
-                </div>
-                <a class="btn btn-app-primary" href="${appPath}/admin/categories/edit">Tạo danh mục</a>
+          </c:when>
+          <c:otherwise>
+            <div class="table-scroll">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tên danh mục</th>
+                    <th>Slug</th>
+                    <th>Thứ tự</th>
+                    <th>Trạng thái</th>
+                    <th style="text-align:right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <c:forEach var="category" items="${categories}">
+                    <tr>
+                      <td class="num">#${category.categoryId}</td>
+                      <td><b><c:out value="${category.name}" /></b></td>
+                      <td class="num">/<c:out value="${category.slug}" /></td>
+                      <td class="num">${category.displayOrder}</td>
+                      <td>
+                        <span class="badge ${category.isActive ? 'ok' : 'off'}">
+                          ${category.isActive ? 'Đang hoạt động' : 'Không hoạt động'}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="row-actions">
+                          <a class="btn xs quiet" href="${appPath}/admin/categories/edit?id=${category.categoryId}" title="Sửa">
+                            <svg width="13" height="13"><use href="#i-edit" /></svg>
+                          </a>
+                          <form class="inline-form" action="${appPath}/admin/categories/status" method="post">
+                            <input type="hidden" name="categoryId" value="${category.categoryId}">
+                            <input type="hidden" name="status" value="${category.isActive ? 'INACTIVE' : 'ACTIVE'}">
+                            <button class="btn xs ${category.isActive ? 'danger' : ''}" type="submit">
+                              ${category.isActive ? 'Tắt' : 'Kích hoạt'}
+                            </button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  </c:forEach>
+                </tbody>
+              </table>
             </div>
-
-            <c:if test="${not empty successMsg}">
-                <div class="alert alert-success" role="alert"><c:out value="${successMsg}" /></div>
-            </c:if>
-            <c:if test="${not empty errorMsg}">
-                <div class="alert alert-danger" role="alert"><c:out value="${errorMsg}" /></div>
-            </c:if>
-
-            <section class="admin-kpi-grid">
-                <article class="stat-card compact">
-                    <div class="stat-label">Danh mục</div>
-                    <div class="stat-value">${totalCategories}</div>
-                    <p>Tổng số danh mục trong hệ thống</p>
-                </article>
-                <article class="stat-card compact">
-                    <div class="stat-label">Đang hoạt động</div>
-                    <div class="stat-value">${activeCategories}</div>
-                    <p>Có thể gán cho sản phẩm</p>
-                </article>
-                <article class="stat-card compact">
-                    <div class="stat-label">Không hoạt động</div>
-                    <div class="stat-value">${inactiveCategories}</div>
-                    <p>Đang ẩn hoặc tạm ngưng</p>
-                </article>
-                <article class="stat-card compact">
-                    <div class="stat-label">Kết quả lọc</div>
-                    <div class="stat-value">${filteredCategories}</div>
-                    <p>Số danh mục khớp điều kiện hiện tại</p>
-                </article>
-            </section>
-
-            <section class="admin-panel">
-                <div class="admin-panel-head">
-                    <div>
-                        <h2>Bảng danh mục</h2>
-                        <p>Dữ liệu được lọc, sắp xếp và phân trang từ bảng categories.</p>
-                    </div>
-                    <span class="text-muted small">Kết quả lọc: ${filteredCategories}</span>
-                </div>
-                <div class="table-toolbar">
-                    <form class="admin-filter-bar compact" action="${appPath}/admin/categories" method="get" name="adminCategoryFilterForm">
-                        <input class="form-control" type="search" name="keyword" value="${fn:escapeXml(keyword)}" placeholder="Tìm theo tên danh mục hoặc slug">
-                        <select class="form-select" name="status">
-                            <option value="">Tất cả trạng thái</option>
-                            <c:forEach var="status" items="${categoryStatusOptions}">
-                                <c:choose>
-                                    <c:when test="${selectedStatus eq status}">
-                                        <option value="${fn:escapeXml(status)}" selected>${status eq 'ACTIVE' ? 'Đang hoạt động' : status eq 'INACTIVE' ? 'Không hoạt động' : status}</option>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <option value="${fn:escapeXml(status)}">${status eq 'ACTIVE' ? 'Đang hoạt động' : status eq 'INACTIVE' ? 'Không hoạt động' : status}</option>
-                                    </c:otherwise>
-                                </c:choose>
-                            </c:forEach>
-                        </select>
-                        <select class="form-select" name="sort">
-                            <c:forEach var="sortOption" items="${sortOptions}">
-                                <c:choose>
-                                    <c:when test="${selectedSort eq sortOption.value}">
-                                        <option value="${fn:escapeXml(sortOption.value)}" selected><c:out value="${sortOption.label}" /></option>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <option value="${fn:escapeXml(sortOption.value)}"><c:out value="${sortOption.label}" /></option>
-                                    </c:otherwise>
-                                </c:choose>
-                            </c:forEach>
-                        </select>
-                        <button class="btn btn-app-primary" type="submit">Lọc</button>
-                    </form>
-                </div>
-                <div class="table-responsive">
-                    <table class="table app-table">
-                        <thead>
-                            <tr>
-                                <th scope="col">ID</th>
-                                <th scope="col">Tên danh mục</th>
-                                <th scope="col">Slug</th>
-                                <th scope="col">Thứ tự hiển thị</th>
-                                <th scope="col">Trạng thái</th>
-                                <th scope="col" class="text-end">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <c:choose>
-                                <c:when test="${empty categories}">
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">Không tìm thấy danh mục.</td>
-                                    </tr>
-                                </c:when>
-                                <c:otherwise>
-                                    <c:forEach var="category" items="${categories}">
-                                        <tr>
-                                            <td><strong>#${category.categoryId}</strong></td>
-                                            <td><strong><c:out value="${category.name}" /></strong></td>
-                                            <td><code><c:out value="${category.slug}" /></code></td>
-                                            <td>${category.displayOrder}</td>
-                                            <td>
-                                                <span class="status-badge ${category.isActive ? 'status-in-stock' : 'status-out-stock'}">
-                                                    ${category.isActive ? 'Đang hoạt động' : 'Không hoạt động'}
-                                                </span>
-                                            </td>
-                                            <td class="text-end table-actions">
-                                                <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/categories/edit?id=${category.categoryId}">Sửa</a>
-                                                <form class="d-inline" action="${appPath}/admin/categories/status" method="post">
-                                                    <input type="hidden" name="categoryId" value="${category.categoryId}">
-                                                    <input type="hidden" name="status" value="${category.isActive ? 'INACTIVE' : 'ACTIVE'}">
-                                                    <button class="btn ${category.isActive ? 'btn-app-outline' : 'btn-app-primary'} btn-sm" type="submit">
-                                                        ${category.isActive ? 'Tắt' : 'Kích hoạt'}
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
-                        </tbody>
-                    </table>
-                </div>
-                <nav aria-label="Phân trang danh mục" class="mt-3">
-                    <ul class="pagination app-pagination justify-content-end mb-0">
-                        <li class="page-item ${currentPage le 1 ? 'disabled' : ''}">
-                            <c:choose>
-                                <c:when test="${currentPage le 1}">
-                                    <span class="page-link">Trước</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <a class="page-link" href="${appPath}/admin/categories?page=${currentPage - 1}${listQuerySuffix}">Trước</a>
-                                </c:otherwise>
-                            </c:choose>
-                        </li>
-                        <c:forEach var="pageNumber" begin="1" end="${totalPages}">
-                            <li class="page-item ${pageNumber eq currentPage ? 'active' : ''}">
-                                <c:choose>
-                                    <c:when test="${pageNumber eq currentPage}">
-                                        <span class="page-link">${pageNumber}</span>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <a class="page-link" href="${appPath}/admin/categories?page=${pageNumber}${listQuerySuffix}">${pageNumber}</a>
-                                    </c:otherwise>
-                                </c:choose>
-                            </li>
-                        </c:forEach>
-                        <li class="page-item ${currentPage ge totalPages ? 'disabled' : ''}">
-                            <c:choose>
-                                <c:when test="${currentPage ge totalPages}">
-                                    <span class="page-link">Sau</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <a class="page-link" href="${appPath}/admin/categories?page=${currentPage + 1}${listQuerySuffix}">Sau</a>
-                                </c:otherwise>
-                            </c:choose>
-                        </li>
-                    </ul>
-                </nav>
-            </section>
-
-            <p class="admin-footer-note">Các thao tác tạo, sửa, kích hoạt và tắt danh mục đều đi qua Servlet thật.</p>
-        </section>
-    </main>
+            <c:set var="pageUrl" value="${appPath}/admin/categories" />
+            <c:set var="itemLabel" value="danh mục" />
+            <c:set var="totalItems" value="${filteredCategories}" />
+            <jsp:include page="/WEB-INF/views/common/pagination.jsp" />
+          </c:otherwise>
+        </c:choose>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

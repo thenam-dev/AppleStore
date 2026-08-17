@@ -115,6 +115,8 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .err-msg{display:flex;gap:6px;font-size:12px;color:var(--danger);margin-top:6px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 18px}
+.field.full{grid-column:1/-1}
+.frame{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
 .switch{width:42px;height:24px;border-radius:var(--r-pill);background:#DCDFE4;position:relative;display:inline-block}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:var(--sh-1)}
 .switch.on{background:var(--ok)}
@@ -303,6 +305,11 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .adm-side .brand{display:flex;align-items:center;gap:10px;padding:0 18px 20px;border-bottom:1px solid var(--line-d);margin-bottom:14px}
 .adm-side .brand .wm{font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:13px}
 .adm-side .brand small{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;color:#5C6470}
+.adm-side .home-action{padding:0 14px 14px;margin-bottom:4px;border-bottom:1px solid var(--line-d)}
+.adm-side a.home-link{justify-content:center;border:1px solid rgba(201,181,140,.36);border-left:1px solid rgba(201,181,140,.36);
+  border-radius:var(--r-pill);background:linear-gradient(120deg,var(--titan-2),var(--titan));color:#2A2213;font-weight:700;
+  padding:10px 14px;box-shadow:0 10px 24px -18px rgba(201,181,140,.72)}
+.adm-side a.home-link:hover{color:#2A2213;box-shadow:0 14px 26px -18px rgba(201,181,140,.9)}
 .adm-side .grp{padding:14px 18px 6px;font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:#5C6470;text-transform:uppercase}
 .adm-side a{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:13.5px;color:#B9C0CA;border-left:2px solid transparent}
 .adm-side a.on{color:#fff;background:#151A21;border-left-color:var(--titan)}
