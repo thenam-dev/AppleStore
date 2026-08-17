@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HALO — UI Kit &amp; Screen Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   HALO — Design tokens
+   ============================================================ */
+:root{
+  --ink:#0E1116;        /* graphite đen tím, nền tối chủ đạo */
+  --slate:#171C24;      /* panel tối */
+  --line-d:#262D38;     /* hairline trên nền tối */
+  --porcelain:#F1F2F4;  /* nền workspace sáng */
+  --paper:#FFFFFF;
+  --line:#E3E5E9;       /* hairline trên nền sáng */
+  --graphite:#3A424D;   /* chữ phụ trên nền sáng */
+  --ash:#8B929C;        /* chữ mờ */
+  --titan:#C9B58C;      /* champagne titanium — accent sang trọng */
+  --titan-2:#EBDCBB;
+  --iris:#7B61FF;       /* iridescent — chỉ dùng cho logo & light sweep */
+  --aqua:#38D6FF;
+  --ok:#12A67B; --ok-bg:#E4F5EF;
+  --warn:#C98A16; --warn-bg:#FBF1DC;
+  --danger:#D64545; --danger-bg:#FBE9E9;
+  --info:#3A6DF0; --info-bg:#E8EFFE;
+
+  --r-xs:4px; --r-sm:8px; --r-md:14px; --r-lg:22px; --r-pill:999px;
+  --sh-1:0 1px 2px rgba(14,17,22,.06);
+  --sh-2:0 8px 24px -12px rgba(14,17,22,.22);
+  --sh-3:0 30px 70px -30px rgba(14,17,22,.45);
+
+  --display:"Archivo","Be Vietnam Pro",system-ui,sans-serif;
+  --body:"Be Vietnam Pro",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--body); background:var(--porcelain); color:var(--ink);
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%}
+button{font:inherit;cursor:pointer}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:0;line-height:1.1;letter-spacing:-.01em}
+.t-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ash)}
+.mono{font-family:var(--mono)}
+:focus-visible{outline:2px solid var(--iris);outline-offset:2px;border-radius:var(--r-xs)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ============================================================
+   Signature: dải titanium khắc laser
+   ============================================================ */
+.etch{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:7px 16px;
+  background:linear-gradient(90deg,#12161C,#1E252F 30%,#12161C);
+  border-top:1px solid rgba(201,181,140,.28);
+  border-bottom:1px solid rgba(201,181,140,.28);
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--titan);
+}
+.etch span{opacity:.72}
+.etch .dot{width:3px;height:3px;border-radius:50%;background:var(--titan);opacity:.6}
+
+/* ============================================================
+   Shell của bộ kit
+   ============================================================ */
+.app{display:flex;min-height:100vh}
+.rail{
+  width:262px;flex:0 0 262px;background:var(--ink);color:#fff;position:sticky;top:0;height:100vh;
+  overflow:auto;padding:22px 0 40px;border-right:1px solid var(--line-d)
+}
+.rail-brand{display:flex;align-items:center;gap:11px;padding:0 20px 18px}
+.rail-brand .wm{font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.2em;font-size:17px}
+.rail-brand small{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;color:var(--titan);opacity:.85}
+.rail-group{padding:18px 20px 6px;font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:#5C6470}
+.rail a.item{
+  display:flex;align-items:center;gap:10px;padding:8px 20px;font-size:13.5px;color:#B9C0CA;
+  border-left:2px solid transparent
+}
+.rail a.item:hover{color:#fff;background:#151A21}
+.rail a.item.on{color:#fff;background:#151A21;border-left-color:var(--titan)}
+.rail a.item .num{font-family:var(--mono);font-size:10px;color:#5C6470;min-width:18px}
+.rail a.item.on .num{color:var(--titan)}
+
+.stage{flex:1;min-width:0;display:flex;flex-direction:column}
+.stage-head{position:sticky;top:0;z-index:40;background:rgba(241,242,244,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.stage-head .row{display:flex;align-items:center;gap:14px;padding:14px 26px}
+.stage-head h1{font-size:19px}
+.chip{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;padding:4px 9px;border-radius:var(--r-pill);border:1px solid var(--line);background:#fff;color:var(--graphite)}
+.chip.cus{border-color:#CBB7E8;color:#6B3FBF;background:#F4EEFC}
+.chip.adm{border-color:#B9CAF6;color:#2C4FBF;background:#EDF2FE}
+.chip.stf{border-color:#BFE3D5;color:#0E7C5B;background:#E9F7F1}
+.stage-head .note{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--ash);text-align:right;max-width:52%}
+.canvas{padding:26px;display:flex;flex-direction:column;gap:26px}
+.screen{display:none}
+.screen.on{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.frame{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-2)}
+.frame.dark{background:var(--ink);border-color:var(--line-d)}
+.sec-title{display:flex;align-items:baseline;gap:12px;margin:6px 2px}
+.sec-title h3{font-size:14px;letter-spacing:.04em;text-transform:uppercase}
+.sec-title p{margin:0;font-size:12.5px;color:var(--ash)}
+
+/* ============================================================
+   Components
+   ============================================================ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:42px;padding:0 20px;border-radius:var(--r-pill);border:1px solid transparent;
+  font-weight:600;font-size:14px;background:var(--ink);color:#fff;transition:.18s
+}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--sh-2)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--ink);box-shadow:none}
+.btn.titan{background:linear-gradient(120deg,var(--titan-2),var(--titan));color:#2A2213;border-color:rgba(0,0,0,.06)}
+.btn.light{background:#fff;color:var(--ink)}
+.btn.quiet{background:#F3F4F6;color:var(--graphite)}
+.btn.danger{background:var(--danger-bg);color:var(--danger);border-color:#F2C9C9}
+.btn.sm{height:32px;padding:0 13px;font-size:12.5px}
+.btn.xs{height:27px;padding:0 10px;font-size:11.5px;border-radius:var(--r-sm)}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.icon-btn{width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--line);background:#fff;display:inline-flex;align-items:center;justify-content:center}
+.icon-btn:hover{border-color:var(--ink)}
+
+.badge{display:inline-flex;align-items:center;gap:6px;height:23px;padding:0 10px;border-radius:var(--r-pill);font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.off{background:#EEF0F3;color:#79818C}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.dan{background:var(--danger-bg);color:var(--danger)}
+.badge.info{background:var(--info-bg);color:var(--info)}
+.tag{display:inline-block;padding:3px 9px;border-radius:var(--r-xs);background:#F3F4F6;font-size:11.5px;color:var(--graphite)}
+
+.field{display:block;margin-bottom:16px}
+.field > label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px}
+.field .req{color:var(--danger)}
+.input,.select,.textarea{
+  width:100%;height:44px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-sm);
+  background:#fff;font:inherit;font-size:14px;color:var(--ink);transition:.15s
+}
+.textarea{height:auto;padding:12px 14px;resize:vertical;min-height:96px}
+.input::placeholder{color:#AEB4BD}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0 3px rgba(14,17,22,.07)}
+.select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--graphite) 50%),linear-gradient(135deg,var(--graphite) 50%,transparent 50%);background-position:calc(100% - 18px) 19px,calc(100% - 13px) 19px;background-size:5px 5px;background-repeat:no-repeat;padding-right:38px}
+.help{font-size:11.5px;color:var(--ash);margin-top:5px}
+.field.err .input,.field.err .select,.field.err .textarea{border-color:var(--danger);background:#FFFBFB}
+.err-msg{display:flex;gap:6px;font-size:12px;color:var(--danger);margin-top:6px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 18px}
+
+.flash{display:flex;gap:11px;align-items:flex-start;padding:13px 16px;border-radius:var(--r-sm);font-size:13.5px;border:1px solid}
+.flash.ok{background:var(--ok-bg);border-color:#BEE7D8;color:#0B6B4F}
+.flash.err{background:var(--danger-bg);border-color:#F2C9C9;color:#9E2B2B}
+.flash b{font-weight:600}
+.flash .k{font-family:var(--mono);font-size:10px;opacity:.7;margin-left:auto;white-space:nowrap}
+
+.table{width:100%;border-collapse:collapse;font-size:13.5px}
+.table th{
+  text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ash);font-weight:500;padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap
+}
+.table th .sort{color:var(--ink);cursor:pointer}
+.table th .sort::after{content:"↑";margin-left:5px;color:var(--titan)}
+.table td{padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.table tbody tr:hover{background:#FAFBFC}
+.table .num{font-family:var(--mono);font-size:12.5px}
+.row-actions{display:flex;gap:6px;justify-content:flex-end}
+
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:16px 18px;border-bottom:1px solid var(--line);background:#FCFCFD}
+.search{position:relative;flex:1;min-width:220px;max-width:340px}
+.search .input{padding-left:38px}
+.search svg{position:absolute;left:13px;top:14px;opacity:.45}
+.toolbar .select{width:auto;min-width:150px;height:44px}
+
+.pager{display:flex;align-items:center;gap:6px;padding:14px 18px;justify-content:space-between;flex-wrap:wrap}
+.pager .info{font-size:12.5px;color:var(--ash)}
+.pager .pages{display:flex;gap:5px}
+.pg{min-width:34px;height:34px;padding:0 9px;border-radius:var(--r-sm);border:1px solid var(--line);background:#fff;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12.5px}
+.pg.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pg[disabled]{opacity:.4}
+
+.empty{text-align:center;padding:64px 24px}
+.empty .ring{width:74px;height:74px;margin:0 auto 18px;border-radius:50%;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center}
+.empty h3{font-size:18px;margin-bottom:8px}
+.empty p{margin:0 auto 20px;max-width:380px;color:var(--ash);font-size:13.5px}
+
+/* Product visuals (SVG, không dùng ảnh ngoài) */
+.shot{aspect-ratio:1/1;border-radius:var(--r-md);background:linear-gradient(160deg,#F7F8FA,#E9EBEF);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.shot.dark{background:linear-gradient(160deg,#20262F,#0E1116)}
+.shot svg{width:58%;height:58%}
+.p-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:14px;transition:.2s;position:relative}
+.p-card:hover{box-shadow:var(--sh-2);transform:translateY(-3px);border-color:#D5D8DE}
+.p-card .name{font-weight:600;font-size:14px;margin:12px 0 2px}
+.p-card .meta{font-size:12px;color:var(--ash)}
+.p-card .price{font-family:var(--display);font-weight:700;font-stretch:112%;font-size:17px;margin-top:9px}
+.p-card .was{font-size:12px;color:var(--ash);text-decoration:line-through;margin-left:7px;font-family:var(--body);font-weight:400}
+.p-card .flag{position:absolute;top:22px;left:22px;z-index:2}
+.p-card .fav{position:absolute;top:22px;right:22px;z-index:2;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.p-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+
+/* Storefront chrome */
+.sf-top{background:var(--ink);color:#fff}
+.sf-nav{display:flex;align-items:center;gap:26px;padding:14px 26px}
+.sf-nav .links{display:flex;gap:22px;font-size:13.5px;color:#C3C9D2}
+.sf-nav .links a.on{color:#fff}
+.sf-nav .links a:hover{color:var(--titan)}
+.sf-nav .tools{margin-left:auto;display:flex;align-items:center;gap:12px}
+.sf-search{position:relative;width:210px}
+.sf-search input{width:100%;height:36px;border-radius:var(--r-pill);border:1px solid #2A313B;background:#151A21;color:#fff;padding:0 14px 0 34px;font:inherit;font-size:13px}
+.sf-search input::placeholder{color:#6C7480}
+.sf-search svg{position:absolute;left:12px;top:10px;opacity:.55}
+.ic{width:36px;height:36px;border-radius:50%;border:1px solid #2A313B;display:flex;align-items:center;justify-content:center;position:relative;color:#fff}
+.ic:hover{border-color:var(--titan)}
+.ic .dot-n{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;border-radius:var(--r-pill);background:var(--titan);color:#2A2213;font-family:var(--mono);font-size:9.5px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-weight:700}
+.crumb{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ash);padding:16px 26px 0}
+.crumb a:hover{color:var(--ink)}
+.sf-foot{background:var(--ink);color:#98A0AB;padding:34px 26px 22px;font-size:13px}
+.sf-foot .cols{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:26px}
+.sf-foot h4{color:#fff;font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px;font-stretch:100%}
+.sf-foot li{list-style:none;margin-bottom:7px}
+.sf-foot ul{padding:0;margin:0}
+
+/* Hero */
+.hero{position:relative;background:var(--ink);color:#fff;padding:54px 26px 46px;overflow:hidden}
+.hero::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 30%,rgba(235,220,187,.14) 46%,rgba(56,214,255,.10) 52%,transparent 66%);
+  transform:translateX(-30%);animation:sweep 7s ease-in-out infinite
+}
+@keyframes sweep{0%,100%{transform:translateX(-40%)}50%{transform:translateX(40%)}}
+.hero .inner{position:relative;z-index:2;display:grid;grid-template-columns:1.25fr .75fr;gap:36px;align-items:center}
+.hero .kicker{font-family:var(--mono);font-size:10px;letter-spacing:.26em;color:var(--titan);text-transform:uppercase}
+.hero h2{font-size:clamp(38px,5.6vw,68px);font-weight:800;font-stretch:120%;text-transform:uppercase;letter-spacing:-.02em;margin:14px 0 0}
+.hero h2 em{font-style:normal;display:block;background:linear-gradient(92deg,var(--titan-2),var(--titan) 45%,#9E8B63);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .rule{height:1px;background:linear-gradient(90deg,var(--titan),transparent);margin:22px 0}
+.hero p{color:#AEB6C0;max-width:400px;margin:0 0 24px;font-size:14.5px}
+.hero .cta{display:flex;gap:10px;flex-wrap:wrap}
+.spec-col{border-left:1px solid var(--line-d);padding-left:22px}
+.spec-col dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:11px 16px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.spec-col dt{color:#616A76}
+.spec-col dd{margin:0;color:var(--titan)}
+
+.strip{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff}
+.strip div{padding:18px 22px;border-right:1px solid var(--line)}
+.strip div:last-child{border-right:0}
+.strip b{display:block;font-size:13.5px;margin-bottom:2px}
+.strip span{font-size:12px;color:var(--ash)}
+
+.sec{padding:34px 26px}
+.sec-head{display:flex;align-items:flex-end;gap:14px;margin-bottom:20px}
+.sec-head h3{font-size:24px;text-transform:uppercase;font-stretch:116%}
+.sec-head a{margin-left:auto;font-size:13px;color:var(--graphite);border-bottom:1px solid var(--line)}
+
+.cat-rail{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.cat{border:1px solid var(--line);border-radius:var(--r-md);padding:16px 12px;text-align:center;background:#fff}
+.cat:hover{border-color:var(--ink)}
+.cat svg{height:34px;margin-bottom:10px}
+.cat b{font-size:12.5px;display:block}
+.cat span{font-size:11px;color:var(--ash);font-family:var(--mono)}
+
+/* Admin chrome */
+div.adm{display:grid;grid-template-columns:230px 1fr;min-height:640px}
+.adm-side{background:var(--ink);color:#fff;padding:18px 0}
+.adm-side .brand{display:flex;align-items:center;gap:10px;padding:0 18px 20px;border-bottom:1px solid var(--line-d);margin-bottom:14px}
+.adm-side .grp{padding:14px 18px 6px;font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:#5C6470;text-transform:uppercase}
+.adm-side a{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:13.5px;color:#B9C0CA;border-left:2px solid transparent}
+.adm-side a.on{color:#fff;background:#151A21;border-left-color:var(--titan)}
+.adm-side a:hover{color:#fff}
+.adm-main{background:var(--porcelain);display:flex;flex-direction:column;min-width:0}
+.adm-bar{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:13px 22px}
+.adm-bar h2{font-size:17px}
+.adm-bar .who{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px}
+.av{width:32px;height:32px;border-radius:50%;background:linear-gradient(140deg,var(--titan-2),var(--titan));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;color:#2A2213}
+.adm-body{padding:22px;display:flex;flex-direction:column;gap:18px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.panel-head{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line)}
+.panel-head h3{font-size:14.5px}
+.panel-head .r{margin-left:auto;display:flex;gap:8px}
+.panel-pad{padding:18px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:16px 18px;position:relative;overflow:hidden}
+.stat .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash)}
+.stat .val{font-family:var(--display);font-stretch:114%;font-weight:700;font-size:27px;margin-top:6px}
+.stat .delta{font-size:12px;color:var(--ok);margin-top:2px}
+.stat .delta.down{color:var(--danger)}
+.stat::after{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--titan)}
+
+/* misc */
+.kv{display:grid;grid-template-columns:auto 1fr;gap:10px 18px;font-size:13.5px}
+.kv dt{color:var(--ash);font-size:12.5px}
+.kv dd{margin:0;font-weight:500}
+.split{display:grid;grid-template-columns:1.6fr .9fr;gap:20px;align-items:start}
+.steps{display:flex;gap:0;align-items:center;padding:16px 26px;border-bottom:1px solid var(--line);background:#fff}
+.steps .st{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ash)}
+.steps .st b{width:24px;height:24px;border-radius:50%;background:#EEF0F3;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px}
+.steps .st.on{color:var(--ink);font-weight:600}
+.steps .st.on b{background:var(--ink);color:#fff}
+.steps .bar{flex:1;height:1px;background:var(--line);margin:0 14px}
+.line-item{display:flex;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.line-item .shot{width:64px;height:64px;flex:0 0 64px;aspect-ratio:auto;border-radius:var(--r-sm)}
+.qty{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:var(--r-pill);height:34px;overflow:hidden}
+.qty button{width:32px;height:32px;background:none;border:0;color:var(--graphite)}
+.qty span{width:34px;text-align:center;font-family:var(--mono);font-size:13px}
+.sum-row{display:flex;justify-content:space-between;font-size:13.5px;padding:7px 0}
+.sum-row.total{border-top:1px solid var(--line);margin-top:8px;padding-top:14px;font-family:var(--display);font-stretch:112%;font-weight:700;font-size:19px}
+.timeline{position:relative;padding-left:22px}
+.timeline::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.timeline .ev{position:relative;padding-bottom:16px}
+.timeline .ev::before{content:"";position:absolute;left:-21px;top:5px;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid var(--line)}
+.timeline .ev.done::before{border-color:var(--ok);background:var(--ok)}
+.timeline .ev b{display:block;font-size:13.5px}
+.timeline .ev span{font-family:var(--mono);font-size:11px;color:var(--ash)}
+.note-box{background:#FBFAF7;border:1px solid #EAE3D5;border-left:2px solid var(--titan);border-radius:var(--r-sm);padding:13px 15px;font-size:12.5px;color:#5C5644}
+.note-box b{color:#3D3728}
+.sw{display:flex;flex-direction:column;gap:8px}
+.sw .chipc{height:74px;border-radius:var(--r-sm);border:1px solid rgba(0,0,0,.06)}
+.sw code{font-family:var(--mono);font-size:11px;color:var(--graphite)}
+.sw b{font-size:12.5px}
+.switch{width:42px;height:24px;border-radius:var(--r-pill);background:#DCDFE4;position:relative;display:inline-block}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:var(--sh-1)}
+.switch.on{background:var(--ok)}
+.switch.on::after{left:21px}
+
+@media(max-width:1180px){
+  .p-grid{grid-template-columns:repeat(3,1fr)}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .hero .inner{grid-template-columns:1fr}
+  .spec-col{border-left:0;border-top:1px solid var(--line-d);padding:20px 0 0}
+  .cat-rail{grid-template-columns:repeat(3,1fr)}
+  .split{grid-template-columns:1fr}
+  div.adm{grid-template-columns:1fr}
+  .adm-side{display:none}
+}
+@media(max-width:860px){
+  .rail{position:fixed;left:-262px;z-index:100;transition:.25s}
+  .rail.open{left:0}
+  .p-grid,.strip,.sf-foot .cols,.grid-2,.grid-3{grid-template-columns:1fr}
+  .canvas{padding:14px}
+  .menu-btn{display:inline-flex!important}
+}
+.menu-btn{display:none}
+</style>
+</head>
+<body>
+
+<svg style="display:none">
+  <!-- ICON SPRITE -->
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h2.2l2 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20.5 8H6"/><circle cx="10" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20s-7-4.4-7-9.2A3.8 3.8 0 0 1 12 8a3.8 3.8 0 0 1 7 2.8C19 15.6 12 20 12 20Z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3Z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 12s4-6.5 10-6.5S22 12 22 12s-4 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.3v.2"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z"/><path d="m4 7 8 4 8-4M12 11v10"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12.5V4h8.5L21 13.5 12.5 22 3 12.5Z"/><circle cx="7.5" cy="8" r="1.4"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 6h11v10H2zM13 9h4l4 3.5V16h-8"/><circle cx="6" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="10" width="14" height="10" rx="2.5"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5h6v2M6.5 7l1 13h9l1-13"/></symbol>
+  <!-- PRODUCT SILHOUETTES -->
+  <symbol id="d-phone" viewBox="0 0 120 200"><rect x="18" y="6" width="84" height="188" rx="19" fill="none" stroke="currentColor" stroke-width="3"/><rect x="27" y="15" width="66" height="170" rx="12" fill="currentColor" opacity=".07"/><rect x="46" y="12" width="28" height="7" rx="3.5" fill="currentColor" opacity=".5"/><circle cx="36" cy="36" r="9" fill="none" stroke="currentColor" stroke-width="2.4" opacity=".5"/><circle cx="36" cy="58" r="9" fill="none" stroke="currentColor" stroke-width="2.4" opacity=".5"/></symbol>
+  <symbol id="d-mac" viewBox="0 0 220 150"><rect x="26" y="14" width="168" height="104" rx="8" fill="none" stroke="currentColor" stroke-width="3"/><rect x="34" y="22" width="152" height="88" rx="4" fill="currentColor" opacity=".07"/><path d="M8 128h204l-10 10H18z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M96 128h28" stroke="currentColor" stroke-width="3"/></symbol>
+  <symbol id="d-watch" viewBox="0 0 120 190"><rect x="30" y="8" width="60" height="34" rx="12" fill="currentColor" opacity=".25"/><rect x="30" y="148" width="60" height="34" rx="12" fill="currentColor" opacity=".25"/><rect x="22" y="42" width="76" height="106" rx="24" fill="none" stroke="currentColor" stroke-width="3"/><rect x="31" y="51" width="58" height="88" rx="18" fill="currentColor" opacity=".08"/><path d="M99 76v18" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></symbol>
+  <symbol id="d-pods" viewBox="0 0 160 130"><rect x="20" y="30" width="120" height="82" rx="26" fill="none" stroke="currentColor" stroke-width="3"/><path d="M20 66h120" stroke="currentColor" stroke-width="2" opacity=".4"/><circle cx="80" cy="96" r="5" fill="currentColor" opacity=".4"/><path d="M62 12c0 10-4 16-4 16M98 12c0 10 4 16 4 16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="62" cy="10" r="7" fill="currentColor" opacity=".35"/><circle cx="98" cy="10" r="7" fill="currentColor" opacity=".35"/></symbol>
+  <symbol id="d-pad" viewBox="0 0 160 200"><rect x="14" y="8" width="132" height="184" rx="14" fill="none" stroke="currentColor" stroke-width="3"/><rect x="24" y="18" width="112" height="164" rx="6" fill="currentColor" opacity=".07"/><circle cx="36" cy="32" r="7" fill="none" stroke="currentColor" stroke-width="2.2" opacity=".5"/></symbol>
+  <symbol id="d-acc" viewBox="0 0 160 160"><circle cx="80" cy="80" r="52" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="80" cy="80" r="26" fill="currentColor" opacity=".1"/><path d="M80 28v-14M80 146v-14M28 80H14M146 80h-14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+</svg>
+
+<div class="app">
+<!-- ==================== RAIL ==================== -->
+<aside class="rail" id="rail">
+  <div class="rail-brand">
+    <svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true">
+      <defs><linearGradient id="lgA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EBDCBB"/><stop offset=".55" stop-color="#C9B58C"/><stop offset="1" stop-color="#8E7C55"/></linearGradient></defs>
+      <circle cx="50" cy="54" r="31" fill="none" stroke="url(#lgA)" stroke-width="8" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/>
+      <path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="url(#lgA)"/>
+    </svg>
+    <div><span class="wm">HALO</span><small>UI KIT · V1.0</small></div>
+  </div>
+
+  <div class="rail-group">Thương hiệu</div>
+  <a class="item" data-go="s-logo"><span class="num">00</span>Logo &amp; nhận diện</a>
+  <a class="item" data-go="s-tokens"><span class="num">01</span>Design system</a>
+
+  <div class="rail-group">Khách hàng</div>
+  <a class="item" data-go="s-home"><span class="num">02</span>Trang chủ</a>
+  <a class="item" data-go="s-catalog"><span class="num">03</span>Danh sách sản phẩm</a>
+  <a class="item" data-go="s-product"><span class="num">04</span>Chi tiết sản phẩm</a>
+  <a class="item" data-go="s-cart"><span class="num">05</span>Giỏ hàng</a>
+  <a class="item" data-go="s-checkout"><span class="num">06</span>Thanh toán</a>
+  <a class="item" data-go="s-done"><span class="num">07</span>Đặt hàng thành công</a>
+  <a class="item" data-go="s-auth"><span class="num">08</span>Đăng nhập / Đăng ký</a>
+  <a class="item" data-go="s-account"><span class="num">09</span>Hồ sơ của tôi</a>
+  <a class="item" data-go="s-orders"><span class="num">10</span>Đơn hàng của tôi</a>
+  <a class="item" data-go="s-wish"><span class="num">11</span>Yêu thích</a>
+  <a class="item" data-go="s-promo"><span class="num">12</span>Khuyến mãi</a>
+  <a class="item" data-go="s-states"><span class="num">13</span>Trạng thái rỗng &amp; lỗi</a>
+
+  <div class="rail-group">Quản trị</div>
+  <a class="item" data-go="s-dash"><span class="num">14</span>Dashboard</a>
+  <a class="item" data-go="s-users"><span class="num">15</span>Quản lý người dùng</a>
+  <a class="item" data-go="s-userform"><span class="num">16</span>Form người dùng</a>
+  <a class="item" data-go="s-cats"><span class="num">17</span>Quản lý danh mục</a>
+  <a class="item" data-go="s-prods"><span class="num">18</span>Quản lý sản phẩm</a>
+  <a class="item" data-go="s-prodform"><span class="num">19</span>Form sản phẩm</a>
+  <a class="item" data-go="s-promos"><span class="num">20</span>Quản lý khuyến mãi</a>
+  <a class="item" data-go="s-aorders"><span class="num">21</span>Quản lý đơn hàng</a>
+
+  <div class="rail-group">Nhân viên</div>
+  <a class="item" data-go="s-staff"><span class="num">22</span>Màn hình dùng chung</a>
+</aside>
+
+<!-- ==================== STAGE ==================== -->
+<main class="stage">
+  <div class="stage-head">
+    <div class="row">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Mở danh sách màn hình"><svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <h1 id="scTitle">Logo &amp; nhận diện</h1>
+      <span class="chip" id="scRole">Thương hiệu</span>
+      <div class="note" id="scNote">Bộ nhận diện dùng chung cho web, hoá đơn và slide bảo vệ</div>
+    </div>
+    <div class="etch"><span>HALO</span><i class="dot"></i><span>Apple Store</span><i class="dot"></i><span>Thiết kế giao diện &amp; trải nghiệm</span><i class="dot"></i><span id="scCode">SCR-00</span></div>
+  </div>
+
+  <div class="canvas">
+
+  <!-- ============ 00 · LOGO ============ -->
+  <section class="screen on" id="s-logo" data-title="Logo &amp; nhận diện" data-role="Thương hiệu" data-rolec="" data-code="SCR-00" data-note="Vòng sáng + chiếc lá — dựng bằng SVG nên in ấn và favicon đều nét">
+    <div class="frame dark" style="padding:52px 26px">
+      <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:44px;align-items:center">
+        <div>
+          <div class="t-eyebrow" style="color:var(--titan)">Bộ nhận diện chính</div>
+          <div style="display:flex;align-items:center;gap:18px;margin:26px 0 30px">
+            <svg width="96" height="96" viewBox="0 0 100 100">
+              <defs><linearGradient id="lgB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3E9D2"/><stop offset=".5" stop-color="#C9B58C"/><stop offset="1" stop-color="#8E7C55"/></linearGradient></defs>
+              <circle cx="50" cy="54" r="31" fill="none" stroke="url(#lgB)" stroke-width="8" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/>
+              <path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="url(#lgB)"/>
+            </svg>
+            <div style="color:#fff">
+              <div style="font-family:var(--display);font-weight:800;font-stretch:120%;font-size:46px;letter-spacing:.16em;line-height:1">HALO</div>
+              <div class="mono" style="font-size:10px;letter-spacing:.34em;color:var(--titan);margin-top:6px">ĐỒ APPLE CHÍNH HÃNG</div>
+            </div>
+          </div>
+          <p style="color:#AEB6C0;max-width:440px;font-size:14px;margin:0 0 22px">
+            Vòng tròn hở là quầng sáng quanh sản phẩm khi lên kệ; chỗ hở nhường chỗ cho chiếc lá — dấu hiệu duy nhất nhắc tới quả táo. Không vẽ quả táo để tránh chạm nhãn hiệu của Apple.
+          </p>
+          <div class="etch" style="display:inline-flex;border-radius:var(--r-pill)"><span>Mã màu</span><i class="dot"></i><span>#C9B58C Champagne Titanium</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="background:#fff;border-radius:var(--r-md);padding:20px;text-align:center">
+            <svg width="54" height="54" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#0E1116" stroke-width="8" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#0E1116"/></svg>
+            <div class="mono" style="font-size:9.5px;letter-spacing:.16em;color:var(--ash);margin-top:12px">MỘT MÀU / NỀN SÁNG</div>
+          </div>
+          <div style="background:var(--titan);border-radius:var(--r-md);padding:20px;text-align:center">
+            <svg width="54" height="54" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#2A2213" stroke-width="8" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#2A2213"/></svg>
+            <div class="mono" style="font-size:9.5px;letter-spacing:.16em;color:#5B4E2E;margin-top:12px">TRÊN NỀN THƯƠNG HIỆU</div>
+          </div>
+          <div style="background:#151A21;border:1px solid var(--line-d);border-radius:var(--r-md);padding:20px;text-align:center">
+            <svg width="54" height="54" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#fff"/></svg>
+            <div class="mono" style="font-size:9.5px;letter-spacing:.16em;color:#6C7480;margin-top:12px">ĐẢO MÀU / NỀN TỐI</div>
+          </div>
+          <div style="background:#fff;border-radius:var(--r-md);padding:20px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+            <div style="display:flex;gap:10px;align-items:flex-end">
+              <svg width="16" height="16" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#0E1116" stroke-width="11" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#0E1116"/></svg>
+              <svg width="26" height="26" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#0E1116" stroke-width="9" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#0E1116"/></svg>
+            </div>
+            <div class="mono" style="font-size:9.5px;letter-spacing:.16em;color:var(--ash)">FAVICON 16 / 32PX</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-title"><h3>Quy tắc dùng logo</h3><p>Ghi vào README của source chung để cả nhóm dùng giống nhau</p></div>
+    <div class="frame" style="padding:22px">
+      <div class="grid-3">
+        <div><b style="font-size:13.5px">Khoảng trống tối thiểu</b><p style="font-size:13px;color:var(--graphite);margin:6px 0 0">Chừa quanh logo một khoảng bằng chiều cao chữ H. Không đặt logo đè lên ảnh sản phẩm.</p></div>
+        <div><b style="font-size:13.5px">Kích thước nhỏ nhất</b><p style="font-size:13px;color:var(--graphite);margin:6px 0 0">Logo đầy đủ 120px, riêng biểu tượng 16px. Dưới mức đó dùng bản một màu.</p></div>
+        <div><b style="font-size:13.5px">Không làm</b><p style="font-size:13px;color:var(--graphite);margin:6px 0 0">Không đổi màu gradient, không nghiêng, không thêm viền, không thay chữ HALO bằng font khác.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 · DESIGN SYSTEM ============ -->
+  <section class="screen" id="s-tokens" data-title="Design system" data-role="Thư viện dùng chung" data-rolec="" data-code="SCR-01" data-note="Toàn bộ màn hình sau đều lắp từ đúng những mảnh trong trang này">
+    <div class="frame" style="padding:24px">
+      <div class="sec-title"><h3>Bảng màu</h3><p>Đặt trong :root, JSP chỉ gọi biến</p></div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:30px">
+        <div class="sw"><div class="chipc" style="background:#0E1116"></div><b>Ink</b><code>#0E1116</code></div>
+        <div class="sw"><div class="chipc" style="background:#3A424D"></div><b>Graphite</b><code>#3A424D</code></div>
+        <div class="sw"><div class="chipc" style="background:#C9B58C"></div><b>Champagne</b><code>#C9B58C</code></div>
+        <div class="sw"><div class="chipc" style="background:#F1F2F4"></div><b>Porcelain</b><code>#F1F2F4</code></div>
+        <div class="sw"><div class="chipc" style="background:#12A67B"></div><b>Đang bán</b><code>#12A67B</code></div>
+        <div class="sw"><div class="chipc" style="background:#D64545"></div><b>Lỗi</b><code>#D64545</code></div>
+      </div>
+
+      <div class="sec-title"><h3>Kiểu chữ</h3><p>Archivo cho tiêu đề · Be Vietnam Pro cho nội dung · JetBrains Mono cho số liệu</p></div>
+      <div style="border-top:1px solid var(--line);padding-top:18px;margin-bottom:30px">
+        <div style="display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--line);padding:12px 0"><span class="mono" style="font-size:10px;color:var(--ash);width:110px">DISPLAY 48/800</span><span style="font-family:var(--display);font-weight:800;font-stretch:118%;font-size:44px;text-transform:uppercase">iPhone 16 Pro</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--line);padding:12px 0"><span class="mono" style="font-size:10px;color:var(--ash);width:110px">TIÊU ĐỀ 24/700</span><span style="font-family:var(--display);font-weight:700;font-stretch:114%;font-size:24px">Sản phẩm nổi bật</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--line);padding:12px 0"><span class="mono" style="font-size:10px;color:var(--ash);width:110px">NỘI DUNG 15/400</span><span>Máy mới 100%, bảo hành 12 tháng chính hãng, đổi mới trong 30 ngày.</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px;padding:12px 0"><span class="mono" style="font-size:10px;color:var(--ash);width:110px">DỮ LIỆU 11/500</span><span class="mono" style="font-size:11px;letter-spacing:.14em">SKU-IP16PM-256-TIT · 34.990.000 ₫</span></div>
+      </div>
+
+      <div class="sec-title"><h3>Nút bấm</h3><p>Nhãn nói đúng việc sẽ xảy ra</p></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:30px">
+        <button class="btn">Thêm vào giỏ</button>
+        <button class="btn titan">Mua ngay</button>
+        <button class="btn ghost">Xem chi tiết</button>
+        <button class="btn quiet sm">Đặt lại bộ lọc</button>
+        <button class="btn danger sm">Ngừng bán</button>
+        <button class="btn sm" disabled>Hết hàng</button>
+      </div>
+
+      <div class="sec-title"><h3>Trạng thái &amp; thông báo</h3><p>Dùng chung hai key: successMsg và errorMsg</p></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="badge ok">Đang bán</span><span class="badge off">Ngừng bán</span><span class="badge warn">Chờ xác nhận</span><span class="badge info">Đang giao</span><span class="badge dan">Đã huỷ</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:30px">
+        <div class="flash ok"><svg width="18" height="18"><use href="#i-check"/></svg><div><b>Đã cập nhật danh mục.</b> Danh mục “Phụ kiện” hiện đang bán.</div><span class="k">successMsg</span></div>
+        <div class="flash err"><svg width="18" height="18"><use href="#i-alert"/></svg><div><b>Chưa lưu được sản phẩm.</b> Tên sản phẩm đã tồn tại, hãy đặt tên khác.</div><span class="k">errorMsg</span></div>
+      </div>
+
+      <div class="sec-title"><h3>Ô nhập liệu</h3><p>Lỗi hiện ngay dưới ô và giữ nguyên dữ liệu vừa nhập</p></div>
+      <div class="grid-3">
+        <div class="field"><label>Tên sản phẩm <span class="req">*</span></label><input class="input" value="iPhone 16 Pro Max 256GB"><div class="help">Tối đa 100 ký tự</div></div>
+        <div class="field err"><label>Email <span class="req">*</span></label><input class="input" value="an.nguyen@"><div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg>Email chưa đúng định dạng, ví dụ: ten@gmail.com</div></div>
+        <div class="field"><label>Danh mục <span class="req">*</span></label><select class="select"><option>iPhone</option><option>Mac</option></select><div class="help">Chỉ hiện danh mục đang bán</div></div>
+      </div>
+
+      <div class="sec-title"><h3>Phân trang</h3><p>Giữ nguyên từ khoá, bộ lọc và thứ tự sắp xếp khi chuyển trang</p></div>
+      <div class="pager" style="border:1px solid var(--line);border-radius:var(--r-md)">
+        <span class="info">Hiển thị 1–10 trong 128 sản phẩm</span>
+        <div class="pages"><button class="pg" disabled>‹</button><button class="pg on">1</button><button class="pg">2</button><button class="pg">3</button><span class="pg" style="border:0">…</span><button class="pg">13</button><button class="pg">›</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 · HOME ============ -->
+  <section class="screen" id="s-home" data-title="Trang chủ" data-role="Khách hàng" data-rolec="cus" data-code="SCR-02" data-note="Hero khắc thông số như mặt lưng máy · JSP dùng chung: header, footer, product-card">
+    <div class="frame">
+      <div class="sf-top">
+        <div class="etch" style="border-top:0"><span>Giao 2 giờ nội thành</span><i class="dot"></i><span>Trả góp 0%</span><i class="dot"></i><span>Đổi mới 30 ngày</span></div>
+        <nav class="sf-nav">
+          <a style="display:flex;align-items:center;gap:9px">
+            <svg width="26" height="26" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg>
+            <span style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px">HALO</span>
+          </a>
+          <div class="links"><a class="on">Trang chủ</a><a>iPhone</a><a>Mac</a><a>iPad</a><a>Watch</a><a>Phụ kiện</a><a>Khuyến mãi</a></div>
+          <div class="tools">
+            <div class="sf-search"><svg width="15" height="15"><use href="#i-search"/></svg><input placeholder="Tìm iPhone, Mac, AirPods…"></div>
+            <a class="ic"><svg width="17" height="17"><use href="#i-heart"/></svg><span class="dot-n">3</span></a>
+            <a class="ic"><svg width="17" height="17"><use href="#i-cart"/></svg><span class="dot-n">2</span></a>
+            <a class="ic"><svg width="17" height="17"><use href="#i-user"/></svg></a>
+          </div>
+        </nav>
+      </div>
+
+      <div class="hero">
+        <div class="inner">
+          <div>
+            <div class="kicker">Hàng mới về · Tháng 8</div>
+            <h2>iPhone 16<em>Pro Max</em></h2>
+            <div class="rule"></div>
+            <p>Khung titan, chip A18 Pro, quay video 4K 120fps. Bản 256GB đang giảm 2 triệu khi thanh toán qua thẻ.</p>
+            <div class="cta"><button class="btn titan">Mua ngay · 34.990.000 ₫</button><button class="btn ghost" style="color:#fff;border-color:#2A313B">So sánh phiên bản</button></div>
+          </div>
+          <div class="spec-col">
+            <div style="text-align:center;color:var(--titan);margin-bottom:18px"><svg style="width:110px;height:150px" viewBox="0 0 120 200"><use href="#d-phone"/></svg></div>
+            <dl>
+              <dt>Chip</dt><dd>A18 Pro</dd>
+              <dt>Màn hình</dt><dd>6.9" 120Hz</dd>
+              <dt>Camera</dt><dd>48MP Fusion</dd>
+              <dt>Bộ nhớ</dt><dd>256GB / 512GB / 1TB</dd>
+              <dt>Bảo hành</dt><dd>12 tháng</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <div class="strip">
+        <div><b>Chính hãng VN/A</b><span>Có hoá đơn, kích hoạt tại cửa hàng</span></div>
+        <div><b>Trả góp 0% qua thẻ</b><span>Kỳ hạn 3 · 6 · 12 tháng</span></div>
+        <div><b>Giao 2 giờ nội thành</b><span>Hà Nội và TP.HCM</span></div>
+        <div><b>Đổi mới trong 30 ngày</b><span>Nếu máy lỗi do nhà sản xuất</span></div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head"><h3>Chọn theo dòng máy</h3><a>Xem tất cả danh mục →</a></div>
+        <div class="cat-rail">
+          <a class="cat"><svg viewBox="0 0 120 200" style="width:26px"><use href="#d-phone"/></svg><b>iPhone</b><span>24 mẫu</span></a>
+          <a class="cat"><svg viewBox="0 0 220 150" style="width:44px"><use href="#d-mac"/></svg><b>Mac</b><span>18 mẫu</span></a>
+          <a class="cat"><svg viewBox="0 0 160 200" style="width:28px"><use href="#d-pad"/></svg><b>iPad</b><span>12 mẫu</span></a>
+          <a class="cat"><svg viewBox="0 0 120 190" style="width:24px"><use href="#d-watch"/></svg><b>Watch</b><span>16 mẫu</span></a>
+          <a class="cat"><svg viewBox="0 0 160 130" style="width:40px"><use href="#d-pods"/></svg><b>Âm thanh</b><span>21 mẫu</span></a>
+          <a class="cat"><svg viewBox="0 0 160 160" style="width:32px"><use href="#d-acc"/></svg><b>Phụ kiện</b><span>57 mẫu</span></a>
+        </div>
+      </div>
+
+      <div class="sec" style="padding-top:0">
+        <div class="sec-head"><h3>Bán chạy tuần này</h3><a>Xem tất cả →</a></div>
+        <div class="p-grid">
+          <a class="p-card"><span class="flag badge dan">-8%</span><span class="fav"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div><div class="name">iPhone 16 Pro Max 256GB</div><div class="meta">Titan sa mạc</div><div class="price">34.990.000 ₫<span class="was">37.990.000 ₫</span></div></a>
+          <a class="p-card"><span class="fav"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-mac"/></svg></div><div class="name">MacBook Air M3 13"</div><div class="meta">8GB · 256GB</div><div class="price">26.490.000 ₫</div></a>
+          <a class="p-card"><span class="flag badge ok">Mới</span><span class="fav"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-pods"/></svg></div><div class="name">AirPods Pro 2 USB-C</div><div class="meta">Chống ồn chủ động</div><div class="price">5.290.000 ₫</div></a>
+          <a class="p-card"><span class="fav"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-watch"/></svg></div><div class="name">Apple Watch Series 10</div><div class="meta">42mm · GPS</div><div class="price">10.990.000 ₫</div></a>
+        </div>
+      </div>
+
+      <div class="sec" style="padding-top:0">
+        <div class="frame dark" style="padding:30px 28px;display:flex;gap:26px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:240px">
+            <div class="t-eyebrow" style="color:var(--titan)">Ưu đãi thành viên</div>
+            <h3 style="color:#fff;font-size:26px;margin:10px 0 8px;text-transform:uppercase">Giảm thêm 500K cho đơn đầu tiên</h3>
+            <p style="color:#AEB6C0;margin:0;font-size:13.5px">Tạo tài khoản HALO, mã giảm giá về ngay trong mục Khuyến mãi của bạn.</p>
+          </div>
+          <button class="btn titan">Tạo tài khoản</button>
+        </div>
+      </div>
+
+      <footer class="sf-foot">
+        <div class="cols">
+          <div>
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+              <svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg>
+              <span style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:14px;color:#fff">HALO</span>
+            </div>
+            <p style="margin:0;max-width:260px">Hệ thống bán lẻ sản phẩm Apple. 128 Cầu Giấy, Hà Nội. Mở cửa 8:30–21:30 mỗi ngày.</p>
+          </div>
+          <div><h4>Sản phẩm</h4><ul><li>iPhone</li><li>Mac</li><li>iPad</li><li>Phụ kiện</li></ul></div>
+          <div><h4>Hỗ trợ</h4><ul><li>Tra cứu đơn hàng</li><li>Chính sách bảo hành</li><li>Đổi trả 30 ngày</li><li>Hướng dẫn trả góp</li></ul></div>
+          <div><h4>Liên hệ</h4><ul><li>1900 6868</li><li>hotro@halo.vn</li><li>Facebook · Zalo</li></ul></div>
+        </div>
+        <div style="border-top:1px solid var(--line-d);margin-top:24px;padding-top:16px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:#5C6470">© 2026 HALO STORE · ĐỒ ÁN WEB APPLE STORE</div>
+      </footer>
+    </div>
+  </section>
+
+  <!-- ============ 03 · CATALOG ============ -->
+  <section class="screen" id="s-catalog" data-title="Danh sách sản phẩm" data-role="Khách hàng" data-rolec="cus" data-code="SCR-03" data-note="Đủ tìm kiếm · lọc · sắp xếp · phân trang — cùng một khuôn với mọi bảng dữ liệu trong hệ thống">
+    <div class="frame">
+      <div class="sf-top"><nav class="sf-nav">
+        <a style="display:flex;align-items:center;gap:9px"><svg width="26" height="26" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><span style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px">HALO</span></a>
+        <div class="links"><a>Trang chủ</a><a class="on">iPhone</a><a>Mac</a><a>iPad</a><a>Watch</a><a>Phụ kiện</a><a>Khuyến mãi</a></div>
+        <div class="tools"><div class="sf-search"><svg width="15" height="15"><use href="#i-search"/></svg><input value="iphone 16"></div><a class="ic"><svg width="17" height="17"><use href="#i-cart"/></svg><span class="dot-n">2</span></a><a class="ic"><svg width="17" height="17"><use href="#i-user"/></svg></a></div>
+      </nav></div>
+
+      <div class="crumb"><a>Trang chủ</a><span>/</span><a>iPhone</a><span>/</span><span style="color:var(--ink)">Kết quả cho “iphone 16”</span></div>
+      <div style="padding:14px 26px 0"><h2 style="font-size:28px;text-transform:uppercase">iPhone</h2><p style="color:var(--ash);font-size:13.5px;margin:6px 0 0">24 sản phẩm · cập nhật 14/08/2026</p></div>
+
+      <div class="toolbar" style="margin-top:18px;border-top:1px solid var(--line)">
+        <div class="search"><svg width="17" height="17"><use href="#i-search"/></svg><input class="input" value="iphone 16" placeholder="Tìm theo tên sản phẩm"></div>
+        <select class="select"><option>Tất cả dòng máy</option><option selected>iPhone</option></select>
+        <select class="select"><option>Mọi mức giá</option><option selected>20 – 40 triệu</option></select>
+        <select class="select"><option>Mọi dung lượng</option><option>256GB</option></select>
+        <select class="select"><option selected>Mới nhất</option><option>Giá thấp đến cao</option><option>Giá cao đến thấp</option><option>Bán chạy</option></select>
+        <button class="btn sm">Áp dụng</button>
+        <button class="btn quiet sm">Xoá lọc</button>
+      </div>
+      <div style="padding:12px 18px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line);flex-wrap:wrap">
+        <span class="mono" style="font-size:10px;letter-spacing:.16em;color:var(--ash)">ĐANG LỌC</span>
+        <span class="tag">iPhone ✕</span><span class="tag">20 – 40 triệu ✕</span><span class="tag">Còn hàng ✕</span>
+        <span style="margin-left:auto;font-size:12.5px;color:var(--ash)">Tìm thấy 9 sản phẩm</span>
+      </div>
+
+      <div style="padding:20px">
+        <div class="p-grid">
+          <a class="p-card"><span class="flag badge dan">-8%</span><span class="fav"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div><div class="name">iPhone 16 Pro Max 256GB</div><div class="meta">Titan sa mạc · Còn 12 máy</div><div class="price">34.990.000 ₫<span class="was">37.990.000 ₫</span></div></a>
+          <a class="p-card"><span class="fav"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div><div class="name">iPhone 16 Pro 128GB</div><div class="meta">Titan đen · Còn 8 máy</div><div class="price">28.990.000 ₫</div></a>
+          <a class="p-card"><span class="fav"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div><div class="name">iPhone 16 Plus 128GB</div><div class="meta">Xanh lưu ly · Còn 5 máy</div><div class="price">24.490.000 ₫</div></a>
+          <a class="p-card" style="opacity:.72"><span class="flag badge off">Hết hàng</span><div class="shot"><svg style="color:#9AA1AB"><use href="#d-phone"/></svg></div><div class="name">iPhone 16 128GB</div><div class="meta">Hồng · Dự kiến về 20/08</div><div class="price">21.990.000 ₫</div></a>
+          <a class="p-card"><span class="fav"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div><div class="name">iPhone 16 Pro Max 512GB</div><div class="meta">Titan trắng · Còn 3 máy</div><div class="price">40.990.000 ₫</div></a>
+          <a class="p-card"><span class="flag badge ok">Trả góp 0%</span><span class="fav"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div><div class="name">iPhone 16e 128GB</div><div class="meta">Đen · Còn 21 máy</div><div class="price">16.990.000 ₫</div></a>
+          <a class="p-card"><span class="fav"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div><div class="name">iPhone 15 Pro 256GB</div><div class="meta">Titan xanh · Còn 6 máy</div><div class="price">25.490.000 ₫</div></a>
+          <a class="p-card"><span class="fav"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div><div class="name">iPhone 15 128GB</div><div class="meta">Xanh lá · Còn 14 máy</div><div class="price">18.990.000 ₫</div></a>
+        </div>
+      </div>
+      <div class="pager" style="border-top:1px solid var(--line)">
+        <span class="info">Hiển thị 1–8 trong 9 sản phẩm</span>
+        <div class="pages"><button class="pg" disabled>‹</button><button class="pg on">1</button><button class="pg">2</button><button class="pg">›</button></div>
+      </div>
+    </div>
+    <div class="note-box"><b>Ghi chú cho bạn code:</b> mọi ô tìm kiếm, bộ lọc, thứ tự sắp xếp và số trang đều đi qua query string, ví dụ <span class="mono">?keyword=iphone+16&amp;categoryId=1&amp;sort=newest&amp;page=1</span>. Servlet đọc tham số, đẩy xuống DAO và trả lại đúng giá trị đã chọn để JSP giữ nguyên bộ lọc.</div>
+  </section>
+
+  <!-- ============ 04 · PRODUCT DETAIL ============ -->
+  <section class="screen" id="s-product" data-title="Chi tiết sản phẩm" data-role="Khách hàng" data-rolec="cus" data-code="SCR-04" data-note="Bảng thông số khắc kiểu vỏ hộp · nút thêm giỏ chạy bằng POST">
+    <div class="frame">
+      <div class="sf-top"><nav class="sf-nav">
+        <a style="display:flex;align-items:center;gap:9px"><svg width="26" height="26" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><span style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px">HALO</span></a>
+        <div class="links"><a>Trang chủ</a><a class="on">iPhone</a><a>Mac</a><a>iPad</a><a>Watch</a><a>Phụ kiện</a></div>
+        <div class="tools"><a class="ic"><svg width="17" height="17"><use href="#i-cart"/></svg><span class="dot-n">2</span></a><a class="ic"><svg width="17" height="17"><use href="#i-user"/></svg></a></div>
+      </nav></div>
+      <div class="crumb"><a>Trang chủ</a><span>/</span><a>iPhone</a><span>/</span><span style="color:var(--ink)">iPhone 16 Pro Max</span></div>
+
+      <div style="padding:20px 26px 30px;display:grid;grid-template-columns:1.05fr .95fr;gap:34px">
+        <div>
+          <div class="shot dark" style="aspect-ratio:4/3"><svg style="color:var(--titan);width:34%"><use href="#d-phone"/></svg></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px">
+            <div class="shot" style="border:1px solid var(--ink)"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div>
+            <div class="shot"><svg style="color:#8B929C"><use href="#d-phone"/></svg></div>
+            <div class="shot"><svg style="color:#8B929C"><use href="#d-acc"/></svg></div>
+            <div class="shot"><svg style="color:#8B929C"><use href="#d-box"/></svg></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="badge ok">Còn 12 máy</span><span class="mono" style="font-size:10.5px;letter-spacing:.14em;color:var(--ash)">SKU-IP16PM-256-TIT</span></div>
+          <h2 style="font-size:32px;text-transform:uppercase">iPhone 16 Pro Max</h2>
+          <div style="display:flex;align-items:baseline;gap:12px;margin:16px 0 4px">
+            <span style="font-family:var(--display);font-stretch:114%;font-weight:700;font-size:30px">34.990.000 ₫</span>
+            <span style="text-decoration:line-through;color:var(--ash);font-size:15px">37.990.000 ₫</span>
+            <span class="badge dan">Giảm 3 triệu</span>
+          </div>
+          <p style="color:var(--graphite);font-size:13.5px;margin:0 0 20px">Trả góp từ 2.916.000 ₫ / tháng trong 12 tháng, lãi suất 0%.</p>
+
+          <div style="margin-bottom:18px">
+            <div class="t-eyebrow" style="margin-bottom:9px">Màu sắc — Titan sa mạc</div>
+            <div style="display:flex;gap:9px">
+              <span style="width:32px;height:32px;border-radius:50%;background:#B7A084;outline:2px solid var(--ink);outline-offset:2px"></span>
+              <span style="width:32px;height:32px;border-radius:50%;background:#3B3B3E"></span>
+              <span style="width:32px;height:32px;border-radius:50%;background:#E7E3DC"></span>
+              <span style="width:32px;height:32px;border-radius:50%;background:#5C6572"></span>
+            </div>
+          </div>
+          <div style="margin-bottom:22px">
+            <div class="t-eyebrow" style="margin-bottom:9px">Dung lượng</div>
+            <div style="display:flex;gap:9px;flex-wrap:wrap">
+              <button class="btn ghost sm" style="border-color:var(--ink);font-weight:600">256GB</button>
+              <button class="btn ghost sm">512GB · +6.000.000 ₫</button>
+              <button class="btn ghost sm" disabled>1TB · hết hàng</button>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px">
+            <div class="qty"><button>−</button><span>1</span><button>+</button></div>
+            <button class="btn" style="flex:1">Thêm vào giỏ</button>
+            <button class="btn titan" style="flex:1">Mua ngay</button>
+            <button class="icon-btn" style="width:42px;height:42px;border-radius:50%"><svg width="17" height="17"><use href="#i-heart"/></svg></button>
+          </div>
+
+          <div class="etch" style="border-radius:var(--r-sm);margin-bottom:18px"><span>Bảo hành 12 tháng</span><i class="dot"></i><span>Đổi mới 30 ngày</span><i class="dot"></i><span>Giao 2 giờ</span></div>
+
+          <div class="panel">
+            <div class="panel-head"><h3>Thông số kỹ thuật</h3></div>
+            <div class="panel-pad">
+              <dl class="kv">
+                <dt>Chip</dt><dd>Apple A18 Pro</dd>
+                <dt>Màn hình</dt><dd>6.9" Super Retina XDR, 120Hz</dd>
+                <dt>Camera sau</dt><dd>48MP Fusion + 48MP Ultra Wide + 12MP Tele</dd>
+                <dt>Pin</dt><dd>Xem video tới 33 giờ</dd>
+                <dt>Chất liệu</dt><dd>Khung titan cấp 5</dd>
+                <dt>Trong hộp</dt><dd>Máy, cáp USB-C, sách hướng dẫn</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec" style="border-top:1px solid var(--line)">
+        <div class="sec-head"><h3>Đánh giá của khách</h3><a>Viết đánh giá →</a></div>
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:28px">
+          <div style="text-align:center;border:1px solid var(--line);border-radius:var(--r-md);padding:22px">
+            <div style="font-family:var(--display);font-stretch:114%;font-weight:700;font-size:44px">4.8</div>
+            <div style="color:var(--titan);font-size:17px;letter-spacing:3px">★★★★★</div>
+            <div style="font-size:12.5px;color:var(--ash);margin-top:6px">126 đánh giá</div>
+          </div>
+          <div>
+            <div style="border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:14px">
+              <div style="display:flex;gap:10px;align-items:center"><span class="av">TH</span><b style="font-size:13.5px">Trần Hải</b><span style="color:var(--titan)">★★★★★</span><span class="mono" style="font-size:10.5px;color:var(--ash);margin-left:auto">02/08/2026</span></div>
+              <p style="margin:8px 0 0;font-size:13.5px;color:var(--graphite)">Máy đẹp, pin trâu hơn bản 15 Pro rõ rệt. Nhân viên giao trong 2 tiếng đúng như cam kết.</p>
+            </div>
+            <div>
+              <div style="display:flex;gap:10px;align-items:center"><span class="av" style="background:#DDE1E7;color:#4A525C">NL</span><b style="font-size:13.5px">Nguyễn Linh</b><span style="color:var(--titan)">★★★★☆</span><span class="mono" style="font-size:10.5px;color:var(--ash);margin-left:auto">28/07/2026</span></div>
+              <p style="margin:8px 0 0;font-size:13.5px;color:var(--graphite)">Hài lòng, chỉ tiếc là màu titan trắng phải chờ hàng thêm một tuần.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec" style="padding-top:0">
+        <div class="sec-head"><h3>Mua kèm phụ kiện</h3></div>
+        <div class="p-grid">
+          <a class="p-card"><div class="shot"><svg style="color:#5B6472"><use href="#d-pods"/></svg></div><div class="name">AirPods Pro 2</div><div class="price">5.290.000 ₫</div></a>
+          <a class="p-card"><div class="shot"><svg style="color:#5B6472"><use href="#d-acc"/></svg></div><div class="name">Ốp MagSafe silicon</div><div class="price">1.290.000 ₫</div></a>
+          <a class="p-card"><div class="shot"><svg style="color:#5B6472"><use href="#d-acc"/></svg></div><div class="name">Sạc nhanh 30W</div><div class="price">790.000 ₫</div></a>
+          <a class="p-card"><div class="shot"><svg style="color:#5B6472"><use href="#d-watch"/></svg></div><div class="name">Apple Watch SE 2</div><div class="price">6.190.000 ₫</div></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 · CART ============ -->
+  <section class="screen" id="s-cart" data-title="Giỏ hàng" data-role="Khách hàng" data-rolec="cus" data-code="SCR-05" data-note="Đổi số lượng và xoá món đều là POST rồi chuyển hướng lại giỏ hàng">
+    <div class="frame">
+      <div class="sf-top"><nav class="sf-nav">
+        <a style="display:flex;align-items:center;gap:9px"><svg width="26" height="26" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><span style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px">HALO</span></a>
+        <div class="links"><a>Trang chủ</a><a>iPhone</a><a>Mac</a><a>iPad</a><a>Watch</a><a>Phụ kiện</a></div>
+        <div class="tools"><a class="ic" style="border-color:var(--titan)"><svg width="17" height="17"><use href="#i-cart"/></svg><span class="dot-n">3</span></a><a class="ic"><svg width="17" height="17"><use href="#i-user"/></svg></a></div>
+      </nav></div>
+
+      <div class="steps"><div class="st on"><b>1</b>Giỏ hàng</div><span class="bar"></span><div class="st"><b>2</b>Thông tin giao hàng</div><span class="bar"></span><div class="st"><b>3</b>Thanh toán</div><span class="bar"></span><div class="st"><b>4</b>Hoàn tất</div></div>
+
+      <div style="padding:22px 26px">
+        <div class="flash ok" style="margin-bottom:18px"><svg width="18" height="18"><use href="#i-check"/></svg><div><b>Đã thêm iPhone 16 Pro Max vào giỏ.</b></div><span class="k">successMsg</span></div>
+        <div class="split">
+          <div>
+            <h2 style="font-size:24px;text-transform:uppercase;margin-bottom:6px">Giỏ hàng của bạn</h2>
+            <p style="color:var(--ash);font-size:13px;margin:0 0 6px">3 sản phẩm · giữ hàng trong 30 phút</p>
+
+            <div class="line-item">
+              <div class="shot"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div>
+              <div style="flex:1">
+                <b style="font-size:14px">iPhone 16 Pro Max 256GB</b>
+                <div style="font-size:12.5px;color:var(--ash)">Titan sa mạc</div>
+                <button class="btn xs quiet" style="margin-top:7px"><svg width="12" height="12"><use href="#i-trash"/></svg> Xoá</button>
+              </div>
+              <div class="qty"><button>−</button><span>1</span><button>+</button></div>
+              <b style="width:140px;text-align:right;font-family:var(--display);font-stretch:112%">34.990.000 ₫</b>
+            </div>
+            <div class="line-item">
+              <div class="shot"><svg style="color:#5B6472"><use href="#d-pods"/></svg></div>
+              <div style="flex:1">
+                <b style="font-size:14px">AirPods Pro 2 USB-C</b>
+                <div style="font-size:12.5px;color:var(--ash)">Trắng</div>
+                <button class="btn xs quiet" style="margin-top:7px"><svg width="12" height="12"><use href="#i-trash"/></svg> Xoá</button>
+              </div>
+              <div class="qty"><button>−</button><span>1</span><button>+</button></div>
+              <b style="width:140px;text-align:right;font-family:var(--display);font-stretch:112%">5.290.000 ₫</b>
+            </div>
+            <div class="line-item" style="border-bottom:0">
+              <div class="shot"><svg style="color:#5B6472"><use href="#d-acc"/></svg></div>
+              <div style="flex:1">
+                <b style="font-size:14px">Sạc nhanh 30W</b>
+                <div style="font-size:12.5px;color:var(--ash)">Trắng</div>
+                <button class="btn xs quiet" style="margin-top:7px"><svg width="12" height="12"><use href="#i-trash"/></svg> Xoá</button>
+              </div>
+              <div class="qty"><button>−</button><span>2</span><button>+</button></div>
+              <b style="width:140px;text-align:right;font-family:var(--display);font-stretch:112%">1.580.000 ₫</b>
+            </div>
+            <button class="btn ghost sm" style="margin-top:16px">← Chọn thêm sản phẩm</button>
+          </div>
+
+          <div class="panel" style="position:sticky;top:96px">
+            <div class="panel-head"><h3>Tóm tắt đơn</h3></div>
+            <div class="panel-pad">
+              <div style="display:flex;gap:8px;margin-bottom:16px"><input class="input" placeholder="Nhập mã giảm giá"><button class="btn sm">Áp dụng</button></div>
+              <div class="flash ok" style="font-size:12.5px;padding:9px 12px;margin-bottom:14px"><div>Mã <b>HALO500</b> giảm 500.000 ₫</div></div>
+              <div class="sum-row"><span>Tạm tính</span><span>41.860.000 ₫</span></div>
+              <div class="sum-row"><span>Giảm giá</span><span style="color:var(--ok)">− 500.000 ₫</span></div>
+              <div class="sum-row"><span>Phí giao hàng</span><span>Miễn phí</span></div>
+              <div class="sum-row total"><span>Tổng cộng</span><span>41.360.000 ₫</span></div>
+              <button class="btn titan block" style="margin-top:16px">Tiến hành đặt hàng</button>
+              <p style="font-size:11.5px;color:var(--ash);text-align:center;margin:12px 0 0">Bạn sẽ xem lại toàn bộ đơn trước khi xác nhận.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 · CHECKOUT ============ -->
+  <section class="screen" id="s-checkout" data-title="Thanh toán" data-role="Khách hàng" data-rolec="cus" data-code="SCR-06" data-note="Kiểm tra dữ liệu ở server: bắt buộc nhập, độ dài, định dạng số điện thoại và email">
+    <div class="frame">
+      <div class="sf-top"><nav class="sf-nav">
+        <a style="display:flex;align-items:center;gap:9px"><svg width="26" height="26" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><span style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px">HALO</span></a>
+        <div class="tools"><span class="mono" style="font-size:10px;letter-spacing:.16em;color:var(--titan);display:flex;align-items:center;gap:7px"><svg width="13" height="13"><use href="#i-lock"/></svg>THANH TOÁN AN TOÀN</span></div>
+      </nav></div>
+      <div class="steps"><div class="st"><b>1</b>Giỏ hàng</div><span class="bar"></span><div class="st on"><b>2</b>Thông tin giao hàng</div><span class="bar"></span><div class="st"><b>3</b>Thanh toán</div><span class="bar"></span><div class="st"><b>4</b>Hoàn tất</div></div>
+
+      <div style="padding:22px 26px">
+        <div class="flash err" style="margin-bottom:18px"><svg width="18" height="18"><use href="#i-alert"/></svg><div><b>Chưa đặt được hàng.</b> Hãy sửa 2 ô đang báo lỗi bên dưới rồi gửi lại.</div><span class="k">errorMsg</span></div>
+        <div class="split">
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div class="panel"><div class="panel-head"><h3>Người nhận hàng</h3></div><div class="panel-pad">
+              <div class="grid-2">
+                <div class="field"><label>Họ và tên <span class="req">*</span></label><input class="input" value="Nguyễn Minh An"></div>
+                <div class="field err"><label>Số điện thoại <span class="req">*</span></label><input class="input" value="09123"><div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg>Số điện thoại phải có 10 chữ số, bắt đầu bằng 0</div></div>
+              </div>
+              <div class="field err"><label>Email <span class="req">*</span></label><input class="input" value="minhan@"><div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg>Email chưa đúng định dạng, ví dụ: ten@gmail.com</div></div>
+              <div class="grid-3">
+                <div class="field"><label>Tỉnh / Thành phố <span class="req">*</span></label><select class="select"><option>Hà Nội</option></select></div>
+                <div class="field"><label>Quận / Huyện <span class="req">*</span></label><select class="select"><option>Cầu Giấy</option></select></div>
+                <div class="field"><label>Phường / Xã <span class="req">*</span></label><select class="select"><option>Dịch Vọng</option></select></div>
+              </div>
+              <div class="field" style="margin-bottom:0"><label>Địa chỉ cụ thể <span class="req">*</span></label><input class="input" value="Số 128, ngõ 24 Trần Duy Hưng"><div class="help">Ghi rõ số nhà và tên đường để shipper tìm đúng</div></div>
+            </div></div>
+
+            <div class="panel"><div class="panel-head"><h3>Cách nhận hàng</h3></div><div class="panel-pad" style="display:flex;flex-direction:column;gap:10px">
+              <label style="display:flex;gap:12px;align-items:center;border:1px solid var(--ink);border-radius:var(--r-sm);padding:13px 15px">
+                <span style="width:16px;height:16px;border-radius:50%;border:5px solid var(--ink)"></span>
+                <span style="flex:1"><b style="font-size:13.5px">Giao tận nơi trong 2 giờ</b><br><span style="font-size:12.5px;color:var(--ash)">Nội thành Hà Nội, nhận từ 8:30 đến 21:30</span></span>
+                <b style="font-size:13.5px">Miễn phí</b>
+              </label>
+              <label style="display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 15px">
+                <span style="width:16px;height:16px;border-radius:50%;border:1px solid var(--line)"></span>
+                <span style="flex:1"><b style="font-size:13.5px">Nhận tại cửa hàng</b><br><span style="font-size:12.5px;color:var(--ash)">128 Cầu Giấy, Hà Nội · sẵn hàng sau 30 phút</span></span>
+                <b style="font-size:13.5px">Miễn phí</b>
+              </label>
+            </div></div>
+
+            <div class="panel"><div class="panel-head"><h3>Cách thanh toán</h3></div><div class="panel-pad" style="display:flex;flex-direction:column;gap:10px">
+              <label style="display:flex;gap:12px;align-items:center;border:1px solid var(--ink);border-radius:var(--r-sm);padding:13px 15px"><span style="width:16px;height:16px;border-radius:50%;border:5px solid var(--ink)"></span><b style="font-size:13.5px">Trả tiền khi nhận hàng</b></label>
+              <label style="display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 15px"><span style="width:16px;height:16px;border-radius:50%;border:1px solid var(--line)"></span><b style="font-size:13.5px">Chuyển khoản ngân hàng</b></label>
+              <label style="display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 15px"><span style="width:16px;height:16px;border-radius:50%;border:1px solid var(--line)"></span><b style="font-size:13.5px">Trả góp 0% qua thẻ tín dụng</b></label>
+              <div class="field" style="margin:6px 0 0"><label>Ghi chú cho cửa hàng</label><textarea class="textarea" placeholder="Ví dụ: gọi trước 15 phút khi giao"></textarea></div>
+            </div></div>
+          </div>
+
+          <div class="panel" style="position:sticky;top:96px">
+            <div class="panel-head"><h3>Đơn của bạn</h3><span class="r mono" style="font-size:11px;color:var(--ash)">3 món</span></div>
+            <div class="panel-pad">
+              <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px"><div class="shot" style="width:44px;height:44px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div><div style="flex:1;font-size:12.5px"><b>iPhone 16 Pro Max 256GB</b><br><span style="color:var(--ash)">× 1</span></div><span style="font-size:12.5px">34.990.000 ₫</span></div>
+              <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px"><div class="shot" style="width:44px;height:44px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-pods"/></svg></div><div style="flex:1;font-size:12.5px"><b>AirPods Pro 2</b><br><span style="color:var(--ash)">× 1</span></div><span style="font-size:12.5px">5.290.000 ₫</span></div>
+              <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px"><div class="shot" style="width:44px;height:44px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-acc"/></svg></div><div style="flex:1;font-size:12.5px"><b>Sạc nhanh 30W</b><br><span style="color:var(--ash)">× 2</span></div><span style="font-size:12.5px">1.580.000 ₫</span></div>
+              <div class="sum-row"><span>Tạm tính</span><span>41.860.000 ₫</span></div>
+              <div class="sum-row"><span>Mã HALO500</span><span style="color:var(--ok)">− 500.000 ₫</span></div>
+              <div class="sum-row total"><span>Tổng cộng</span><span>41.360.000 ₫</span></div>
+              <button class="btn titan block" style="margin-top:16px">Đặt hàng</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 · ORDER DONE ============ -->
+  <section class="screen" id="s-done" data-title="Đặt hàng thành công" data-role="Khách hàng" data-rolec="cus" data-code="SCR-07" data-note="Trang này chỉ mở được sau khi chuyển hướng, tải lại không tạo thêm đơn">
+    <div class="frame">
+      <div class="sf-top"><nav class="sf-nav"><a style="display:flex;align-items:center;gap:9px"><svg width="26" height="26" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><span style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px">HALO</span></a></nav></div>
+      <div class="steps"><div class="st"><b>1</b>Giỏ hàng</div><span class="bar"></span><div class="st"><b>2</b>Thông tin giao hàng</div><span class="bar"></span><div class="st"><b>3</b>Thanh toán</div><span class="bar"></span><div class="st on"><b>4</b>Hoàn tất</div></div>
+      <div style="padding:44px 26px;text-align:center">
+        <div style="width:76px;height:76px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><svg width="34" height="34"><use href="#i-check"/></svg></div>
+        <h2 style="font-size:30px;text-transform:uppercase">Đã nhận đơn của bạn</h2>
+        <p style="color:var(--graphite);max-width:460px;margin:12px auto 4px;font-size:14px">Cửa hàng sẽ gọi xác nhận trong 15 phút. Chi tiết đơn cũng vừa gửi tới minhan@gmail.com.</p>
+        <div class="etch" style="display:inline-flex;border-radius:var(--r-pill);margin:18px 0 26px"><span>Mã đơn</span><i class="dot"></i><span style="opacity:1;font-weight:700">HL-20260814-0192</span></div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn">Theo dõi đơn hàng</button><button class="btn ghost">Tiếp tục mua sắm</button></div>
+
+        <div class="panel" style="max-width:620px;margin:34px auto 0;text-align:left">
+          <div class="panel-head"><h3>Thông tin giao hàng</h3><span class="r badge warn">Chờ xác nhận</span></div>
+          <div class="panel-pad"><dl class="kv">
+            <dt>Người nhận</dt><dd>Nguyễn Minh An · 0912 345 678</dd>
+            <dt>Địa chỉ</dt><dd>Số 128, ngõ 24 Trần Duy Hưng, Dịch Vọng, Cầu Giấy, Hà Nội</dd>
+            <dt>Cách nhận</dt><dd>Giao tận nơi trong 2 giờ</dd>
+            <dt>Thanh toán</dt><dd>Trả tiền khi nhận hàng</dd>
+            <dt>Tổng tiền</dt><dd style="font-family:var(--display);font-stretch:112%;font-size:17px">41.360.000 ₫</dd>
+          </dl></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 · AUTH ============ -->
+  <section class="screen" id="s-auth" data-title="Đăng nhập &amp; Đăng ký" data-role="Khách hàng" data-rolec="cus" data-code="SCR-08" data-note="Hai màn dùng chung một khuôn form và một bộ quy tắc kiểm tra dữ liệu">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="frame" style="display:grid;grid-template-columns:.85fr 1.15fr;min-height:520px">
+        <div style="background:var(--ink);color:#fff;padding:30px 24px;display:flex;flex-direction:column;justify-content:space-between">
+          <svg width="30" height="30" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg>
+          <div>
+            <h3 style="font-size:24px;text-transform:uppercase;color:#fff">Chào bạn quay lại</h3>
+            <p style="color:#AEB6C0;font-size:13px;margin:10px 0 0">Đăng nhập để xem đơn hàng, mã giảm giá và danh sách yêu thích của bạn.</p>
+          </div>
+          <div class="mono" style="font-size:10px;letter-spacing:.18em;color:#5C6470">LOGIN · SCR-08A</div>
+        </div>
+        <div style="padding:30px 26px">
+          <h2 style="font-size:22px;text-transform:uppercase;margin-bottom:20px">Đăng nhập</h2>
+          <div class="flash err" style="margin-bottom:16px;font-size:12.5px;padding:10px 12px"><svg width="16" height="16"><use href="#i-alert"/></svg><div>Email hoặc mật khẩu chưa đúng. Bạn còn 4 lần thử.</div></div>
+          <div class="field"><label>Email</label><input class="input" value="minhan@gmail.com"></div>
+          <div class="field"><label>Mật khẩu</label><input class="input" type="password" value="123456789"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px"><span class="switch on"></span>Ghi nhớ đăng nhập<a style="margin-left:auto;border-bottom:1px solid var(--line)">Quên mật khẩu?</a></div>
+          <button class="btn block">Đăng nhập</button>
+          <p style="text-align:center;font-size:13px;color:var(--ash);margin:16px 0 0">Chưa có tài khoản? <a style="color:var(--ink);border-bottom:1px solid var(--line)">Đăng ký ngay</a></p>
+        </div>
+      </div>
+
+      <div class="frame" style="padding:30px 26px">
+        <h2 style="font-size:22px;text-transform:uppercase;margin-bottom:6px">Đăng ký</h2>
+        <p style="color:var(--ash);font-size:13px;margin:0 0 20px">Tạo tài khoản để nhận mã giảm 500.000 ₫ cho đơn đầu tiên.</p>
+        <div class="grid-2">
+          <div class="field"><label>Họ và tên <span class="req">*</span></label><input class="input" value="Nguyễn Minh An"></div>
+          <div class="field"><label>Số điện thoại <span class="req">*</span></label><input class="input" value="0912345678"></div>
+        </div>
+        <div class="field err"><label>Email <span class="req">*</span></label><input class="input" value="minhan@gmail.com"><div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg>Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.</div></div>
+        <div class="grid-2">
+          <div class="field"><label>Mật khẩu <span class="req">*</span></label><input class="input" type="password" value="12345678"><div class="help">Từ 8 ký tự, có chữ và số</div></div>
+          <div class="field"><label>Nhập lại mật khẩu <span class="req">*</span></label><input class="input" type="password" value="12345678"></div>
+        </div>
+        <div style="display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--graphite);margin:4px 0 18px"><span style="width:16px;height:16px;border:1px solid var(--line);border-radius:4px;flex:0 0 16px;margin-top:2px"></span>Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật của HALO.</div>
+        <button class="btn titan block">Tạo tài khoản</button>
+        <div class="note-box" style="margin-top:18px">Dữ liệu đã nhập được giữ nguyên khi có lỗi — người dùng chỉ phải sửa đúng ô sai.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 · ACCOUNT ============ -->
+  <section class="screen" id="s-account" data-title="Hồ sơ của tôi" data-role="Khách hàng" data-rolec="cus" data-code="SCR-09" data-note="Khu vực tài khoản dùng chung một khung: menu trái + vùng nội dung phải">
+    <div class="frame">
+      <div class="sf-top"><nav class="sf-nav">
+        <a style="display:flex;align-items:center;gap:9px"><svg width="26" height="26" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><span style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px">HALO</span></a>
+        <div class="links"><a>Trang chủ</a><a>iPhone</a><a>Mac</a><a>iPad</a><a>Phụ kiện</a></div>
+        <div class="tools"><a class="ic"><svg width="17" height="17"><use href="#i-cart"/></svg></a><span class="av">MA</span></div>
+      </nav></div>
+
+      <div style="display:grid;grid-template-columns:240px 1fr;gap:0;min-height:520px">
+        <aside style="border-right:1px solid var(--line);padding:22px 0">
+          <div style="display:flex;gap:11px;align-items:center;padding:0 20px 18px">
+            <span class="av" style="width:42px;height:42px;font-size:15px">MA</span>
+            <div><b style="font-size:13.5px">Nguyễn Minh An</b><div class="mono" style="font-size:10px;color:var(--ash)">THÀNH VIÊN TỪ 2025</div></div>
+          </div>
+          <a style="display:flex;gap:10px;padding:10px 20px;font-size:13.5px;background:#F6F7F8;border-left:2px solid var(--ink);font-weight:600"><svg width="17" height="17"><use href="#i-user"/></svg>Hồ sơ</a>
+          <a style="display:flex;gap:10px;padding:10px 20px;font-size:13.5px;color:var(--graphite);border-left:2px solid transparent"><svg width="17" height="17"><use href="#i-box"/></svg>Đơn hàng của tôi</a>
+          <a style="display:flex;gap:10px;padding:10px 20px;font-size:13.5px;color:var(--graphite);border-left:2px solid transparent"><svg width="17" height="17"><use href="#i-heart"/></svg>Yêu thích</a>
+          <a style="display:flex;gap:10px;padding:10px 20px;font-size:13.5px;color:var(--graphite);border-left:2px solid transparent"><svg width="17" height="17"><use href="#i-tag"/></svg>Mã giảm giá</a>
+          <a style="display:flex;gap:10px;padding:10px 20px;font-size:13.5px;color:var(--graphite);border-left:2px solid transparent"><svg width="17" height="17"><use href="#i-truck"/></svg>Sổ địa chỉ</a>
+          <a style="display:flex;gap:10px;padding:10px 20px;font-size:13.5px;color:var(--graphite);border-left:2px solid transparent"><svg width="17" height="17"><use href="#i-lock"/></svg>Đổi mật khẩu</a>
+          <a style="display:flex;gap:10px;padding:10px 20px;font-size:13.5px;color:var(--danger);border-left:2px solid transparent;margin-top:10px">Đăng xuất</a>
+        </aside>
+
+        <div style="padding:24px;display:flex;flex-direction:column;gap:18px;background:var(--porcelain)">
+          <div class="flash ok"><svg width="18" height="18"><use href="#i-check"/></svg><div><b>Đã lưu hồ sơ.</b></div><span class="k">successMsg</span></div>
+          <div class="panel"><div class="panel-head"><h3>Thông tin cá nhân</h3><div class="r"><button class="btn sm">Lưu thay đổi</button></div></div>
+            <div class="panel-pad">
+              <div class="grid-2">
+                <div class="field"><label>Họ và tên <span class="req">*</span></label><input class="input" value="Nguyễn Minh An"></div>
+                <div class="field"><label>Số điện thoại <span class="req">*</span></label><input class="input" value="0912345678"></div>
+                <div class="field"><label>Email</label><input class="input" value="minhan@gmail.com" disabled style="background:#F6F7F8;color:var(--ash)"><div class="help">Email dùng để đăng nhập nên không sửa được</div></div>
+                <div class="field"><label>Ngày sinh</label><input class="input" type="date" value="2003-05-12"></div>
+                <div class="field"><label>Giới tính</label><select class="select"><option>Nam</option><option>Nữ</option><option>Không muốn nêu</option></select></div>
+                <div class="field"><label>Ảnh đại diện</label><div style="display:flex;gap:10px;align-items:center"><span class="av" style="width:44px;height:44px">MA</span><button class="btn ghost sm">Chọn ảnh</button></div><div class="help">JPG hoặc PNG, tối đa 2MB</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel"><div class="panel-head"><h3>Địa chỉ mặc định</h3><div class="r"><button class="btn ghost sm">Thêm địa chỉ</button></div></div>
+            <div class="panel-pad">
+              <div style="display:flex;gap:14px;align-items:flex-start;border:1px solid var(--ink);border-radius:var(--r-sm);padding:14px">
+                <svg width="18" height="18" style="margin-top:2px"><use href="#i-truck"/></svg>
+                <div style="flex:1;font-size:13.5px"><b>Nhà riêng</b> <span class="badge ok" style="margin-left:6px">Mặc định</span><div style="color:var(--graphite);margin-top:4px">Số 128, ngõ 24 Trần Duy Hưng, Dịch Vọng, Cầu Giấy, Hà Nội<br>Nguyễn Minh An · 0912 345 678</div></div>
+                <button class="btn xs quiet">Sửa</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 · MY ORDERS ============ -->
+  <section class="screen" id="s-orders" data-title="Đơn hàng của tôi" data-role="Khách hàng" data-rolec="cus" data-code="SCR-10" data-note="Lọc theo trạng thái · mỗi đơn có dòng thời gian để khách tự tra cứu">
+    <div class="frame">
+      <div class="sf-top"><nav class="sf-nav">
+        <a style="display:flex;align-items:center;gap:9px"><svg width="26" height="26" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><span style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px">HALO</span></a>
+        <div class="links"><a>Trang chủ</a><a>iPhone</a><a>Mac</a><a>Phụ kiện</a></div>
+        <div class="tools"><a class="ic"><svg width="17" height="17"><use href="#i-cart"/></svg></a><span class="av">MA</span></div>
+      </nav></div>
+      <div style="padding:22px 26px">
+        <h2 style="font-size:24px;text-transform:uppercase;margin-bottom:16px">Đơn hàng của tôi</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+          <button class="btn sm">Tất cả (7)</button><button class="btn quiet sm">Chờ xác nhận (1)</button><button class="btn quiet sm">Đang giao (1)</button><button class="btn quiet sm">Đã giao (4)</button><button class="btn quiet sm">Đã huỷ (1)</button>
+        </div>
+
+        <div class="split">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="panel">
+              <div class="panel-head"><span class="mono" style="font-size:11.5px">HL-20260814-0192</span><span class="badge warn">Chờ xác nhận</span><div class="r"><span style="font-size:12.5px;color:var(--ash)">14/08/2026</span></div></div>
+              <div class="panel-pad">
+                <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+                  <div class="shot" style="width:54px;height:54px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div>
+                  <div style="flex:1;font-size:13.5px"><b>iPhone 16 Pro Max 256GB</b><div style="color:var(--ash);font-size:12.5px">và 2 sản phẩm khác</div></div>
+                  <div style="text-align:right"><div style="font-family:var(--display);font-stretch:112%;font-weight:700;font-size:16px">41.360.000 ₫</div><div style="font-size:12px;color:var(--ash)">Trả tiền khi nhận</div></div>
+                </div>
+                <div style="display:flex;gap:8px"><button class="btn sm">Xem chi tiết</button><button class="btn ghost sm">Huỷ đơn</button></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><span class="mono" style="font-size:11.5px">HL-20260731-0088</span><span class="badge info">Đang giao</span><div class="r"><span style="font-size:12.5px;color:var(--ash)">31/07/2026</span></div></div>
+              <div class="panel-pad">
+                <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+                  <div class="shot" style="width:54px;height:54px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-watch"/></svg></div>
+                  <div style="flex:1;font-size:13.5px"><b>Apple Watch Series 10 42mm</b><div style="color:var(--ash);font-size:12.5px">Shipper: Lê Văn Cường · 0987 111 222</div></div>
+                  <div style="text-align:right"><div style="font-family:var(--display);font-stretch:112%;font-weight:700;font-size:16px">10.990.000 ₫</div></div>
+                </div>
+                <div style="display:flex;gap:8px"><button class="btn sm">Theo dõi</button><button class="btn ghost sm">Xem chi tiết</button></div>
+              </div>
+            </div>
+            <div class="panel" style="opacity:.85">
+              <div class="panel-head"><span class="mono" style="font-size:11.5px">HL-20260612-0031</span><span class="badge ok">Đã giao</span><div class="r"><span style="font-size:12.5px;color:var(--ash)">12/06/2026</span></div></div>
+              <div class="panel-pad"><div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+                <div class="shot" style="width:54px;height:54px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-mac"/></svg></div>
+                <div style="flex:1;font-size:13.5px"><b>MacBook Air M3 13"</b></div>
+                <div style="font-family:var(--display);font-stretch:112%;font-weight:700;font-size:16px">26.490.000 ₫</div>
+              </div><div style="display:flex;gap:8px"><button class="btn ghost sm">Mua lại</button><button class="btn ghost sm">Viết đánh giá</button></div></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h3>Chi tiết đơn HL-20260814-0192</h3></div>
+            <div class="panel-pad">
+              <div class="timeline">
+                <div class="ev done"><b>Đã đặt hàng</b><span>14/08/2026 · 09:12</span></div>
+                <div class="ev"><b>Cửa hàng xác nhận</b><span>Dự kiến trong 15 phút</span></div>
+                <div class="ev"><b>Đang giao</b><span>—</span></div>
+                <div class="ev"><b>Đã giao</b><span>—</span></div>
+              </div>
+              <div style="border-top:1px solid var(--line);margin-top:8px;padding-top:14px">
+                <dl class="kv">
+                  <dt>Người nhận</dt><dd>Nguyễn Minh An<br>0912 345 678</dd>
+                  <dt>Địa chỉ</dt><dd>128 Trần Duy Hưng, Cầu Giấy, Hà Nội</dd>
+                  <dt>Thanh toán</dt><dd>Trả tiền khi nhận hàng</dd>
+                </dl>
+                <div class="sum-row" style="margin-top:12px"><span>Tạm tính</span><span>41.860.000 ₫</span></div>
+                <div class="sum-row"><span>Giảm giá</span><span style="color:var(--ok)">− 500.000 ₫</span></div>
+                <div class="sum-row total"><span>Tổng cộng</span><span>41.360.000 ₫</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 · WISHLIST ============ -->
+  <section class="screen" id="s-wish" data-title="Yêu thích" data-role="Khách hàng" data-rolec="cus" data-code="SCR-11" data-note="Dùng lại đúng thẻ sản phẩm của trang danh sách, chỉ đổi hành động trên thẻ">
+    <div class="frame">
+      <div class="sf-top"><nav class="sf-nav">
+        <a style="display:flex;align-items:center;gap:9px"><svg width="26" height="26" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><span style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px">HALO</span></a>
+        <div class="links"><a>Trang chủ</a><a>iPhone</a><a>Mac</a><a>Phụ kiện</a></div>
+        <div class="tools"><a class="ic" style="border-color:var(--titan)"><svg width="17" height="17"><use href="#i-heart"/></svg><span class="dot-n">3</span></a><span class="av">MA</span></div>
+      </nav></div>
+      <div style="padding:22px 26px">
+        <div style="display:flex;align-items:flex-end;gap:14px;margin-bottom:18px"><h2 style="font-size:24px;text-transform:uppercase">Yêu thích</h2><span style="color:var(--ash);font-size:13px">3 sản phẩm</span><button class="btn quiet sm" style="margin-left:auto">Xoá tất cả</button></div>
+        <div class="p-grid">
+          <div class="p-card"><span class="fav" style="background:var(--danger-bg);border-color:#F2C9C9;color:var(--danger)"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div><div class="name">iPhone 16 Pro 128GB</div><div class="meta">Titan đen</div><div class="price">28.990.000 ₫</div><button class="btn sm block" style="margin-top:12px">Thêm vào giỏ</button></div>
+          <div class="p-card"><span class="fav" style="background:var(--danger-bg);border-color:#F2C9C9;color:var(--danger)"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#5B6472"><use href="#d-pad"/></svg></div><div class="name">iPad Air M2 11"</div><div class="meta">128GB · Wi-Fi</div><div class="price">15.990.000 ₫</div><button class="btn sm block" style="margin-top:12px">Thêm vào giỏ</button></div>
+          <div class="p-card" style="opacity:.75"><span class="flag badge off">Hết hàng</span><span class="fav" style="background:var(--danger-bg);border-color:#F2C9C9;color:var(--danger)"><svg width="15" height="15"><use href="#i-heart"/></svg></span><div class="shot"><svg style="color:#9AA1AB"><use href="#d-pods"/></svg></div><div class="name">AirPods Max</div><div class="meta">Dự kiến về 22/08</div><div class="price">12.490.000 ₫</div><button class="btn sm block quiet" style="margin-top:12px">Báo tôi khi có hàng</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 12 · PROMOTIONS ============ -->
+  <section class="screen" id="s-promo" data-title="Khuyến mãi" data-role="Khách hàng" data-rolec="cus" data-code="SCR-12" data-note="Mã hết hạn vẫn hiển thị nhưng bị mờ và không bấm được, không xoá khỏi dữ liệu">
+    <div class="frame">
+      <div class="sf-top"><nav class="sf-nav">
+        <a style="display:flex;align-items:center;gap:9px"><svg width="26" height="26" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><span style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px">HALO</span></a>
+        <div class="links"><a>Trang chủ</a><a>iPhone</a><a>Mac</a><a class="on">Khuyến mãi</a></div>
+        <div class="tools"><a class="ic"><svg width="17" height="17"><use href="#i-cart"/></svg></a><span class="av">MA</span></div>
+      </nav></div>
+      <div class="hero" style="padding:40px 26px 34px">
+        <div style="position:relative;z-index:2">
+          <div class="kicker">Tháng 8 · Back to school</div>
+          <h2 style="font-size:44px">Giảm tới<em>5 triệu</em></h2>
+          <p style="margin-top:14px">Áp dụng cho MacBook và iPad khi mua kèm phụ kiện. Kết thúc 31/08/2026.</p>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h3>Mã giảm giá của bạn</h3></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+          <div class="panel" style="border-left:2px solid var(--titan)"><div class="panel-pad">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px"><span class="badge ok">Đang chạy</span><span class="mono" style="font-size:10.5px;color:var(--ash);margin-left:auto">HSD 31/08</span></div>
+            <div style="font-family:var(--display);font-stretch:116%;font-weight:700;font-size:22px">HALO500</div>
+            <p style="font-size:13px;color:var(--graphite);margin:6px 0 12px">Giảm 500.000 ₫ cho đơn từ 10 triệu. Mỗi tài khoản dùng 1 lần.</p>
+            <button class="btn sm block">Sao chép mã</button>
+          </div></div>
+          <div class="panel" style="border-left:2px solid var(--titan)"><div class="panel-pad">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px"><span class="badge ok">Đang chạy</span><span class="mono" style="font-size:10.5px;color:var(--ash);margin-left:auto">HSD 20/08</span></div>
+            <div style="font-family:var(--display);font-stretch:116%;font-weight:700;font-size:22px">MAC5TR</div>
+            <p style="font-size:13px;color:var(--graphite);margin:6px 0 12px">Giảm 5% tối đa 5.000.000 ₫ cho dòng Mac.</p>
+            <button class="btn sm block">Sao chép mã</button>
+          </div></div>
+          <div class="panel" style="opacity:.55"><div class="panel-pad">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px"><span class="badge off">Hết hạn</span><span class="mono" style="font-size:10.5px;color:var(--ash);margin-left:auto">HSD 30/06</span></div>
+            <div style="font-family:var(--display);font-stretch:116%;font-weight:700;font-size:22px">SUMMER300</div>
+            <p style="font-size:13px;color:var(--graphite);margin:6px 0 12px">Giảm 300.000 ₫ cho phụ kiện.</p>
+            <button class="btn sm block quiet" disabled>Đã hết hạn</button>
+          </div></div>
+        </div>
+      </div>
+      <div class="sec" style="padding-top:0">
+        <div class="sec-head"><h3>Sản phẩm đang giảm giá</h3><a>Xem tất cả →</a></div>
+        <div class="p-grid">
+          <a class="p-card"><span class="flag badge dan">-8%</span><div class="shot"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div><div class="name">iPhone 16 Pro Max 256GB</div><div class="price">34.990.000 ₫<span class="was">37.990.000 ₫</span></div></a>
+          <a class="p-card"><span class="flag badge dan">-12%</span><div class="shot"><svg style="color:#5B6472"><use href="#d-mac"/></svg></div><div class="name">MacBook Pro M4 14"</div><div class="price">42.490.000 ₫<span class="was">47.990.000 ₫</span></div></a>
+          <a class="p-card"><span class="flag badge dan">-15%</span><div class="shot"><svg style="color:#5B6472"><use href="#d-pad"/></svg></div><div class="name">iPad Air M2 11"</div><div class="price">15.990.000 ₫<span class="was">18.790.000 ₫</span></div></a>
+          <a class="p-card"><span class="flag badge dan">-10%</span><div class="shot"><svg style="color:#5B6472"><use href="#d-pods"/></svg></div><div class="name">AirPods Pro 2</div><div class="price">5.290.000 ₫<span class="was">5.890.000 ₫</span></div></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 13 · EMPTY & ERROR ============ -->
+  <section class="screen" id="s-states" data-title="Trạng thái rỗng &amp; lỗi" data-role="Khách hàng" data-rolec="cus" data-code="SCR-13" data-note="Màn hình trống luôn nói rõ bước tiếp theo, thông báo lỗi nói rõ cách sửa">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="frame"><div class="empty">
+        <div class="ring"><svg width="26" height="26" style="color:var(--ash)"><use href="#i-cart"/></svg></div>
+        <h3>Giỏ hàng đang trống</h3>
+        <p>Thêm sản phẩm bạn thích vào giỏ, HALO sẽ giữ hàng trong 30 phút.</p>
+        <button class="btn">Xem sản phẩm bán chạy</button>
+      </div></div>
+      <div class="frame"><div class="empty">
+        <div class="ring"><svg width="26" height="26" style="color:var(--ash)"><use href="#i-search"/></svg></div>
+        <h3>Không có sản phẩm nào khớp</h3>
+        <p>Từ khoá “ipohne 16 promax” không có kết quả. Thử bỏ bớt bộ lọc hoặc tìm bằng tên ngắn hơn.</p>
+        <div style="display:flex;gap:9px;justify-content:center"><button class="btn ghost">Xoá bộ lọc</button><button class="btn">Tìm “iphone 16”</button></div>
+      </div></div>
+      <div class="frame"><div class="empty">
+        <div class="ring"><svg width="26" height="26" style="color:var(--ash)"><use href="#i-box"/></svg></div>
+        <h3>Bạn chưa có đơn hàng nào</h3>
+        <p>Đơn đầu tiên được giảm 500.000 ₫ với mã HALO500.</p>
+        <button class="btn titan">Bắt đầu mua sắm</button>
+      </div></div>
+      <div class="frame dark"><div class="empty" style="color:#fff">
+        <div class="ring" style="border-color:var(--line-d)"><span class="mono" style="color:var(--titan);font-size:13px">404</span></div>
+        <h3 style="color:#fff">Không tìm thấy trang này</h3>
+        <p style="color:#98A0AB">Đường dẫn có thể đã đổi hoặc sản phẩm đã ngừng bán.</p>
+        <div style="display:flex;gap:9px;justify-content:center"><button class="btn titan">Về trang chủ</button><button class="btn ghost" style="color:#fff;border-color:#2A313B">Liên hệ 1900 6868</button></div>
+      </div></div>
+    </div>
+    <div class="note-box">Trên trang danh sách của quản trị, khi không có dữ liệu thì bảng vẫn giữ nguyên thanh tìm kiếm và bộ lọc, chỉ phần thân bảng đổi thành khối trống như trên.</div>
+  </section>
+
+  <!-- ============ 14 · DASHBOARD ============ -->
+  <section class="screen" id="s-dash" data-title="Dashboard" data-role="Quản trị viên" data-rolec="adm" data-code="SCR-14" data-note="Số liệu lấy từ các hàm đếm trong DAO, mỗi thẻ nối tới đúng trang danh sách">
+    <div class="frame"><div class="adm">
+      <aside class="adm-side">
+        <div class="brand"><svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><div><div style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:13px">HALO</div><div class="mono" style="font-size:8.5px;letter-spacing:.16em;color:#5C6470">TRANG QUẢN TRỊ</div></div></div>
+        <div class="grp">Tổng quan</div>
+        <a class="on"><svg width="17" height="17"><use href="#i-chart"/></svg>Dashboard</a>
+        <div class="grp">Dữ liệu nền</div>
+        <a><svg width="17" height="17"><use href="#i-user"/></svg>Người dùng</a>
+        <a><svg width="17" height="17"><use href="#i-grid"/></svg>Danh mục</a>
+        <a><svg width="17" height="17"><use href="#i-box"/></svg>Sản phẩm</a>
+        <a><svg width="17" height="17"><use href="#i-tag"/></svg>Khuyến mãi</a>
+        <div class="grp">Bán hàng</div>
+        <a><svg width="17" height="17"><use href="#i-truck"/></svg>Đơn hàng</a>
+        <a><svg width="17" height="17"><use href="#i-chart"/></svg>Báo cáo doanh thu</a>
+      </aside>
+      <div class="adm-main">
+        <div class="adm-bar"><h2>Dashboard</h2><span class="badge ok">Hôm nay · 14/08/2026</span><div class="who"><span>Quản trị viên</span><span class="av">QT</span></div></div>
+        <div class="adm-body">
+          <div class="stats">
+            <div class="stat"><div class="lab">Doanh thu hôm nay</div><div class="val">128,4 tr</div><div class="delta">+12,5% so với hôm qua</div></div>
+            <div class="stat"><div class="lab">Đơn mới</div><div class="val">37</div><div class="delta">+6 đơn</div></div>
+            <div class="stat"><div class="lab">Chờ xác nhận</div><div class="val">9</div><div class="delta down">Cần xử lý trong hôm nay</div></div>
+            <div class="stat"><div class="lab">Sản phẩm sắp hết</div><div class="val">5</div><div class="delta down">Tồn dưới 3 máy</div></div>
+          </div>
+
+          <div class="split">
+            <div class="panel">
+              <div class="panel-head"><h3>Doanh thu 7 ngày gần nhất</h3><div class="r"><select class="select sm" style="height:32px;font-size:12.5px"><option>7 ngày</option><option>30 ngày</option></select></div></div>
+              <div class="panel-pad">
+                <div style="display:flex;align-items:flex-end;gap:14px;height:180px">
+                  <div style="flex:1;text-align:center"><div style="height:78px;background:#E7E9ED;border-radius:6px 6px 0 0"></div><div class="mono" style="font-size:10px;color:var(--ash);margin-top:7px">08/08</div></div>
+                  <div style="flex:1;text-align:center"><div style="height:104px;background:#E7E9ED;border-radius:6px 6px 0 0"></div><div class="mono" style="font-size:10px;color:var(--ash);margin-top:7px">09/08</div></div>
+                  <div style="flex:1;text-align:center"><div style="height:88px;background:#E7E9ED;border-radius:6px 6px 0 0"></div><div class="mono" style="font-size:10px;color:var(--ash);margin-top:7px">10/08</div></div>
+                  <div style="flex:1;text-align:center"><div style="height:132px;background:#E7E9ED;border-radius:6px 6px 0 0"></div><div class="mono" style="font-size:10px;color:var(--ash);margin-top:7px">11/08</div></div>
+                  <div style="flex:1;text-align:center"><div style="height:118px;background:#E7E9ED;border-radius:6px 6px 0 0"></div><div class="mono" style="font-size:10px;color:var(--ash);margin-top:7px">12/08</div></div>
+                  <div style="flex:1;text-align:center"><div style="height:96px;background:#E7E9ED;border-radius:6px 6px 0 0"></div><div class="mono" style="font-size:10px;color:var(--ash);margin-top:7px">13/08</div></div>
+                  <div style="flex:1;text-align:center"><div style="height:152px;background:linear-gradient(180deg,#EBDCBB,#C9B58C);border-radius:6px 6px 0 0"></div><div class="mono" style="font-size:10px;color:var(--ink);margin-top:7px">14/08</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>Bán chạy tháng này</h3></div>
+              <div class="panel-pad" style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;gap:11px;align-items:center"><div class="shot" style="width:40px;height:40px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div><div style="flex:1;font-size:13px"><b>iPhone 16 Pro Max</b><br><span style="color:var(--ash);font-size:12px">42 máy</span></div><span class="mono" style="font-size:12px">1,47 tỷ</span></div>
+                <div style="display:flex;gap:11px;align-items:center"><div class="shot" style="width:40px;height:40px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-mac"/></svg></div><div style="flex:1;font-size:13px"><b>MacBook Air M3</b><br><span style="color:var(--ash);font-size:12px">18 máy</span></div><span class="mono" style="font-size:12px">476 tr</span></div>
+                <div style="display:flex;gap:11px;align-items:center"><div class="shot" style="width:40px;height:40px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-pods"/></svg></div><div style="flex:1;font-size:13px"><b>AirPods Pro 2</b><br><span style="color:var(--ash);font-size:12px">63 chiếc</span></div><span class="mono" style="font-size:12px">333 tr</span></div>
+                <div style="display:flex;gap:11px;align-items:center"><div class="shot" style="width:40px;height:40px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-watch"/></svg></div><div style="flex:1;font-size:13px"><b>Apple Watch S10</b><br><span style="color:var(--ash);font-size:12px">21 chiếc</span></div><span class="mono" style="font-size:12px">231 tr</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h3>Đơn cần xử lý</h3><div class="r"><button class="btn ghost sm">Xem tất cả đơn</button></div></div>
+            <table class="table">
+              <thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Trạng thái</th><th>Đặt lúc</th><th></th></tr></thead>
+              <tbody>
+                <tr><td class="num">HL-…0192</td><td>Nguyễn Minh An</td><td>3 sản phẩm</td><td class="num">41.360.000 ₫</td><td><span class="badge warn">Chờ xác nhận</span></td><td class="num">09:12</td><td class="row-actions"><button class="btn xs">Xác nhận</button></td></tr>
+                <tr><td class="num">HL-…0191</td><td>Trần Hải</td><td>1 sản phẩm</td><td class="num">5.290.000 ₫</td><td><span class="badge warn">Chờ xác nhận</span></td><td class="num">08:47</td><td class="row-actions"><button class="btn xs">Xác nhận</button></td></tr>
+                <tr><td class="num">HL-…0190</td><td>Lê Thu Trang</td><td>2 sản phẩm</td><td class="num">27.780.000 ₫</td><td><span class="badge info">Đang giao</span></td><td class="num">08:05</td><td class="row-actions"><button class="btn xs quiet">Xem</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ============ 15 · USERS ============ -->
+  <section class="screen" id="s-users" data-title="Quản lý người dùng" data-role="Quản trị viên" data-rolec="adm" data-code="SCR-15" data-note="Khoá tài khoản thay cho xoá · nút bật tắt gửi bằng POST rồi chuyển hướng về danh sách">
+    <div class="frame"><div class="adm">
+      <aside class="adm-side">
+        <div class="brand"><svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><div><div style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:13px">HALO</div><div class="mono" style="font-size:8.5px;letter-spacing:.16em;color:#5C6470">TRANG QUẢN TRỊ</div></div></div>
+        <div class="grp">Tổng quan</div><a><svg width="17" height="17"><use href="#i-chart"/></svg>Dashboard</a>
+        <div class="grp">Dữ liệu nền</div>
+        <a class="on"><svg width="17" height="17"><use href="#i-user"/></svg>Người dùng</a>
+        <a><svg width="17" height="17"><use href="#i-grid"/></svg>Danh mục</a>
+        <a><svg width="17" height="17"><use href="#i-box"/></svg>Sản phẩm</a>
+        <a><svg width="17" height="17"><use href="#i-tag"/></svg>Khuyến mãi</a>
+        <div class="grp">Bán hàng</div><a><svg width="17" height="17"><use href="#i-truck"/></svg>Đơn hàng</a>
+      </aside>
+      <div class="adm-main">
+        <div class="adm-bar"><h2>Người dùng</h2><span style="font-size:13px;color:var(--ash)">128 tài khoản</span><div class="who"><span>Quản trị viên</span><span class="av">QT</span></div></div>
+        <div class="adm-body">
+          <div class="flash ok"><svg width="18" height="18"><use href="#i-check"/></svg><div><b>Đã khoá tài khoản letrang@gmail.com.</b> Người này không đăng nhập được cho tới khi bạn mở lại.</div><span class="k">successMsg</span></div>
+          <div class="panel">
+            <div class="panel-head"><h3>Danh sách người dùng</h3><div class="r"><button class="btn sm"><svg width="15" height="15"><use href="#i-plus"/></svg>Thêm người dùng</button></div></div>
+            <div class="toolbar">
+              <div class="search"><svg width="17" height="17"><use href="#i-search"/></svg><input class="input" placeholder="Tìm theo tên, email hoặc số điện thoại"></div>
+              <select class="select"><option>Tất cả vai trò</option><option>Quản trị viên</option><option>Nhân viên</option><option>Khách hàng</option></select>
+              <select class="select"><option>Tất cả trạng thái</option><option>Đang hoạt động</option><option>Đã khoá</option></select>
+              <select class="select"><option>Mới nhất</option><option>Tên A → Z</option></select>
+              <button class="btn sm">Áp dụng</button><button class="btn quiet sm">Xoá lọc</button>
+            </div>
+            <table class="table">
+              <thead><tr><th>#</th><th><span class="sort">Họ tên</span></th><th>Email</th><th>Điện thoại</th><th>Vai trò</th><th>Trạng thái</th><th>Ngày tạo</th><th style="text-align:right">Thao tác</th></tr></thead>
+              <tbody>
+                <tr><td class="num">01</td><td><div style="display:flex;gap:9px;align-items:center"><span class="av" style="width:28px;height:28px;font-size:11px">MA</span><b>Nguyễn Minh An</b></div></td><td>minhan@gmail.com</td><td class="num">0912345678</td><td><span class="tag">Khách hàng</span></td><td><span class="badge ok">Đang hoạt động</span></td><td class="num">02/05/2025</td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg></button><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Khoá</button></td></tr>
+                <tr><td class="num">02</td><td><div style="display:flex;gap:9px;align-items:center"><span class="av" style="width:28px;height:28px;font-size:11px;background:#DDE1E7;color:#4A525C">TH</span><b>Trần Hải</b></div></td><td>tranhai@gmail.com</td><td class="num">0987654321</td><td><span class="tag">Khách hàng</span></td><td><span class="badge ok">Đang hoạt động</span></td><td class="num">17/04/2025</td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg></button><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Khoá</button></td></tr>
+                <tr style="background:#FCFBF8"><td class="num">03</td><td><div style="display:flex;gap:9px;align-items:center"><span class="av" style="width:28px;height:28px;font-size:11px;background:#DDE1E7;color:#4A525C">LT</span><b>Lê Thu Trang</b></div></td><td>letrang@gmail.com</td><td class="num">0903111222</td><td><span class="tag">Khách hàng</span></td><td><span class="badge off">Đã khoá</span></td><td class="num">28/03/2025</td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg></button><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs">Mở khoá</button></td></tr>
+                <tr><td class="num">04</td><td><div style="display:flex;gap:9px;align-items:center"><span class="av" style="width:28px;height:28px;font-size:11px">PV</span><b>Phạm Văn Đức</b></div></td><td>duc.pham@halo.vn</td><td class="num">0966888999</td><td><span class="tag" style="background:#E9F7F1;color:#0E7C5B">Nhân viên</span></td><td><span class="badge ok">Đang hoạt động</span></td><td class="num">11/01/2025</td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg></button><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Khoá</button></td></tr>
+                <tr><td class="num">05</td><td><div style="display:flex;gap:9px;align-items:center"><span class="av" style="width:28px;height:28px;font-size:11px">QT</span><b>Quản trị viên</b></div></td><td>admin@halo.vn</td><td class="num">0900000001</td><td><span class="tag" style="background:#EDF2FE;color:#2C4FBF">Quản trị viên</span></td><td><span class="badge ok">Đang hoạt động</span></td><td class="num">01/01/2025</td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg></button><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs quiet" disabled>Khoá</button></td></tr>
+              </tbody>
+            </table>
+            <div class="pager" style="border-top:1px solid var(--line)">
+              <span class="info">Hiển thị 1–5 trong 128 tài khoản</span>
+              <div style="display:flex;gap:12px;align-items:center">
+                <select class="select" style="height:34px;font-size:12.5px;min-width:120px"><option>10 dòng/trang</option><option>20 dòng/trang</option></select>
+                <div class="pages"><button class="pg" disabled>‹</button><button class="pg on">1</button><button class="pg">2</button><button class="pg">3</button><span class="pg" style="border:0">…</span><button class="pg">26</button><button class="pg">›</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ============ 16 · USER FORM ============ -->
+  <section class="screen" id="s-userform" data-title="Form người dùng" data-role="Quản trị viên" data-rolec="adm" data-code="SCR-16" data-note="Một khuôn form dùng cho cả thêm mới và chỉnh sửa, chỉ khác tiêu đề và dữ liệu đổ vào">
+    <div class="frame"><div class="adm">
+      <aside class="adm-side">
+        <div class="brand"><svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><div><div style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:13px">HALO</div><div class="mono" style="font-size:8.5px;letter-spacing:.16em;color:#5C6470">TRANG QUẢN TRỊ</div></div></div>
+        <div class="grp">Dữ liệu nền</div>
+        <a class="on"><svg width="17" height="17"><use href="#i-user"/></svg>Người dùng</a>
+        <a><svg width="17" height="17"><use href="#i-grid"/></svg>Danh mục</a>
+        <a><svg width="17" height="17"><use href="#i-box"/></svg>Sản phẩm</a>
+        <a><svg width="17" height="17"><use href="#i-tag"/></svg>Khuyến mãi</a>
+      </aside>
+      <div class="adm-main">
+        <div class="adm-bar"><h2>Sửa người dùng</h2><span class="mono" style="font-size:11px;color:var(--ash)">ID 03</span><div class="who"><button class="btn ghost sm">Huỷ</button><button class="btn sm">Lưu thay đổi</button></div></div>
+        <div class="adm-body">
+          <div class="flash err"><svg width="18" height="18"><use href="#i-alert"/></svg><div><b>Chưa lưu được.</b> Có 2 ô chưa hợp lệ, xem chi tiết bên dưới.</div><span class="k">errorMsg</span></div>
+          <div class="split">
+            <div class="panel"><div class="panel-head"><h3>Thông tin tài khoản</h3></div><div class="panel-pad">
+              <div class="grid-2">
+                <div class="field"><label>Họ và tên <span class="req">*</span></label><input class="input" value="Lê Thu Trang"><div class="help">Tối đa 100 ký tự</div></div>
+                <div class="field err"><label>Email <span class="req">*</span></label><input class="input" value="letrang@gmail"><div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg>Email chưa đúng định dạng</div></div>
+                <div class="field err"><label>Số điện thoại <span class="req">*</span></label><input class="input" value="090311"><div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg>Số điện thoại phải có đúng 10 chữ số</div></div>
+                <div class="field"><label>Ngày sinh</label><input class="input" type="date" value="2001-09-20"></div>
+                <div class="field"><label>Vai trò <span class="req">*</span></label><select class="select"><option>Khách hàng</option><option>Nhân viên</option><option>Quản trị viên</option></select></div>
+                <div class="field"><label>Trạng thái</label><div style="display:flex;align-items:center;gap:10px;height:44px"><span class="switch"></span><span style="font-size:13.5px">Đã khoá</span></div><div class="help">Tài khoản khoá vẫn giữ lại toàn bộ đơn hàng cũ</div></div>
+              </div>
+              <div class="field" style="margin-bottom:0"><label>Địa chỉ</label><textarea class="textarea">Số 5, ngách 12 Phố Vọng, Hai Bà Trưng, Hà Nội</textarea></div>
+            </div></div>
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div class="panel"><div class="panel-head"><h3>Mật khẩu</h3></div><div class="panel-pad">
+                <p style="font-size:13px;color:var(--graphite);margin:0 0 12px">Để trống nếu bạn không muốn đổi mật khẩu của người dùng này.</p>
+                <div class="field"><label>Mật khẩu mới</label><input class="input" type="password" placeholder="Từ 8 ký tự"></div>
+                <div class="field" style="margin-bottom:0"><label>Nhập lại mật khẩu mới</label><input class="input" type="password"></div>
+              </div></div>
+              <div class="panel"><div class="panel-head"><h3>Lịch sử</h3></div><div class="panel-pad"><dl class="kv">
+                <dt>Ngày tạo</dt><dd>28/03/2025</dd><dt>Đăng nhập gần nhất</dt><dd>02/08/2026 · 20:14</dd><dt>Số đơn đã mua</dt><dd>4 đơn · 62.180.000 ₫</dd>
+              </dl></div></div>
+              <div class="note-box"><b>Quy tắc dùng chung:</b> nhân viên mở đúng màn hình này nhưng ô Vai trò và Trạng thái bị ẩn — phân quyền quyết định hiển thị, không tạo màn hình riêng.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ============ 17 · CATEGORIES ============ -->
+  <section class="screen" id="s-cats" data-title="Quản lý danh mục" data-role="Quản trị viên" data-rolec="adm" data-code="SCR-17" data-note="Danh mục còn sản phẩm thì không cho ngừng bán — chặn từ tầng nghiệp vụ và báo rõ lý do">
+    <div class="frame"><div class="adm">
+      <aside class="adm-side">
+        <div class="brand"><svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><div><div style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:13px">HALO</div><div class="mono" style="font-size:8.5px;letter-spacing:.16em;color:#5C6470">TRANG QUẢN TRỊ</div></div></div>
+        <div class="grp">Dữ liệu nền</div>
+        <a><svg width="17" height="17"><use href="#i-user"/></svg>Người dùng</a>
+        <a class="on"><svg width="17" height="17"><use href="#i-grid"/></svg>Danh mục</a>
+        <a><svg width="17" height="17"><use href="#i-box"/></svg>Sản phẩm</a>
+        <a><svg width="17" height="17"><use href="#i-tag"/></svg>Khuyến mãi</a>
+      </aside>
+      <div class="adm-main">
+        <div class="adm-bar"><h2>Danh mục</h2><span style="font-size:13px;color:var(--ash)">8 danh mục</span><div class="who"><span class="av">QT</span></div></div>
+        <div class="adm-body">
+          <div class="flash err"><svg width="18" height="18"><use href="#i-alert"/></svg><div><b>Không thể ngừng bán danh mục “iPhone”.</b> Danh mục đang có 24 sản phẩm đang bán. Hãy ngừng bán các sản phẩm đó trước.</div><span class="k">errorMsg</span></div>
+          <div class="split">
+            <div class="panel">
+              <div class="panel-head"><h3>Danh sách danh mục</h3><div class="r"><button class="btn sm"><svg width="15" height="15"><use href="#i-plus"/></svg>Thêm danh mục</button></div></div>
+              <div class="toolbar">
+                <div class="search"><svg width="17" height="17"><use href="#i-search"/></svg><input class="input" placeholder="Tìm theo tên danh mục"></div>
+                <select class="select"><option>Tất cả trạng thái</option><option>Đang bán</option><option>Ngừng bán</option></select>
+                <select class="select"><option>Thứ tự hiển thị</option><option>Tên A → Z</option><option>Nhiều sản phẩm nhất</option></select>
+                <button class="btn sm">Áp dụng</button>
+              </div>
+              <table class="table">
+                <thead><tr><th>#</th><th><span class="sort">Tên danh mục</span></th><th>Đường dẫn</th><th>Số sản phẩm</th><th>Trạng thái</th><th style="text-align:right">Thao tác</th></tr></thead>
+                <tbody>
+                  <tr><td class="num">01</td><td><b>iPhone</b><div style="font-size:12px;color:var(--ash)">Điện thoại Apple chính hãng</div></td><td class="num">/iphone</td><td class="num">24</td><td><span class="badge ok">Đang bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Ngừng bán</button></td></tr>
+                  <tr><td class="num">02</td><td><b>Mac</b><div style="font-size:12px;color:var(--ash)">MacBook và máy để bàn</div></td><td class="num">/mac</td><td class="num">18</td><td><span class="badge ok">Đang bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Ngừng bán</button></td></tr>
+                  <tr><td class="num">03</td><td><b>iPad</b></td><td class="num">/ipad</td><td class="num">12</td><td><span class="badge ok">Đang bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Ngừng bán</button></td></tr>
+                  <tr><td class="num">04</td><td><b>Watch</b></td><td class="num">/watch</td><td class="num">16</td><td><span class="badge ok">Đang bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Ngừng bán</button></td></tr>
+                  <tr><td class="num">05</td><td><b>Phụ kiện</b></td><td class="num">/phu-kien</td><td class="num">57</td><td><span class="badge ok">Đang bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Ngừng bán</button></td></tr>
+                  <tr style="opacity:.7"><td class="num">06</td><td><b>Hàng cũ đã qua sử dụng</b></td><td class="num">/refurbished</td><td class="num">0</td><td><span class="badge off">Ngừng bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs">Mở bán</button></td></tr>
+                </tbody>
+              </table>
+              <div class="pager" style="border-top:1px solid var(--line)"><span class="info">Hiển thị 1–6 trong 8 danh mục</span><div class="pages"><button class="pg" disabled>‹</button><button class="pg on">1</button><button class="pg">2</button><button class="pg">›</button></div></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Sửa danh mục</h3><span class="r badge info">Đang mở: iPhone</span></div>
+              <div class="panel-pad">
+                <div class="field"><label>Tên danh mục <span class="req">*</span></label><input class="input" value="iPhone"><div class="help">Không trùng với danh mục khác, tối đa 50 ký tự</div></div>
+                <div class="field"><label>Đường dẫn <span class="req">*</span></label><input class="input" value="iphone"><div class="help">Chỉ dùng chữ thường, số và dấu gạch ngang</div></div>
+                <div class="field"><label>Mô tả</label><textarea class="textarea">Điện thoại Apple chính hãng, bảo hành 12 tháng.</textarea></div>
+                <div class="grid-2">
+                  <div class="field"><label>Thứ tự hiển thị</label><input class="input" value="1"></div>
+                  <div class="field"><label>Trạng thái</label><div style="display:flex;align-items:center;gap:10px;height:44px"><span class="switch on"></span><span style="font-size:13.5px">Đang bán</span></div></div>
+                </div>
+                <div style="display:flex;gap:9px"><button class="btn" style="flex:1">Lưu danh mục</button><button class="btn ghost">Huỷ</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ============ 18 · PRODUCTS ============ -->
+  <section class="screen" id="s-prods" data-title="Quản lý sản phẩm" data-role="Quản trị viên" data-rolec="adm" data-code="SCR-18" data-note="Cùng một khuôn bảng với người dùng và danh mục — chỉ đổi cột và bộ lọc">
+    <div class="frame"><div class="adm">
+      <aside class="adm-side">
+        <div class="brand"><svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><div><div style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:13px">HALO</div><div class="mono" style="font-size:8.5px;letter-spacing:.16em;color:#5C6470">TRANG QUẢN TRỊ</div></div></div>
+        <div class="grp">Dữ liệu nền</div>
+        <a><svg width="17" height="17"><use href="#i-user"/></svg>Người dùng</a>
+        <a><svg width="17" height="17"><use href="#i-grid"/></svg>Danh mục</a>
+        <a class="on"><svg width="17" height="17"><use href="#i-box"/></svg>Sản phẩm</a>
+        <a><svg width="17" height="17"><use href="#i-tag"/></svg>Khuyến mãi</a>
+        <div class="grp">Bán hàng</div><a><svg width="17" height="17"><use href="#i-truck"/></svg>Đơn hàng</a>
+      </aside>
+      <div class="adm-main">
+        <div class="adm-bar"><h2>Sản phẩm</h2><span style="font-size:13px;color:var(--ash)">128 sản phẩm · 5 sắp hết hàng</span><div class="who"><span class="av">QT</span></div></div>
+        <div class="adm-body">
+          <div class="panel">
+            <div class="panel-head"><h3>Danh sách sản phẩm</h3><div class="r"><button class="btn ghost sm">Xuất Excel</button><button class="btn sm"><svg width="15" height="15"><use href="#i-plus"/></svg>Thêm sản phẩm</button></div></div>
+            <div class="toolbar">
+              <div class="search"><svg width="17" height="17"><use href="#i-search"/></svg><input class="input" value="pro max" placeholder="Tìm theo tên hoặc mã sản phẩm"></div>
+              <select class="select"><option>Tất cả danh mục</option><option selected>iPhone</option></select>
+              <select class="select"><option>Tất cả trạng thái</option><option>Đang bán</option><option>Ngừng bán</option></select>
+              <select class="select"><option>Mọi mức tồn</option><option selected>Tồn dưới 5</option></select>
+              <select class="select"><option>Mới nhất</option><option>Giá cao đến thấp</option><option>Tồn kho tăng dần</option></select>
+              <button class="btn sm">Áp dụng</button><button class="btn quiet sm">Xoá lọc</button>
+            </div>
+            <table class="table">
+              <thead><tr><th>Ảnh</th><th><span class="sort">Tên sản phẩm</span></th><th>Danh mục</th><th>Giá bán</th><th>Tồn kho</th><th>Đã bán</th><th>Trạng thái</th><th style="text-align:right">Thao tác</th></tr></thead>
+              <tbody>
+                <tr><td><div class="shot" style="width:42px;height:42px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div></td><td><b>iPhone 16 Pro Max 256GB</b><div class="mono" style="font-size:11px;color:var(--ash)">SKU-IP16PM-256-TIT</div></td><td><span class="tag">iPhone</span></td><td class="num">34.990.000 ₫</td><td class="num">12</td><td class="num">42</td><td><span class="badge ok">Đang bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg></button><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Ngừng bán</button></td></tr>
+                <tr><td><div class="shot" style="width:42px;height:42px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div></td><td><b>iPhone 16 Pro Max 512GB</b><div class="mono" style="font-size:11px;color:var(--ash)">SKU-IP16PM-512-WHT</div></td><td><span class="tag">iPhone</span></td><td class="num">40.990.000 ₫</td><td class="num" style="color:var(--warn);font-weight:600">3</td><td class="num">17</td><td><span class="badge ok">Đang bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg></button><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Ngừng bán</button></td></tr>
+                <tr><td><div class="shot" style="width:42px;height:42px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div></td><td><b>iPhone 15 Pro Max 256GB</b><div class="mono" style="font-size:11px;color:var(--ash)">SKU-IP15PM-256-BLU</div></td><td><span class="tag">iPhone</span></td><td class="num">29.990.000 ₫</td><td class="num" style="color:var(--danger);font-weight:600">0</td><td class="num">86</td><td><span class="badge off">Ngừng bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg></button><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs">Mở bán</button></td></tr>
+                <tr><td><div class="shot" style="width:42px;height:42px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-mac"/></svg></div></td><td><b>MacBook Pro M4 14"</b><div class="mono" style="font-size:11px;color:var(--ash)">SKU-MBP14-M4-512</div></td><td><span class="tag">Mac</span></td><td class="num">42.490.000 ₫</td><td class="num" style="color:var(--warn);font-weight:600">2</td><td class="num">9</td><td><span class="badge ok">Đang bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg></button><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Ngừng bán</button></td></tr>
+              </tbody>
+            </table>
+            <div class="pager" style="border-top:1px solid var(--line)">
+              <span class="info">Hiển thị 1–4 trong 26 sản phẩm khớp bộ lọc</span>
+              <div style="display:flex;gap:12px;align-items:center"><select class="select" style="height:34px;font-size:12.5px;min-width:120px"><option>10 dòng/trang</option></select><div class="pages"><button class="pg" disabled>‹</button><button class="pg on">1</button><button class="pg">2</button><button class="pg">3</button><button class="pg">›</button></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ============ 19 · PRODUCT FORM ============ -->
+  <section class="screen" id="s-prodform" data-title="Form sản phẩm" data-role="Quản trị viên" data-rolec="adm" data-code="SCR-19" data-note="Kiểm tra ảnh ở server: chỉ nhận jpg, jpeg, png và tối đa 2MB">
+    <div class="frame"><div class="adm">
+      <aside class="adm-side">
+        <div class="brand"><svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><div><div style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:13px">HALO</div><div class="mono" style="font-size:8.5px;letter-spacing:.16em;color:#5C6470">TRANG QUẢN TRỊ</div></div></div>
+        <div class="grp">Dữ liệu nền</div>
+        <a><svg width="17" height="17"><use href="#i-user"/></svg>Người dùng</a>
+        <a><svg width="17" height="17"><use href="#i-grid"/></svg>Danh mục</a>
+        <a class="on"><svg width="17" height="17"><use href="#i-box"/></svg>Sản phẩm</a>
+        <a><svg width="17" height="17"><use href="#i-tag"/></svg>Khuyến mãi</a>
+      </aside>
+      <div class="adm-main">
+        <div class="adm-bar"><h2>Thêm sản phẩm</h2><div class="who"><button class="btn ghost sm">Huỷ</button><button class="btn ghost sm">Lưu nháp</button><button class="btn sm">Lưu và mở bán</button></div></div>
+        <div class="adm-body">
+          <div class="split">
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div class="panel"><div class="panel-head"><h3>Thông tin cơ bản</h3></div><div class="panel-pad">
+                <div class="field err"><label>Tên sản phẩm <span class="req">*</span></label><input class="input" value="iPhone 16 Pro Max 256GB"><div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg>Tên này đã có trong hệ thống, hãy đặt tên khác</div></div>
+                <div class="grid-2">
+                  <div class="field"><label>Mã sản phẩm <span class="req">*</span></label><input class="input" value="SKU-IP16PM-256-TIT"><div class="help">Viết hoa, không dấu, không khoảng trắng</div></div>
+                  <div class="field"><label>Danh mục <span class="req">*</span></label><select class="select"><option>iPhone</option><option>Mac</option><option>iPad</option></select></div>
+                </div>
+                <div class="grid-3">
+                  <div class="field"><label>Giá bán <span class="req">*</span></label><input class="input" value="34.990.000"><div class="help">Đơn vị: đồng</div></div>
+                  <div class="field"><label>Giá gạch ngang</label><input class="input" value="37.990.000"></div>
+                  <div class="field"><label>Tồn kho <span class="req">*</span></label><input class="input" value="12"></div>
+                </div>
+                <div class="field" style="margin-bottom:0"><label>Mô tả ngắn</label><textarea class="textarea">Khung titan cấp 5, chip A18 Pro, màn hình 6.9 inch 120Hz.</textarea><div class="help">Tối đa 500 ký tự, hiển thị ngay dưới tên sản phẩm</div></div>
+              </div></div>
+
+              <div class="panel"><div class="panel-head"><h3>Thông số kỹ thuật</h3><div class="r"><button class="btn ghost sm"><svg width="14" height="14"><use href="#i-plus"/></svg>Thêm dòng</button></div></div><div class="panel-pad">
+                <div style="display:flex;gap:10px;margin-bottom:10px"><input class="input" value="Chip" style="max-width:200px"><input class="input" value="Apple A18 Pro"><button class="icon-btn"><svg width="14" height="14"><use href="#i-trash"/></svg></button></div>
+                <div style="display:flex;gap:10px;margin-bottom:10px"><input class="input" value="Màn hình" style="max-width:200px"><input class="input" value='6.9" Super Retina XDR, 120Hz'><button class="icon-btn"><svg width="14" height="14"><use href="#i-trash"/></svg></button></div>
+                <div style="display:flex;gap:10px"><input class="input" value="Pin" style="max-width:200px"><input class="input" value="Xem video tới 33 giờ"><button class="icon-btn"><svg width="14" height="14"><use href="#i-trash"/></svg></button></div>
+              </div></div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div class="panel"><div class="panel-head"><h3>Ảnh sản phẩm</h3></div><div class="panel-pad">
+                <div style="border:1px dashed var(--line);border-radius:var(--r-md);padding:26px;text-align:center">
+                  <div class="shot" style="width:76px;height:76px;aspect-ratio:auto;margin:0 auto 12px"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div>
+                  <button class="btn ghost sm">Chọn ảnh từ máy</button>
+                  <div class="help" style="margin-top:8px">Chấp nhận jpg, jpeg, png · tối đa 2MB · nên dùng ảnh vuông 1000×1000</div>
+                </div>
+                <div class="err-msg" style="margin-top:10px"><svg width="14" height="14"><use href="#i-alert"/></svg>File “anh-may.webp” không được chấp nhận. Hãy chọn file jpg, jpeg hoặc png.</div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">
+                  <div class="shot" style="border:1px solid var(--ink)"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div>
+                  <div class="shot"><svg style="color:#8B929C"><use href="#d-phone"/></svg></div>
+                  <div class="shot"><svg style="color:#8B929C"><use href="#d-acc"/></svg></div>
+                  <div class="shot" style="display:flex;align-items:center;justify-content:center;border:1px dashed var(--line);background:#fff"><svg width="18" height="18" style="width:18px;height:18px;color:var(--ash)"><use href="#i-plus"/></svg></div>
+                </div>
+              </div></div>
+              <div class="panel"><div class="panel-head"><h3>Hiển thị</h3></div><div class="panel-pad">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span class="switch on"></span><span style="font-size:13.5px">Đang bán</span></div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span class="switch"></span><span style="font-size:13.5px">Ghim lên trang chủ</span></div>
+                <div class="field" style="margin-bottom:0"><label>Khuyến mãi áp dụng</label><select class="select"><option>Không áp dụng</option><option>HALO500 · giảm 500.000 ₫</option></select></div>
+              </div></div>
+              <div class="note-box"><b>Nhắc trước khi commit:</b> kiểm tra tên rỗng, tên toàn dấu cách, tên vượt độ dài cột trong cơ sở dữ liệu, giá âm và tồn kho âm.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ============ 20 · PROMOTIONS ADMIN ============ -->
+  <section class="screen" id="s-promos" data-title="Quản lý khuyến mãi" data-role="Quản trị viên" data-rolec="adm" data-code="SCR-20" data-note="Ngày bắt đầu phải trước ngày kết thúc — kiểm tra ở tầng nghiệp vụ trước khi ghi xuống cơ sở dữ liệu">
+    <div class="frame"><div class="adm">
+      <aside class="adm-side">
+        <div class="brand"><svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><div><div style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:13px">HALO</div><div class="mono" style="font-size:8.5px;letter-spacing:.16em;color:#5C6470">TRANG QUẢN TRỊ</div></div></div>
+        <div class="grp">Dữ liệu nền</div>
+        <a><svg width="17" height="17"><use href="#i-user"/></svg>Người dùng</a>
+        <a><svg width="17" height="17"><use href="#i-grid"/></svg>Danh mục</a>
+        <a><svg width="17" height="17"><use href="#i-box"/></svg>Sản phẩm</a>
+        <a class="on"><svg width="17" height="17"><use href="#i-tag"/></svg>Khuyến mãi</a>
+      </aside>
+      <div class="adm-main">
+        <div class="adm-bar"><h2>Khuyến mãi</h2><span style="font-size:13px;color:var(--ash)">2 chương trình đang chạy</span><div class="who"><span class="av">QT</span></div></div>
+        <div class="adm-body">
+          <div class="split">
+            <div class="panel">
+              <div class="panel-head"><h3>Danh sách khuyến mãi</h3><div class="r"><button class="btn sm"><svg width="15" height="15"><use href="#i-plus"/></svg>Tạo khuyến mãi</button></div></div>
+              <div class="toolbar">
+                <div class="search"><svg width="17" height="17"><use href="#i-search"/></svg><input class="input" placeholder="Tìm theo mã hoặc tên chương trình"></div>
+                <select class="select"><option>Tất cả trạng thái</option><option>Đang chạy</option><option>Sắp bắt đầu</option><option>Đã kết thúc</option></select>
+                <select class="select"><option>Mới nhất</option><option>Sắp hết hạn</option></select>
+                <button class="btn sm">Áp dụng</button>
+              </div>
+              <table class="table">
+                <thead><tr><th>Mã</th><th><span class="sort">Tên chương trình</span></th><th>Mức giảm</th><th>Thời gian</th><th>Đã dùng</th><th>Trạng thái</th><th style="text-align:right">Thao tác</th></tr></thead>
+                <tbody>
+                  <tr><td class="num"><b>HALO500</b></td><td>Chào thành viên mới</td><td class="num">500.000 ₫</td><td class="num">01/08 → 31/08</td><td class="num">214 / 500</td><td><span class="badge ok">Đang chạy</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Dừng</button></td></tr>
+                  <tr><td class="num"><b>MAC5TR</b></td><td>Back to school cho Mac</td><td class="num">5% · tối đa 5tr</td><td class="num">05/08 → 20/08</td><td class="num">37 / 200</td><td><span class="badge ok">Đang chạy</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs danger">Dừng</button></td></tr>
+                  <tr><td class="num"><b>NOEL26</b></td><td>Giáng sinh 2026</td><td class="num">1.000.000 ₫</td><td class="num">20/12 → 31/12</td><td class="num">0 / 1000</td><td><span class="badge warn">Sắp bắt đầu</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-edit"/></svg></button><button class="btn xs quiet">Xem</button></td></tr>
+                  <tr style="opacity:.7"><td class="num"><b>SUMMER300</b></td><td>Hè rực rỡ</td><td class="num">300.000 ₫</td><td class="num">01/06 → 30/06</td><td class="num">489 / 500</td><td><span class="badge off">Đã kết thúc</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg></button><button class="btn xs quiet">Nhân bản</button></td></tr>
+                </tbody>
+              </table>
+              <div class="pager" style="border-top:1px solid var(--line)"><span class="info">Hiển thị 1–4 trong 11 chương trình</span><div class="pages"><button class="pg" disabled>‹</button><button class="pg on">1</button><button class="pg">2</button><button class="pg">3</button><button class="pg">›</button></div></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Tạo khuyến mãi</h3></div>
+              <div class="panel-pad">
+                <div class="field"><label>Mã giảm giá <span class="req">*</span></label><input class="input" value="NOEL26"><div class="help">Viết hoa, 4–20 ký tự, không trùng mã cũ</div></div>
+                <div class="field"><label>Tên chương trình <span class="req">*</span></label><input class="input" value="Giáng sinh 2026"></div>
+                <div class="grid-2">
+                  <div class="field"><label>Kiểu giảm <span class="req">*</span></label><select class="select"><option>Số tiền cố định</option><option>Phần trăm</option></select></div>
+                  <div class="field"><label>Giá trị <span class="req">*</span></label><input class="input" value="1.000.000"></div>
+                  <div class="field"><label>Bắt đầu <span class="req">*</span></label><input class="input" type="date" value="2026-12-20"></div>
+                  <div class="field err"><label>Kết thúc <span class="req">*</span></label><input class="input" type="date" value="2026-12-10"><div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg>Ngày kết thúc phải sau ngày bắt đầu</div></div>
+                </div>
+                <div class="grid-2">
+                  <div class="field"><label>Đơn tối thiểu</label><input class="input" value="10.000.000"></div>
+                  <div class="field"><label>Số lượt tối đa</label><input class="input" value="1000"></div>
+                </div>
+                <div class="field"><label>Áp dụng cho</label><select class="select"><option>Toàn bộ sản phẩm</option><option>Theo danh mục</option><option>Sản phẩm chỉ định</option></select></div>
+                <button class="btn block">Lưu khuyến mãi</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ============ 21 · ORDERS ADMIN ============ -->
+  <section class="screen" id="s-aorders" data-title="Quản lý đơn hàng" data-role="Quản trị viên" data-rolec="adm" data-code="SCR-21" data-note="Đổi trạng thái đơn luôn đi bằng POST, ghi lại người thao tác và thời điểm">
+    <div class="frame"><div class="adm">
+      <aside class="adm-side">
+        <div class="brand"><svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><div><div style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:13px">HALO</div><div class="mono" style="font-size:8.5px;letter-spacing:.16em;color:#5C6470">TRANG QUẢN TRỊ</div></div></div>
+        <div class="grp">Dữ liệu nền</div>
+        <a><svg width="17" height="17"><use href="#i-user"/></svg>Người dùng</a>
+        <a><svg width="17" height="17"><use href="#i-box"/></svg>Sản phẩm</a>
+        <div class="grp">Bán hàng</div>
+        <a class="on"><svg width="17" height="17"><use href="#i-truck"/></svg>Đơn hàng</a>
+        <a><svg width="17" height="17"><use href="#i-chart"/></svg>Báo cáo doanh thu</a>
+      </aside>
+      <div class="adm-main">
+        <div class="adm-bar"><h2>Đơn hàng</h2><span class="badge warn">9 đơn chờ xác nhận</span><div class="who"><span class="av">QT</span></div></div>
+        <div class="adm-body">
+          <div class="panel">
+            <div class="panel-head"><h3>Danh sách đơn</h3><div class="r"><button class="btn ghost sm">Xuất Excel</button></div></div>
+            <div class="toolbar">
+              <div class="search"><svg width="17" height="17"><use href="#i-search"/></svg><input class="input" placeholder="Tìm theo mã đơn, tên hoặc số điện thoại"></div>
+              <select class="select"><option>Tất cả trạng thái</option><option selected>Chờ xác nhận</option><option>Đang giao</option><option>Đã giao</option><option>Đã huỷ</option></select>
+              <input class="input" type="date" style="width:auto"><span style="color:var(--ash);font-size:13px">đến</span><input class="input" type="date" style="width:auto">
+              <button class="btn sm">Áp dụng</button><button class="btn quiet sm">Xoá lọc</button>
+            </div>
+            <table class="table">
+              <thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th><span class="sort">Tổng tiền</span></th><th>Thanh toán</th><th>Trạng thái</th><th>Đặt lúc</th><th style="text-align:right">Thao tác</th></tr></thead>
+              <tbody>
+                <tr><td class="num"><b>HL-20260814-0192</b></td><td>Nguyễn Minh An<div style="font-size:12px;color:var(--ash)">0912345678</div></td><td class="num">3</td><td class="num">41.360.000 ₫</td><td><span class="tag">Khi nhận hàng</span></td><td><span class="badge warn">Chờ xác nhận</span></td><td class="num">14/08 09:12</td><td class="row-actions"><button class="btn xs">Xác nhận</button><button class="btn xs danger">Huỷ</button></td></tr>
+                <tr><td class="num"><b>HL-20260814-0191</b></td><td>Trần Hải<div style="font-size:12px;color:var(--ash)">0987654321</div></td><td class="num">1</td><td class="num">5.290.000 ₫</td><td><span class="tag">Chuyển khoản</span></td><td><span class="badge warn">Chờ xác nhận</span></td><td class="num">14/08 08:47</td><td class="row-actions"><button class="btn xs">Xác nhận</button><button class="btn xs danger">Huỷ</button></td></tr>
+                <tr><td class="num"><b>HL-20260814-0190</b></td><td>Lê Thu Trang<div style="font-size:12px;color:var(--ash)">0903111222</div></td><td class="num">2</td><td class="num">27.780.000 ₫</td><td><span class="tag">Trả góp</span></td><td><span class="badge info">Đang giao</span></td><td class="num">14/08 08:05</td><td class="row-actions"><button class="btn xs">Đã giao</button><button class="btn xs quiet">Xem</button></td></tr>
+                <tr><td class="num"><b>HL-20260813-0189</b></td><td>Phạm Quốc Huy</td><td class="num">1</td><td class="num">26.490.000 ₫</td><td><span class="tag">Chuyển khoản</span></td><td><span class="badge ok">Đã giao</span></td><td class="num">13/08 16:20</td><td class="row-actions"><button class="btn xs quiet">Xem</button></td></tr>
+                <tr style="opacity:.75"><td class="num"><b>HL-20260813-0188</b></td><td>Đỗ Thanh Mai</td><td class="num">2</td><td class="num">7.870.000 ₫</td><td><span class="tag">Khi nhận hàng</span></td><td><span class="badge dan">Đã huỷ</span></td><td class="num">13/08 11:02</td><td class="row-actions"><button class="btn xs quiet">Xem</button></td></tr>
+              </tbody>
+            </table>
+            <div class="pager" style="border-top:1px solid var(--line)"><span class="info">Hiển thị 1–5 trong 342 đơn</span><div class="pages"><button class="pg" disabled>‹</button><button class="pg on">1</button><button class="pg">2</button><button class="pg">3</button><span class="pg" style="border:0">…</span><button class="pg">69</button><button class="pg">›</button></div></div>
+          </div>
+
+          <div class="split">
+            <div class="panel">
+              <div class="panel-head"><h3>Chi tiết đơn HL-20260814-0192</h3><span class="r badge warn">Chờ xác nhận</span></div>
+              <div class="panel-pad">
+                <div class="grid-2" style="margin-bottom:16px">
+                  <dl class="kv"><dt>Khách hàng</dt><dd>Nguyễn Minh An<br>0912 345 678 · minhan@gmail.com</dd></dl>
+                  <dl class="kv"><dt>Giao đến</dt><dd>128 Trần Duy Hưng, Cầu Giấy, Hà Nội<br>Giao tận nơi trong 2 giờ</dd></dl>
+                </div>
+                <table class="table" style="border-top:1px solid var(--line)">
+                  <thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th style="text-align:right">Thành tiền</th></tr></thead>
+                  <tbody>
+                    <tr><td>iPhone 16 Pro Max 256GB</td><td class="num">34.990.000 ₫</td><td class="num">1</td><td class="num" style="text-align:right">34.990.000 ₫</td></tr>
+                    <tr><td>AirPods Pro 2 USB-C</td><td class="num">5.290.000 ₫</td><td class="num">1</td><td class="num" style="text-align:right">5.290.000 ₫</td></tr>
+                    <tr><td>Sạc nhanh 30W</td><td class="num">790.000 ₫</td><td class="num">2</td><td class="num" style="text-align:right">1.580.000 ₫</td></tr>
+                  </tbody>
+                </table>
+                <div style="max-width:280px;margin-left:auto;padding-top:10px">
+                  <div class="sum-row"><span>Tạm tính</span><span>41.860.000 ₫</span></div>
+                  <div class="sum-row"><span>Mã HALO500</span><span style="color:var(--ok)">− 500.000 ₫</span></div>
+                  <div class="sum-row total"><span>Tổng cộng</span><span>41.360.000 ₫</span></div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div class="panel"><div class="panel-head"><h3>Cập nhật trạng thái</h3></div><div class="panel-pad">
+                <div class="field"><label>Trạng thái mới</label><select class="select"><option>Đã xác nhận</option><option>Đang giao</option><option>Đã giao</option><option>Đã huỷ</option></select></div>
+                <div class="field"><label>Ghi chú nội bộ</label><textarea class="textarea" placeholder="Ví dụ: khách hẹn giao sau 18h"></textarea></div>
+                <button class="btn block">Cập nhật đơn</button>
+              </div></div>
+              <div class="panel"><div class="panel-head"><h3>Nhật ký xử lý</h3></div><div class="panel-pad"><div class="timeline">
+                <div class="ev done"><b>Khách đặt hàng</b><span>14/08/2026 · 09:12</span></div>
+                <div class="ev"><b>Chờ nhân viên xác nhận</b><span>—</span></div>
+              </div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ============ 22 · STAFF ============ -->
+  <section class="screen" id="s-staff" data-title="Màn hình dùng chung cho nhân viên" data-role="Nhân viên bán hàng" data-rolec="stf" data-code="SCR-22" data-note="Cùng một trang JSP với quản trị viên — chỉ khác ở chỗ nút nào được hiện ra">
+    <div class="frame"><div class="adm">
+      <aside class="adm-side">
+        <div class="brand"><svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="54" r="31" fill="none" stroke="#C9B58C" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 45" transform="rotate(-63 50 54)"/><path d="M64 10c11 3 15 12 12 22-11-1-15-11-12-22Z" fill="#C9B58C"/></svg><div><div style="font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:13px">HALO</div><div class="mono" style="font-size:8.5px;letter-spacing:.16em;color:#5C6470">TRANG NHÂN VIÊN</div></div></div>
+        <div class="grp">Công việc</div>
+        <a><svg width="17" height="17"><use href="#i-truck"/></svg>Đơn cần xử lý</a>
+        <a class="on"><svg width="17" height="17"><use href="#i-box"/></svg>Sản phẩm</a>
+        <a><svg width="17" height="17"><use href="#i-user"/></svg>Khách hàng</a>
+      </aside>
+      <div class="adm-main">
+        <div class="adm-bar"><h2>Sản phẩm</h2><span class="badge info">Bạn đang xem với quyền nhân viên</span><div class="who"><span>Phạm Văn Đức</span><span class="av" style="background:#DDE1E7;color:#4A525C">PV</span></div></div>
+        <div class="adm-body">
+          <div class="panel">
+            <div class="panel-head"><h3>Danh sách sản phẩm</h3><div class="r"><span style="font-size:12.5px;color:var(--ash)">Nhân viên không thêm hoặc ngừng bán sản phẩm</span></div></div>
+            <div class="toolbar">
+              <div class="search"><svg width="17" height="17"><use href="#i-search"/></svg><input class="input" placeholder="Tìm theo tên hoặc mã sản phẩm"></div>
+              <select class="select"><option>Tất cả danh mục</option></select>
+              <select class="select"><option>Tất cả trạng thái</option></select>
+              <button class="btn sm">Áp dụng</button>
+            </div>
+            <table class="table">
+              <thead><tr><th>Ảnh</th><th>Tên sản phẩm</th><th>Danh mục</th><th>Giá bán</th><th>Tồn kho</th><th>Trạng thái</th><th style="text-align:right">Thao tác</th></tr></thead>
+              <tbody>
+                <tr><td><div class="shot" style="width:42px;height:42px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-phone"/></svg></div></td><td><b>iPhone 16 Pro Max 256GB</b></td><td><span class="tag">iPhone</span></td><td class="num">34.990.000 ₫</td><td class="num">12</td><td><span class="badge ok">Đang bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg> Xem</button></td></tr>
+                <tr><td><div class="shot" style="width:42px;height:42px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-mac"/></svg></div></td><td><b>MacBook Air M3 13"</b></td><td><span class="tag">Mac</span></td><td class="num">26.490.000 ₫</td><td class="num">7</td><td><span class="badge ok">Đang bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg> Xem</button></td></tr>
+                <tr><td><div class="shot" style="width:42px;height:42px;aspect-ratio:auto;border-radius:var(--r-sm)"><svg style="color:#5B6472"><use href="#d-pods"/></svg></div></td><td><b>AirPods Pro 2 USB-C</b></td><td><span class="tag">Phụ kiện</span></td><td class="num">5.290.000 ₫</td><td class="num">34</td><td><span class="badge ok">Đang bán</span></td><td class="row-actions"><button class="btn xs quiet"><svg width="13" height="13"><use href="#i-eye"/></svg> Xem</button></td></tr>
+              </tbody>
+            </table>
+            <div class="pager" style="border-top:1px solid var(--line)"><span class="info">Hiển thị 1–3 trong 128 sản phẩm</span><div class="pages"><button class="pg" disabled>‹</button><button class="pg on">1</button><button class="pg">2</button><button class="pg">›</button></div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h3>Ai làm được gì</h3></div>
+            <table class="table">
+              <thead><tr><th>Chức năng</th><th>Khách hàng</th><th>Nhân viên</th><th>Quản trị viên</th></tr></thead>
+              <tbody>
+                <tr><td>Xem sản phẩm, đặt hàng</td><td><span class="badge ok">Có</span></td><td><span class="badge ok">Có</span></td><td><span class="badge ok">Có</span></td></tr>
+                <tr><td>Xác nhận và cập nhật đơn</td><td><span class="badge off">Không</span></td><td><span class="badge ok">Có</span></td><td><span class="badge ok">Có</span></td></tr>
+                <tr><td>Thêm, sửa sản phẩm và danh mục</td><td><span class="badge off">Không</span></td><td><span class="badge off">Không</span></td><td><span class="badge ok">Có</span></td></tr>
+                <tr><td>Khoá tài khoản, phân vai trò</td><td><span class="badge off">Không</span></td><td><span class="badge off">Không</span></td><td><span class="badge ok">Có</span></td></tr>
+                <tr><td>Tạo và dừng khuyến mãi</td><td><span class="badge off">Không</span></td><td><span class="badge off">Không</span></td><td><span class="badge ok">Có</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note-box"><b>Cách làm:</b> một trang danh sách sản phẩm duy nhất, servlet đọc vai trò trong phiên đăng nhập và đặt sẵn các cờ quyền, JSP chỉ việc hiện hoặc ẩn nút. Không nhân bản thành hai trang riêng cho hai vai trò.</div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  </div>
+</main>
+</div>
+
+<script>
+(function(){
+  var items=document.querySelectorAll('.rail .item');
+  var screens=document.querySelectorAll('.screen');
+  function go(id){
+    screens.forEach(function(s){s.classList.toggle('on',s.id===id)});
+    items.forEach(function(a){a.classList.toggle('on',a.dataset.go===id)});
+    var s=document.getElementById(id); if(!s)return;
+    document.getElementById('scTitle').innerHTML=s.dataset.title||'';
+    var role=document.getElementById('scRole');
+    role.textContent=s.dataset.role||''; role.className='chip '+(s.dataset.rolec||'');
+    document.getElementById('scNote').textContent=s.dataset.note||'';
+    document.getElementById('scCode').textContent=s.dataset.code||'';
+    window.scrollTo({top:0,behavior:'smooth'});
+    document.getElementById('rail').classList.remove('open');
+  }
+  items.forEach(function(a){a.addEventListener('click',function(){go(a.dataset.go)})});
+  document.getElementById('menuBtn').addEventListener('click',function(){document.getElementById('rail').classList.toggle('open')});
+  document.querySelectorAll('.rail .item')[0].classList.add('on');
+})();
+</script>
+</body>
+</html>

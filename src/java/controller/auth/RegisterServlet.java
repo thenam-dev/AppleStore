@@ -1,6 +1,5 @@
 package controller.auth;
 
-import model.entity.user.User;
 import service.AuthService;
 
 import jakarta.servlet.ServletException;
@@ -8,65 +7,59 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet(name = "RegisterServlet", urlPatterns = {"/register"})
 public class RegisterServlet extends HttpServlet {
-    private static final String REGISTER_VIEW = "/WEB-INF/views/auth/register.jsp";
+
+    private static final String VIEW = "/WEB-INF/views/auth/register.jsp";
 
     private final AuthService authService = new AuthService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher(REGISTER_VIEW).forward(request, response);
+        request.getRequestDispatcher(VIEW).forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+
         String fullName = request.getParameter("fullName");
-        String email = request.getParameter("email");
         String phone = request.getParameter("phone");
+        String email = request.getParameter("email");
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
 
+        Map<String, String> formValues = new HashMap<>();
+        formValues.put("fullName", fullName == null ? "" : fullName);
+        formValues.put("phone", phone == null ? "" : phone);
+        formValues.put("email", email == null ? "" : email);
+
         try {
-            User createdUser = authService.register(fullName, email, phone, password, confirmPassword);
-            String redirectUrl = request.getContextPath() + "/login"
-                    + "?registered=1&email=" + encode(createdUser.getEmail());
-            response.sendRedirect(redirectUrl);
-        } catch (IllegalArgumentException ex) {
-            redirectWithError(request, response, ex.getMessage(), fullName, email, phone);
+            AuthService.RegisterResult result = authService.register(fullName, email, phone, password, confirmPassword);
+
+            if (!result.success) {
+                request.setAttribute("form", formValues);
+                request.setAttribute("errors", result.fieldErrors);
+                request.getRequestDispatcher(VIEW).forward(request, response);
+                return;
+            }
+
+            HttpSession session = request.getSession(true);
+            session.setAttribute("successMsg", "Tạo tài khoản thành công, vui lòng đăng nhập.");
+            response.sendRedirect(request.getContextPath() + "/login");
         } catch (SQLException ex) {
-            redirectWithError(request, response,
-                    "Hiện chưa thể tạo tài khoản. Vui lòng thử lại sau.", fullName, email, phone);
+            request.setAttribute("form", formValues);
+            request.setAttribute("errorMsg", "Hiện chưa thể tạo tài khoản. Vui lòng thử lại sau.");
+            request.getRequestDispatcher(VIEW).forward(request, response);
         }
-    }
-
-    private void redirectWithError(HttpServletRequest request, HttpServletResponse response, String message,
-            String fullName, String email, String phone) throws IOException {
-        StringBuilder redirectUrl = new StringBuilder(request.getContextPath())
-                .append("/register?error=").append(encode(message));
-
-        if (fullName != null) {
-            redirectUrl.append("&fullName=").append(encode(fullName));
-        }
-        if (email != null) {
-            redirectUrl.append("&email=").append(encode(email));
-        }
-        if (phone != null) {
-            redirectUrl.append("&phone=").append(encode(phone));
-        }
-
-        response.sendRedirect(redirectUrl.toString());
-    }
-
-    private String encode(String value) {
-        return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
     }
 }

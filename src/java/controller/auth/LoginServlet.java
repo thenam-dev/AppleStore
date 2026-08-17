@@ -12,105 +12,62 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.util.Map;
 
 @WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
 public class LoginServlet extends HttpServlet {
-    private static final String LOGIN_VIEW = "/WEB-INF/views/auth/login.jsp";
-    private static final int REMEMBER_ME_MAX_AGE_SECONDS = 60 * 60 * 24 * 14; // 14 days
-    private static final int DEFAULT_MAX_AGE_SECONDS = 60 * 30; // 30 minutes
+    private static final String VIEW = "/WEB-INF/views/auth/login.jsp";
+    private static final int REMEMBER_ME_MAX_AGE_SECONDS = 60 * 60 * 24 * 14; // 14 ngày
+    private static final int DEFAULT_MAX_AGE_SECONDS = 60 * 30; // 30 phút
 
     private final AuthService authService = new AuthService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher(LOGIN_VIEW).forward(request, response);
+        request.getRequestDispatcher(VIEW).forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+
         String email = request.getParameter("email");
         String password = request.getParameter("password");
-        boolean rememberMe = "1".equals(request.getParameter("rememberMe"));
-        String redirectTo = request.getParameter("redirectTo");
+        boolean rememberMe = "1".equals(request.getParameter("remember"));
+        String redirectTo = sanitizeRedirect(request.getParameter("redirectTo"));
 
         try {
-            User user = authService.login(email, password);
+            AuthService.LoginResult result = authService.login(email, password);
+
+            if (!result.success) {
+                request.setAttribute("errorMsg", result.message);
+                request.setAttribute("attemptsLeft", result.attemptsLeft);
+                request.setAttribute("form", Map.of("email", email == null ? "" : email));
+                request.getRequestDispatcher(VIEW).forward(request, response);
+                return;
+            }
 
             HttpSession session = request.getSession(true);
-            session.setAttribute(AppConfig.SESSION_USER, user);
-            // Temporary bridge while a few older admin screens still read the legacy key.
-            session.setAttribute("loggedInUser", user);
+            session.setAttribute(AppConfig.SESSION_USER, result.user);
             session.setMaxInactiveInterval(rememberMe ? REMEMBER_ME_MAX_AGE_SECONDS : DEFAULT_MAX_AGE_SECONDS);
 
-            String redirectUrl = resolveRedirectUrl(user, redirectTo, request);
-            response.sendRedirect(redirectUrl);
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            redirectWithError(request, response, ex.getMessage(), email, redirectTo);
+            String target = (redirectTo != null) ? request.getContextPath() + redirectTo
+                    : request.getContextPath() + "/index.jsp";
+            response.sendRedirect(target);
         } catch (SQLException ex) {
-            redirectWithError(request, response,
-                    "Hiện chưa thể đăng nhập. Vui lòng thử lại sau.", email, redirectTo);
+            request.setAttribute("errorMsg", "Hiện chưa thể đăng nhập. Vui lòng thử lại sau.");
+            request.setAttribute("form", Map.of("email", email == null ? "" : email));
+            request.getRequestDispatcher(VIEW).forward(request, response);
         }
     }
 
-    private String resolveRedirectUrl(User user, String redirectTo, HttpServletRequest request) {
-        String role = user.getRole() == null ? "" : user.getRole().trim().toUpperCase();
-
-        if (AppConfig.ROLE_ADMIN.equals(role) || AppConfig.ROLE_SALE_STAFF.equals(role)) {
-            return request.getContextPath() + "/admin/dashboard";
+    private String sanitizeRedirect(String redirectTo) {
+        if (redirectTo == null || redirectTo.isBlank() || !redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
+            return null;
         }
-
-        if (AppConfig.ROLE_CUSTOMER.equals(role)) {
-            if (isSafeRedirect(redirectTo)) {
-                return toAppRedirectUrl(redirectTo, request);
-            }
-            return request.getContextPath() + "/index.jsp";
-        }
-
-        if (AppConfig.ROLE_DELIVERY.equals(role)) {
-            return request.getContextPath() + "/index.jsp";
-        }
-
-        return request.getContextPath() + "/index.jsp";
-    }
-
-    private boolean isSafeRedirect(String redirectTo) {
-        // Only allow relative, in-app paths to avoid open-redirect vulnerabilities.
-        return redirectTo != null && redirectTo.startsWith("/") && !redirectTo.startsWith("//");
-    }
-
-    private String toAppRedirectUrl(String redirectTo, HttpServletRequest request) {
-        if (redirectTo == null || redirectTo.isBlank()) {
-            return request.getContextPath() + "/index.jsp";
-        }
-
-        if (redirectTo.startsWith(request.getContextPath() + "/")) {
-            return redirectTo;
-        }
-
-        return request.getContextPath() + redirectTo;
-    }
-
-    private void redirectWithError(HttpServletRequest request, HttpServletResponse response, String message,
-            String email, String redirectTo) throws IOException {
-        StringBuilder redirectUrl = new StringBuilder(request.getContextPath())
-                .append("/login?error=").append(encode(message));
-
-        if (email != null) {
-            redirectUrl.append("&email=").append(encode(email));
-        }
-        if (isSafeRedirect(redirectTo)) {
-            redirectUrl.append("&redirectTo=").append(encode(redirectTo));
-        }
-
-        response.sendRedirect(redirectUrl.toString());
-    }
-
-    private String encode(String value) {
-        return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
+        return redirectTo;
     }
 }

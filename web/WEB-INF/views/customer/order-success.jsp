@@ -1,165 +1,114 @@
+<%--
+  order-success.jsp — đặt hàng thành công.
+  Servlet (OrderSuccessServlet) set:
+    order      : Order{orderId,recipientName,recipientPhone,deliveryAddress,deliveryTimeSlot,
+                        notes,status,totalAmount,deliveryFee,discountAmount,finalAmount,paymentMethod}
+    orderItems : List<OrderItem>{productNameSnapshot,variantLabelSnapshot,addonLabelSnapshot,
+                                  quantity,unitPrice,subtotal}
+    successMsg : flash message (CheckoutServlet/PaymentServlet set trước khi redirect)
+  Chỉ tới trang này bằng GET /order-success?orderId=... (PRG) - tải lại trang không tạo thêm đơn.
+--%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="c"   uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AppleStore | Đặt hàng thành công</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đặt hàng thành công · AppleStore</title>
+  <link rel="icon" href="${ctx}/assets/images/logo-mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=2">
 </head>
-<body class="site-body">
-
-<c:set var="ctx" value="${pageContext.request.contextPath}" />
+<body>
 
 <jsp:include page="/WEB-INF/views/common/header.jsp"/>
 
-<main>
-    <section class="section-block">
-        <div class="container">
-            <nav aria-label="Đường dẫn">
-                <ol class="breadcrumb app-breadcrumb">
-                    <li class="breadcrumb-item"><a href="${ctx}/index.jsp">Trang chủ</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Đặt hàng thành công</li>
-                </ol>
-            </nav>
-            <div class="store-page-heading">
-                <div>
-                    <span class="eyebrow">Cảm ơn bạn</span>
-                    <h1>Đơn hàng #${order.orderId} đã được ghi nhận</h1>
-                    <p>Cửa hàng sẽ liên hệ xác nhận và giao hàng trong thời gian sớm nhất.</p>
+<c:set var="activeStep" value="4" scope="request"/>
+<jsp:include page="/WEB-INF/views/common/checkout-steps.jsp"/>
+
+<div style="padding:44px 26px;text-align:center">
+  <div style="width:76px;height:76px;border-radius:50%;background:var(--ok-bg);color:var(--ok);
+       display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+    <svg width="34" height="34"><use href="#i-check"/></svg>
+  </div>
+  <h2 style="font-size:28px;text-transform:uppercase">Đã nhận đơn của bạn</h2>
+  <p style="color:var(--graphite);max-width:460px;margin:12px auto 4px;font-size:14px">
+    Cửa hàng sẽ liên hệ xác nhận và giao hàng trong thời gian sớm nhất.
+  </p>
+  <div class="etch" style="display:inline-flex;border-radius:var(--r-pill);margin:18px 0 4px">
+    <span>Mã đơn</span><i class="dot"></i><span style="opacity:1;font-weight:700">#${order.orderId}</span>
+  </div>
+
+  <%-- Không hiện lại successMsg ở đây nữa: tiến độ đã thể hiện qua thanh checkout-steps.jsp
+       phía trên (bước 4 tô đậm, các bước trước tô xanh), banner "thành công" là thừa. --%>
+  <div style="max-width:960px;margin:26px auto 0;text-align:left">
+    <div class="split">
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="panel">
+          <div class="panel-head"><h3>Sản phẩm đã đặt</h3></div>
+          <div class="panel-pad">
+            <c:forEach var="item" items="${orderItems}">
+              <div class="line-item">
+                <div style="flex:1;min-width:0">
+                  <b style="font-size:13.5px"><c:out value="${item.productNameSnapshot}"/></b><br>
+                  <span style="font-size:12px;color:var(--ash)">
+                    <c:out value="${item.variantLabelSnapshot}"/>
+                    <c:if test="${not empty item.addonLabelSnapshot}"> &middot; Dịch vụ thêm: <c:out value="${item.addonLabelSnapshot}"/></c:if>
+                  </span>
                 </div>
-            </div>
-
-            <c:if test="${not empty successMsg}">
-                <div class="alert alert-success">${successMsg}</div>
-            </c:if>
-        </div>
-    </section>
-
-    <section class="section-block section-soft">
-        <div class="container">
-            <div class="cart-layout">
-                <div class="cart-filled">
-                    <div class="cart-list-card">
-                        <div class="cart-list-head">
-                            <div>
-                                <h2>Sản phẩm đã đặt</h2>
-                                <p>Chi tiết các sản phẩm trong đơn hàng của bạn.</p>
-                            </div>
-                        </div>
-
-                        <c:forEach var="item" items="${orderItems}">
-                            <article class="cart-item">
-                                <div class="cart-item-body">
-                                    <div class="cart-item-main">
-                                        <div>
-                                            <h3>${item.productNameSnapshot}</h3>
-                                            <p>
-                                                ${item.variantLabelSnapshot}
-                                                <c:if test="${not empty item.addonLabelSnapshot}">
-                                                    &middot; Dịch vụ thêm: ${item.addonLabelSnapshot}
-                                                </c:if>
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div class="cart-item-meta">
-                                        <span>
-                                            Đơn giá:
-                                            <strong><fmt:formatNumber value="${item.unitPrice}" pattern="#,##0"/> đ</strong>
-                                            &times; ${item.quantity}
-                                        </span>
-                                        <span>
-                                            Thành tiền:
-                                            <strong><fmt:formatNumber value="${item.subtotal}" pattern="#,##0"/> đ</strong>
-                                        </span>
-                                    </div>
-                                </div>
-                            </article>
-                        </c:forEach>
-                    </div>
-
-                    <div class="cart-list-card mt-4">
-                        <div class="cart-list-head">
-                            <div>
-                                <h2>Thông tin giao hàng</h2>
-                            </div>
-                        </div>
-                        <div class="summary-lines">
-                            <div class="summary-row">
-                                <span>Người nhận</span>
-                                <strong>${order.recipientName} &ndash; ${order.recipientPhone}</strong>
-                            </div>
-                            <div class="summary-row">
-                                <span>Địa chỉ</span>
-                                <strong>${order.deliveryAddress}</strong>
-                            </div>
-                            <c:if test="${not empty order.deliveryTimeSlot}">
-                                <div class="summary-row">
-                                    <span>Khung giờ nhận hàng</span>
-                                    <strong>${order.deliveryTimeSlot}</strong>
-                                </div>
-                            </c:if>
-                            <c:if test="${not empty order.notes}">
-                                <div class="summary-row">
-                                    <span>Ghi chú</span>
-                                    <strong>${order.notes}</strong>
-                                </div>
-                            </c:if>
-                        </div>
-                    </div>
+                <span class="mono" style="font-size:12.5px;color:var(--ash)">
+                  <fmt:formatNumber value="${item.unitPrice}" type="number" maxFractionDigits="0"/> ₫ × ${item.quantity}
+                </span>
+                <div style="width:110px;text-align:right;font-family:var(--display);font-stretch:112%;font-weight:700;font-size:14.5px">
+                  <fmt:formatNumber value="${item.subtotal}" type="number" maxFractionDigits="0"/> ₫
                 </div>
-
-                <aside class="cart-summary-card">
-                    <div class="summary-card-head">
-                        <h2>Tóm tắt đơn hàng</h2>
-                    </div>
-
-                    <div class="summary-lines">
-                        <div class="summary-row">
-                            <span>Tạm tính</span>
-                            <strong><fmt:formatNumber value="${order.totalAmount}" pattern="#,##0"/> đ</strong>
-                        </div>
-                        <c:if test="${order.discountAmount > 0}">
-                            <div class="summary-row text-success">
-                                <span>Giảm giá</span>
-                                <strong>- <fmt:formatNumber value="${order.discountAmount}" pattern="#,##0"/> đ</strong>
-                            </div>
-                        </c:if>
-                        <div class="summary-row">
-                            <span>Phí vận chuyển</span>
-                            <strong><fmt:formatNumber value="${order.deliveryFee}" pattern="#,##0"/> đ</strong>
-                        </div>
-                        <div class="summary-row">
-                            <span>Phương thức thanh toán</span>
-                            <strong>${order.paymentMethod == 'COD' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản (SePay)'}</strong>
-                        </div>
-                        <div class="summary-row">
-                            <span>Trạng thái đơn</span>
-                            <strong>${order.status}</strong>
-                        </div>
-                    </div>
-
-                    <div class="summary-total">
-                        <span>Tổng cộng</span>
-                        <strong><fmt:formatNumber value="${order.finalAmount}" pattern="#,##0"/> đ</strong>
-                    </div>
-
-                    <div class="summary-actions">
-                        <a class="btn btn-app-primary w-100" href="${ctx}/products">Tiếp tục mua sắm</a>
-                        <a class="btn btn-app-outline w-100" href="${ctx}/index.jsp">Về trang chủ</a>
-                    </div>
-                </aside>
-            </div>
+              </div>
+            </c:forEach>
+          </div>
         </div>
-    </section>
-</main>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Thông tin giao hàng</h3></div>
+          <div class="panel-pad">
+            <dl class="kv">
+              <dt>Người nhận</dt><dd><c:out value="${order.recipientName}"/> · <c:out value="${order.recipientPhone}"/></dd>
+              <dt>Địa chỉ</dt><dd><c:out value="${order.deliveryAddress}"/></dd>
+              <c:if test="${not empty order.deliveryTimeSlot}">
+                <dt>Khung giờ nhận</dt><dd><c:out value="${order.deliveryTimeSlot}"/></dd>
+              </c:if>
+              <c:if test="${not empty order.notes}">
+                <dt>Ghi chú</dt><dd><c:out value="${order.notes}"/></dd>
+              </c:if>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="position:sticky;top:16px">
+        <div class="panel-head"><h3>Tóm tắt đơn hàng</h3></div>
+        <div class="panel-pad">
+          <div class="sum-row"><span>Tạm tính</span><span><fmt:formatNumber value="${order.totalAmount}" type="number" maxFractionDigits="0"/> ₫</span></div>
+          <c:if test="${order.discountAmount > 0}">
+            <div class="sum-row" style="color:var(--ok)"><span>Giảm giá</span><span>− <fmt:formatNumber value="${order.discountAmount}" type="number" maxFractionDigits="0"/> ₫</span></div>
+          </c:if>
+          <div class="sum-row"><span>Phí vận chuyển</span><span><fmt:formatNumber value="${order.deliveryFee}" type="number" maxFractionDigits="0"/> ₫</span></div>
+          <div class="sum-row"><span>Thanh toán</span><span>${order.paymentMethod == 'COD' ? 'Khi nhận hàng' : 'Chuyển khoản (SePay)'}</span></div>
+          <div class="sum-row"><span>Trạng thái</span><span class="badge ${order.status == 'CONFIRMED' ? 'ok' : 'warn'}"><c:out value="${order.status}"/></span></div>
+          <div class="sum-row total"><span>Tổng cộng</span><span><fmt:formatNumber value="${order.finalAmount}" type="number" maxFractionDigits="0"/> ₫</span></div>
+
+          <a class="btn titan block" style="margin-top:16px" href="${ctx}/products">Tiếp tục mua sắm</a>
+          <a class="btn ghost block" style="margin-top:10px" href="${ctx}/home">Về trang chủ</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp"/>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="${ctx}/assets/js/main.js"></script>
 </body>
 </html>
