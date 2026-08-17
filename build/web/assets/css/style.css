@@ -829,6 +829,15 @@ img {
     vertical-align: middle;
 }
 
+.app-table th,
+.app-table td {
+    vertical-align: middle;
+}
+
+.app-table tbody td:first-child {
+    vertical-align: top;
+}
+
 .app-table thead th {
     color: var(--color-text-secondary);
     font-size: 0.9rem;
@@ -862,7 +871,15 @@ img {
 .table-actions {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    flex-wrap: nowrap;
     gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.table-actions .btn,
+.table-actions form {
+    flex: 0 0 auto;
 }
 
 .app-pagination {

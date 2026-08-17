@@ -14,6 +14,7 @@ import java.util.List;
 
 @WebServlet(name = "UserListServlet", urlPatterns = {"/admin/users"})
 public class UserListServlet extends UserServletSupport {
+    /** Mở danh sách người dùng và chuyển sang fallback nếu filter hoặc DB lỗi. */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -24,6 +25,7 @@ public class UserListServlet extends UserServletSupport {
         }
     }
 
+    /** Lấy filter, phân trang và dữ liệu hiển thị rồi forward sang list.jsp của user. */
     private void showUserList(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, ServletException, IOException {
         String keyword = request.getParameter("keyword");
@@ -58,6 +60,7 @@ public class UserListServlet extends UserServletSupport {
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }
 
+    /** Chuẩn bị dữ liệu rỗng để màn user list vẫn render được khi truy vấn thất bại. */
     private void showUserListFallback(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {
         request.setAttribute("users", Collections.emptyList());

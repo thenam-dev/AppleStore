@@ -9,7 +9,6 @@ import model.entity.promtion.Promotion;
 import service.promotion.PromotionService;
 import util.DBConnection;
 import java.sql.Connection;
-
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -59,6 +58,7 @@ public class CheckoutService {
         public String notes;
         public String paymentMethod; // "CK" hoặc "COD"
 
+        // Voucher đã áp dụng ở giỏ hàng (nếu có), truyền từ CheckoutServlet.
         public Promotion appliedPromo;
         public BigDecimal discountAmount;
     }
@@ -71,6 +71,7 @@ public class CheckoutService {
         public String qrCodeUrl;
     }
 
+    /** Validate tối thiểu theo rule 6: required, length, format. */
     public Map<String, String> validate(CheckoutForm form) {
         Map<String, String> errors = new HashMap<>();
 
@@ -124,7 +125,6 @@ public class CheckoutService {
             }
 
             BigDecimal totalAmount = BigDecimal.ZERO;
-
             for (CartItem cartItem : items) {
                 var stock = productVariantDAO.findStockQuantity(cartItem.getVariantId());
                 if (stock.isEmpty()) {
@@ -211,7 +211,7 @@ public class CheckoutService {
                         "ORDER_RESERVE", -cartItem.getQuantity(), stockAfter);
             }
 
-            // Ghi nhận lượt sử dụng mã giảm giá và tăng số đếm used_count lên 1
+            // Ghi nhận việc dùng voucher (order_promotions + tăng used_count).
             if (validPromo != null && discountAmount.compareTo(BigDecimal.ZERO) > 0) {
                 PromotionService promotionService = new PromotionService();
                 try (Connection conn = DBConnection.getConnection()) {
@@ -248,6 +248,7 @@ public class CheckoutService {
         }
     }
 
+    /** Hoàn lại tồn kho đã trừ và xoá đơn hàng vừa tạo khi 1 bước giữa chừng thất bại. */
     private void compensate(int orderId, List<int[]> decreasedStock) {
         for (int[] entry : decreasedStock) {
             try {
@@ -259,6 +260,7 @@ public class CheckoutService {
         } catch (SQLException ignored) {}
     }
 
+    /** Sinh URL ảnh QR VietQR động của SePay. */
     private String buildQrUrl(BigDecimal amount, String content) {
         String encodedContent = URLEncoder.encode(content, StandardCharsets.UTF_8);
         return String.format("https://qr.sepay.vn/img?acc=%s&bank=%s&amount=%s&des=%s",

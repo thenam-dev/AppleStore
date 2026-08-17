@@ -415,6 +415,7 @@ function initAuthFlashMessages() {
     if (alertBox) {
         var errorMessage = params.get("error");
         var registered = params.get("registered");
+        var changed = params.get("changed");
 
         if (errorMessage) {
             alertBox.textContent = errorMessage;
@@ -423,6 +424,11 @@ function initAuthFlashMessages() {
             alertBox.hidden = false;
         } else if (registered) {
             alertBox.textContent = "Account created successfully. Please sign in.";
+            alertBox.classList.remove("alert-danger");
+            alertBox.classList.add("alert-success");
+            alertBox.hidden = false;
+        } else if (changed) {
+            alertBox.textContent = "Đổi mật khẩu thành công.";
             alertBox.classList.remove("alert-danger");
             alertBox.classList.add("alert-success");
             alertBox.hidden = false;

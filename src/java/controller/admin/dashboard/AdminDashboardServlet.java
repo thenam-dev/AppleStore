@@ -55,12 +55,24 @@ public class AdminDashboardServlet extends HttpServlet {
         labels.append("]");
         data.append("]");
 
+        // Lấy dữ liệu thống kê trạng thái đơn hàng (Doughnut Chart)
+        java.util.LinkedHashMap<String, Integer> statusStats = service.getOrderStatusStats(startDate, endDate, staffId);
+        StringBuilder statusJson = new StringBuilder("[");
+        for (java.util.Map.Entry<String, Integer> entry : statusStats.entrySet()) {
+            statusJson.append("{\"status\":\"").append(entry.getKey()).append("\", \"count\":").append(entry.getValue()).append("},");
+        }
+        if (statusJson.length() > 1) {
+            statusJson.setLength(statusJson.length() - 1);
+        }
+        statusJson.append("]");
+
         // Bắn sang JSP
         request.setAttribute("stats", stats);
         request.setAttribute("recentOrders", service.getRecentOrders(4, staffId));
-        request.setAttribute("bestSellingProducts", service.getBestSellingProducts(3, staffId));
+        request.setAttribute("bestSellingProducts", service.getBestSellingProducts(10, staffId)); // Tăng lên 10 để xuất báo cáo
         request.setAttribute("chartLabels", labels.toString());
         request.setAttribute("chartData", data.toString());
+        request.setAttribute("orderStatusStatsJson", statusJson.toString());
 
         // Set các biến Sidebar
         request.setAttribute("adminSidebarActive", "dashboard");

@@ -10,6 +10,7 @@ import java.sql.SQLException;
 
 @WebServlet(name = "CategoryStatusServlet", urlPatterns = {"/admin/categories/status"})
 public class CategoryStatusServlet extends CategoryServletSupport {
+    /** Đổi trạng thái danh mục giữa ACTIVE và INACTIVE theo form gửi từ danh sách. */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

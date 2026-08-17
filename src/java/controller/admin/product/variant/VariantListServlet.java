@@ -15,6 +15,7 @@ import java.util.List;
 
 @WebServlet(name = "VariantListServlet", urlPatterns = {"/admin/products/variants"})
 public class VariantListServlet extends VariantServletSupport {
+    /** Mở danh sách biến thể của một sản phẩm cụ thể. */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -25,6 +26,7 @@ public class VariantListServlet extends VariantServletSupport {
         }
     }
 
+    /** Lấy filter, phân trang, thống kê biến thể rồi forward sang list.jsp của variant. */
     private void showVariantList(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, ServletException, IOException {
         int productId = parseInt(request.getParameter("productId"), "ID sản phẩm không hợp lệ.");

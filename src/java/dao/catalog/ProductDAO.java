@@ -15,13 +15,15 @@ import java.util.List;
 import java.util.Optional;
 
 public class ProductDAO {
+
     private static final String PRODUCT_COLUMNS = """
             p.product_id, p.created_by, p.category_id, c.name AS category_name,
             p.name, p.description, p.brand, p.model_code, p.release_year, p.product_condition,
             p.import_type, p.origin_country, p.warranty_months, p.warranty_provider,
             p.status, p.view_count, p.rating, p.sold_quantity, p.is_featured,
             p.created_at, p.updated_at, vs.min_price, COALESCE(vs.total_stock, 0) AS total_stock,
-            COALESCE(vs.variant_count, 0) AS variant_count
+            COALESCE(vs.variant_count, 0) AS variant_count,
+            pi.file_path AS primary_image_url
             """;
 
     private static final String PRODUCT_FROM = """
@@ -36,9 +38,11 @@ public class ProductDAO {
                 FROM product_variants
                 GROUP BY product_id
             ) vs ON vs.product_id = p.product_id
+            LEFT JOIN product_images pi ON pi.product_id = p.product_id AND pi.is_primary = 1
             WHERE 1 = 1
             """;
 
+    /** Lấy danh sách sản phẩm kèm giá thấp nhất, tồn kho và số biến thể theo filter/sort/phân trang. */
     public List<Product> findAll(String keyword, Integer categoryId, String status, String sort, int page, int pageSize)
             throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT ")
@@ -51,8 +55,7 @@ public class ProductDAO {
         params.add(pageSize);
         params.add(Math.max(0, (page - 1) * pageSize));
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             bindParams(statement, params);
             try (ResultSet resultSet = statement.executeQuery()) {
                 List<Product> products = new ArrayList<>();
@@ -64,13 +67,13 @@ public class ProductDAO {
         }
     }
 
+    /** Đếm số sản phẩm thỏa keyword, danh mục và trạng thái. */
     public int countAll(String keyword, Integer categoryId, String status) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM products p WHERE 1 = 1");
         List<Object> params = new ArrayList<>();
         appendBaseFilters(sql, params, keyword, categoryId, status);
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             bindParams(statement, params);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -81,11 +84,11 @@ public class ProductDAO {
         }
     }
 
+    /** Tìm một sản phẩm theo ID, trả về Optional.empty nếu không tồn tại. */
     public Optional<Product> findById(int productId) throws SQLException {
         String sql = "SELECT " + PRODUCT_COLUMNS + ' ' + PRODUCT_FROM + " AND p.product_id = ?";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, productId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -96,6 +99,7 @@ public class ProductDAO {
         }
     }
 
+    /** Thêm sản phẩm mới vào bảng products và trả về product_id được sinh ra. */
     public int insert(Product product) throws SQLException {
         String sql = """
                 INSERT INTO products (
@@ -105,8 +109,7 @@ public class ProductDAO {
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             setProductMutationParams(statement, product);
             statement.executeUpdate();
 
@@ -119,6 +122,7 @@ public class ProductDAO {
         }
     }
 
+    /** Cập nhật thông tin chính của sản phẩm theo product_id. */
     public boolean update(Product product) throws SQLException {
         String sql = """
                 UPDATE products
@@ -128,8 +132,7 @@ public class ProductDAO {
                 WHERE product_id = ?
                 """;
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, product.getCategoryId());
             statement.setString(2, product.getName());
             statement.setString(3, product.getDescription());
@@ -148,22 +151,22 @@ public class ProductDAO {
         }
     }
 
+    /** Cập nhật riêng trạng thái sản phẩm mà không đụng các trường khác. */
     public boolean updateStatus(int productId, String status) throws SQLException {
         String sql = "UPDATE products SET status = ? WHERE product_id = ?";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, status);
             statement.setInt(2, productId);
             return statement.executeUpdate() > 0;
         }
     }
 
+    /** Kiểm tra tên sản phẩm đã tồn tại hay chưa khi tạo mới. */
     public boolean existsByName(String name) throws SQLException {
         String sql = "SELECT 1 FROM products WHERE name = ? LIMIT 1";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, name);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next();
@@ -171,11 +174,11 @@ public class ProductDAO {
         }
     }
 
+    /** Kiểm tra tên có trùng với sản phẩm khác khi cập nhật hay không. */
     public boolean existsByNameForOtherProduct(String name, int productId) throws SQLException {
         String sql = "SELECT 1 FROM products WHERE name = ? AND product_id <> ? LIMIT 1";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, name);
             statement.setInt(2, productId);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -184,6 +187,7 @@ public class ProductDAO {
         }
     }
 
+    /** Kiểm tra mã model đã tồn tại hay chưa khi tạo mới. */
     public boolean existsByModelCode(String modelCode) throws SQLException {
         if (modelCode == null || modelCode.isBlank()) {
             return false;
@@ -191,8 +195,7 @@ public class ProductDAO {
 
         String sql = "SELECT 1 FROM products WHERE model_code = ? LIMIT 1";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, modelCode);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next();
@@ -200,6 +203,7 @@ public class ProductDAO {
         }
     }
 
+    /** Kiểm tra mã model có trùng với sản phẩm khác khi cập nhật hay không. */
     public boolean existsByModelCodeForOtherProduct(String modelCode, int productId) throws SQLException {
         if (modelCode == null || modelCode.isBlank()) {
             return false;
@@ -207,8 +211,7 @@ public class ProductDAO {
 
         String sql = "SELECT 1 FROM products WHERE model_code = ? AND product_id <> ? LIMIT 1";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, modelCode);
             statement.setInt(2, productId);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -217,10 +220,12 @@ public class ProductDAO {
         }
     }
 
+    /** Gắn các điều kiện filter vào SQL danh sách sản phẩm. */
     private void appendFilters(StringBuilder sql, List<Object> params, String keyword, Integer categoryId, String status) {
         appendBaseFilters(sql, params, keyword, categoryId, status);
     }
 
+    /** Gắn điều kiện keyword, categoryId và status dùng chung cho list/count. */
     private void appendBaseFilters(StringBuilder sql, List<Object> params, String keyword, Integer categoryId, String status) {
         if (keyword != null && !keyword.isBlank()) {
             sql.append(" AND (LOWER(p.name) LIKE ? OR LOWER(COALESCE(p.model_code, '')) LIKE ?)");
@@ -240,6 +245,7 @@ public class ProductDAO {
         }
     }
 
+    /** Chuyển sort key thành ORDER BY cố định để tránh chèn SQL động không kiểm soát. */
     private String resolveOrderBy(String sort) {
         if ("oldest".equals(sort)) {
             return "p.product_id ASC";
@@ -265,6 +271,7 @@ public class ProductDAO {
         return "p.product_id DESC";
     }
 
+    /** Bind dữ liệu sản phẩm vào PreparedStatement khi insert. */
     private void setProductMutationParams(PreparedStatement statement, Product product) throws SQLException {
         setNullableInteger(statement, 1, product.getCreatedBy());
         statement.setInt(2, product.getCategoryId());
@@ -282,6 +289,7 @@ public class ProductDAO {
         statement.setBoolean(14, product.isFeatured());
     }
 
+    /** Map ResultSet từ câu SELECT sản phẩm sang entity Product. */
     private Product mapProduct(ResultSet resultSet) throws SQLException {
         Product product = new Product();
         product.setProductId(resultSet.getInt("product_id"));
@@ -310,15 +318,18 @@ public class ProductDAO {
         product.setMinPrice(resultSet.getBigDecimal("min_price"));
         product.setTotalStock(resultSet.getInt("total_stock"));
         product.setVariantCount(resultSet.getInt("variant_count"));
+        product.setPrimaryImageUrl(resultSet.getString("primary_image_url"));
         return product;
     }
 
+    /** Bind danh sách tham số vào PreparedStatement theo thứ tự đã build SQL. */
     private void bindParams(PreparedStatement statement, List<Object> params) throws SQLException {
         for (int i = 0; i < params.size(); i++) {
             statement.setObject(i + 1, params.get(i));
         }
     }
 
+    /** Bind chuỗi nullable vào PreparedStatement. */
     private void setNullableString(PreparedStatement statement, int index, String value) throws SQLException {
         if (value == null || value.isBlank()) {
             statement.setNull(index, java.sql.Types.VARCHAR);
@@ -327,6 +338,7 @@ public class ProductDAO {
         statement.setString(index, value);
     }
 
+    /** Bind số nguyên nullable vào PreparedStatement. */
     private void setNullableInteger(PreparedStatement statement, int index, Integer value) throws SQLException {
         if (value == null) {
             statement.setNull(index, java.sql.Types.INTEGER);
@@ -335,10 +347,78 @@ public class ProductDAO {
         statement.setInt(index, value);
     }
 
+    /** Chuyển Timestamp từ JDBC sang LocalDateTime cho entity. */
     private java.time.LocalDateTime toLocalDateTime(Timestamp timestamp) {
         if (timestamp == null) {
             return null;
         }
         return timestamp.toLocalDateTime();
+    }
+
+    // 1. Lấy sản phẩm nổi bật
+    public List<Product> findFeaturedProducts(int limit) throws SQLException {
+        // Nối SQL: Lấy các cột + Từ các bảng + Thêm điều kiện Nổi bật & Đang bán + Giới hạn số lượng
+        String sql = "SELECT " + PRODUCT_COLUMNS + " " + PRODUCT_FROM
+                + " AND p.is_featured = 1 AND p.status = 'ACTIVE' LIMIT ?";
+
+        List<Product> products = new ArrayList<>();
+
+        // Mở kết nối Database
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            // Truyền giá trị cho dấu ? (limit)
+            statement.setInt(1, limit);
+
+            // Thực thi truy vấn
+            try (ResultSet resultSet = statement.executeQuery()) {
+                // Duyệt qua từng dòng kết quả
+                while (resultSet.next()) {
+                    products.add(mapProduct(resultSet)); // mapProduct đã tự động xử lý lấy primary_image_url
+                }
+            }
+        }
+        return products;
+    }
+
+    // 2. Lấy sản phẩm mới nhất
+    public List<Product> findNewProducts(int limit) throws SQLException {
+        // Nối SQL: Sắp xếp theo năm phát hành mới nhất, nếu trùng năm thì lấy product_id lớn nhất (mới thêm vào)
+        String sql = "SELECT " + PRODUCT_COLUMNS + " " + PRODUCT_FROM
+                + " AND p.status = 'ACTIVE' ORDER BY p.release_year DESC, p.product_id DESC LIMIT ?";
+
+        List<Product> products = new ArrayList<>();
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, limit);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    products.add(mapProduct(resultSet));
+                }
+            }
+        }
+        return products;
+    }
+
+    // 3. Lấy sản phẩm bán chạy nhất
+    public List<Product> findBestSellerProducts(int limit) throws SQLException {
+        // Nối SQL: Sắp xếp theo số lượng đã bán (sold_quantity) giảm dần
+        String sql = "SELECT " + PRODUCT_COLUMNS + " " + PRODUCT_FROM
+                + " AND p.status = 'ACTIVE' ORDER BY p.sold_quantity DESC, p.product_id DESC LIMIT ?";
+
+        List<Product> products = new ArrayList<>();
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, limit);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    products.add(mapProduct(resultSet));
+                }
+            }
+        }
+        return products;
     }
 }

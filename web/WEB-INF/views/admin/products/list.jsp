@@ -195,14 +195,16 @@
                                             </td>
                                             <td>${product.totalStock}</td>
                                             <td><span class="status-badge ${productStatusClass}">${product.status eq 'ACTIVE' ? 'Đang bán' : product.status eq 'INACTIVE' ? 'Tạm ẩn' : product.status eq 'DISCONTINUED' ? 'Ngừng kinh doanh' : product.status}</span></td>
-                                            <td class="text-end table-actions">
-                                                <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products/variants?productId=${product.productId}">Biến thể</a>
-                                                <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products/edit?id=${product.productId}">Sửa</a>
-                                                <form class="d-inline" action="${appPath}/admin/products/status" method="post">
-                                                    <input type="hidden" name="productId" value="${product.productId}">
-                                                    <input type="hidden" name="status" value="${nextStatus}">
-                                                    <button class="btn ${statusActionClass} btn-sm" type="submit">${statusActionLabel}</button>
-                                                </form>
+                                            <td class="text-end">
+                                                <div class="table-actions">
+                                                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products/variants?productId=${product.productId}">Biến thể</a>
+                                                    <a class="btn btn-app-outline btn-sm" href="${appPath}/admin/products/edit?id=${product.productId}">Sửa</a>
+                                                    <form class="d-inline" action="${appPath}/admin/products/status" method="post">
+                                                        <input type="hidden" name="productId" value="${product.productId}">
+                                                        <input type="hidden" name="status" value="${nextStatus}">
+                                                        <button class="btn ${statusActionClass} btn-sm" type="submit">${statusActionLabel}</button>
+                                                    </form>
+                                                </div>
                                             </td>
                                         </tr>
                                     </c:forEach>
@@ -249,7 +251,7 @@
                 </nav>
             </section>
 
-            <p class="admin-footer-note">CRUD biến thể đã sẵn sàng để quản lý SKU, giá và tồn kho theo từng sản phẩm.</p>
+           
         </section>
     </main>
 </body>
