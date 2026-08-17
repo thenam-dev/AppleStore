@@ -16,8 +16,14 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 
+/**
+ * Đổi mật khẩu cho user đã đăng nhập. Không dùng chung
+ * {@link filter.AuthFilter} (filter đó còn ép role phải là CUSTOMER, sẽ chặn
+ * nhầm Admin/Sale Staff) — servlet tự kiểm tra session ở cả doGet và doPost.
+ */
 @WebServlet(name = "ChangePasswordServlet", urlPatterns = {"/change-password"})
 public class ChangePasswordServlet extends HttpServlet {
+
     private static final String VIEW = "/WEB-INF/views/auth/change-password.jsp";
 
     private final AuthService authService = new AuthService();
@@ -26,26 +32,21 @@ public class ChangePasswordServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         if (!isLoggedIn(request)) {
-            response.sendRedirect(request.getContextPath() + "/login?redirectTo="
-                    + URLEncoder.encode("/change-password", StandardCharsets.UTF_8));
+            redirectToLogin(request, response);
             return;
         }
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 
-    private boolean isLoggedIn(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        return session != null && session.getAttribute(AppConfig.SESSION_USER) instanceof User;
-    }
-
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+
         HttpSession session = request.getSession(false);
         Object sessionUser = (session != null) ? session.getAttribute(AppConfig.SESSION_USER) : null;
-
         if (!(sessionUser instanceof User user)) {
-            // Session expired between page load and submit — send back to login.
-            response.sendRedirect(request.getContextPath() + "/login");
+            redirectToLogin(request, response);
             return;
         }
 
@@ -54,19 +55,30 @@ public class ChangePasswordServlet extends HttpServlet {
         String confirmNewPassword = request.getParameter("confirmNewPassword");
 
         try {
-            authService.changePassword(user.getUserId(), currentPassword, newPassword, confirmNewPassword);
-            response.sendRedirect(request.getContextPath() + "/change-password?changed=1");
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            redirectWithError(request, response, ex.getMessage());
+            AuthService.ChangePasswordResult result
+                    = authService.changePassword(user.getUserId(), currentPassword, newPassword, confirmNewPassword);
+
+            if (!result.success) {
+                request.setAttribute("errors", result.fieldErrors);
+                request.getRequestDispatcher(VIEW).forward(request, response);
+                return;
+            }
+
+            session.setAttribute("successMsg", "Đổi mật khẩu thành công.");
+            response.sendRedirect(request.getContextPath() + "/change-password");
         } catch (SQLException ex) {
-            redirectWithError(request, response, "Hiện chưa thể đổi mật khẩu. Vui lòng thử lại sau.");
+            request.setAttribute("errorMsg", "Hiện chưa thể đổi mật khẩu. Vui lòng thử lại sau.");
+            request.getRequestDispatcher(VIEW).forward(request, response);
         }
     }
 
-    private void redirectWithError(HttpServletRequest request, HttpServletResponse response, String message)
-            throws IOException {
-        String url = request.getContextPath() + "/change-password?error="
-                + URLEncoder.encode(message, StandardCharsets.UTF_8);
-        response.sendRedirect(url);
+    private boolean isLoggedIn(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return session != null && session.getAttribute(AppConfig.SESSION_USER) instanceof User;
+    }
+
+    private void redirectToLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.sendRedirect(request.getContextPath() + "/login?redirectTo="
+                + URLEncoder.encode("/change-password", StandardCharsets.UTF_8));
     }
 }
