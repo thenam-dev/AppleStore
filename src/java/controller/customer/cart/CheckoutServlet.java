@@ -111,4 +111,3 @@ public class CheckoutServlet extends HttpServlet {
         return ((User) sessionUser).getUserId();
     }
 }
-

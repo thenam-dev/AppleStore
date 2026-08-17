@@ -35,7 +35,18 @@
             </div>
 
             <c:if test="${not empty errorMsg}">
-                <div class="alert alert-danger">${errorMsg}</div>
+                <div class="alert alert-danger">
+                    ${errorMsg}
+                    <%-- SỬA: liệt kê chi tiết từng field lỗi thay vì chỉ hiện 1 câu chung
+                         chung, để khách (và cả team debug) biết chính xác field nào sai. --%>
+                    <c:if test="${not empty fieldErrors}">
+                        <ul class="mb-0 mt-2">
+                            <c:forEach var="fieldError" items="${fieldErrors}">
+                                <li>${fieldError.value}</li>
+                            </c:forEach>
+                        </ul>
+                    </c:if>
+                </div>
             </c:if>
         </div>
     </section>
@@ -169,7 +180,7 @@
                     </div>
 
                     <div class="summary-actions">
-                        <button type="submit" form="checkout-form" class="btn btn-app-primary w-100 btn-lg">Xác nhận đặt hàng</button>
+                        <button type="button" id="checkout-submit-btn" class="btn btn-app-primary w-100 btn-lg">Xác nhận đặt hàng</button>
                         <a class="btn btn-app-outline w-100" href="${ctx}/cart">Quay lại giỏ hàng</a>
                     </div>
                 </aside>
@@ -191,7 +202,13 @@
             });
             label.classList.add('active');
         });
-    });
+    }); 
+    var checkoutSubmitBtn = document.getElementById('checkout-submit-btn');
+    if (checkoutSubmitBtn) {
+        checkoutSubmitBtn.addEventListener('click', function () {
+            document.getElementById('checkout-form').submit();
+        });
+    }
 </script>
 </body>
 </html>

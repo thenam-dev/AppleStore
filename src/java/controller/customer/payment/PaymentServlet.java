@@ -1,10 +1,9 @@
 package controller.customer.payment;
 
 import config.AppConfig;
-import dao.order.OrderDAO;
-import dao.payment.PaymentDAO;
 import model.entity.order.Order;
 import model.entity.user.User;
+import service.payment.PaymentService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,20 +14,15 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Optional;
 
 /**
- * Trang thanh toán chuyển khoản (CK): hiển thị QR tĩnh của SePay do
- * CheckoutService sinh sẵn khi tạo đơn (PaymentDAO.insertPending). Không có
- * webhook SePay thật xác thực giao dịch (đã thống nhất phạm vi đồ án), nên
- * có thêm doPost() cho khách tự bấm "Tôi đã chuyển khoản" để demo hết luồng -
- * ghi rõ đây KHÔNG phải cách xác thực thanh toán an toàn cho hệ thống thật.
+ * Controller mỏng: chỉ đọc request/response và điều phối PaymentService,
+ * không tự gọi DAO hay chứa business rule (rule 2).
  */
 @WebServlet(name = "PaymentServlet", urlPatterns = {"/payment"})
 public class PaymentServlet extends HttpServlet {
 
-    private final OrderDAO orderDAO = new OrderDAO();
-    private final PaymentDAO paymentDAO = new PaymentDAO();
+    private final PaymentService paymentService = new PaymentService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -46,26 +40,21 @@ public class PaymentServlet extends HttpServlet {
         }
 
         try {
-            Optional<Order> orderOpt = orderDAO.findById(orderId);
-            if (orderOpt.isEmpty() || orderOpt.get().getCustomerId() != customerId) {
+            PaymentService.PaymentPageResult pageResult = paymentService.getPaymentPageData(orderId, customerId);
+
+            if (!pageResult.orderFound) {
                 request.getSession().setAttribute("errorMsg", "Không tìm thấy đơn hàng.");
                 response.sendRedirect(request.getContextPath() + "/cart");
                 return;
             }
-            Order order = orderOpt.get();
 
-            // Đơn đã được xác nhận (thanh toán xong / COD) -> không cần ở lại trang QR nữa.
-            // order.status chính là nguồn sự thật cho việc điều hướng, không cần đọc
-            // status của payment_transactions riêng.
-            if (!"PENDING_PAYMENT".equals(order.getStatus())) {
+            if (pageResult.alreadyConfirmed) {
                 response.sendRedirect(request.getContextPath() + "/order-success?orderId=" + orderId);
                 return;
             }
 
-            Optional<String> qrCode = paymentDAO.findLatestQrCode(orderId);
-
-            request.setAttribute("order", order);
-            request.setAttribute("qrCodeUrl", qrCode.orElse(null));
+            request.setAttribute("order", pageResult.order);
+            request.setAttribute("qrCodeUrl", pageResult.qrCodeUrl);
             request.getRequestDispatcher("/WEB-INF/views/customer/payment.jsp").forward(request, response);
         } catch (SQLException e) {
             request.getSession().setAttribute("errorMsg", "Lỗi khi tải thông tin thanh toán.");
@@ -73,7 +62,7 @@ public class PaymentServlet extends HttpServlet {
         }
     }
 
-    /** DEMO-ONLY: xem ghi chú ở đầu class. Cần PaymentDAO.markLatestCompleted() (đã gửi kèm để thêm vào). */
+    /** DEMO-ONLY: xem ghi chú trong PaymentService.confirmManualPayment(). */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -90,18 +79,13 @@ public class PaymentServlet extends HttpServlet {
         }
 
         try {
-            Optional<Order> orderOpt = orderDAO.findById(orderId);
-            if (orderOpt.isEmpty() || orderOpt.get().getCustomerId() != customerId) {
-                response.sendRedirect(request.getContextPath() + "/cart");
-                return;
+            PaymentService.ConfirmResult result = paymentService.confirmManualPayment(orderId, customerId);
+            HttpSession session = request.getSession();
+            if (result.success) {
+                session.setAttribute("successMsg", result.message);
+            } else {
+                session.setAttribute("errorMsg", result.message);
             }
-
-            paymentDAO.markLatestCompleted(orderId);
-            orderDAO.updateStatus(orderId, "CONFIRMED");
-            orderDAO.insertStatusHistory(orderId, "CONFIRMED", customerId,
-                    "Khách tự xác nhận đã chuyển khoản (demo, chưa có webhook SePay thật)");
-
-            request.getSession().setAttribute("successMsg", "Xác nhận thanh toán thành công!");
         } catch (SQLException e) {
             request.getSession().setAttribute("errorMsg", "Lỗi khi xác nhận thanh toán.");
         }
