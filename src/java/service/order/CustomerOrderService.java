@@ -8,8 +8,8 @@ public class CustomerOrderService {
 
     private final CustomerOrderDAO customerOrderDAO = new CustomerOrderDAO();
 
-    public List<Map<String, Object>> getCustomerOrders(int customerId, String statusFilter) throws SQLException {
-        List<Map<String, Object>> rawOrders = customerOrderDAO.findOrdersByCustomer(customerId, statusFilter);
+    public List<Map<String, Object>> getCustomerOrders(int customerId, String tab) throws SQLException {
+        List<Map<String, Object>> rawOrders = customerOrderDAO.findOrdersByCustomer(customerId, tab);
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (Map<String, Object> ro : rawOrders) {
@@ -31,8 +31,6 @@ public class CustomerOrderService {
             String firstItem = (String) ro.get("firstItem");
             if (firstItem == null) firstItem = "Sản phẩm Apple";
             o.put("itemsSummary", itemCount > 1 ? firstItem + " và " + (itemCount - 1) + " sản phẩm khác" : firstItem);
-            
-            // Icon mặc định cho giao diện tương ứng với template
             o.put("firstItemIconKey", "d-acc"); 
             
             result.add(o);
@@ -40,8 +38,12 @@ public class CustomerOrderService {
         return result;
     }
 
-    public Map<String, Integer> getStatusCounts(int customerId) throws SQLException {
-        return customerOrderDAO.countOrdersByStatus(customerId);
+    public int getActiveCount(int customerId) throws SQLException {
+        return customerOrderDAO.countTabOrders(customerId, "active");
+    }
+
+    public int getCompletedCount(int customerId) throws SQLException {
+        return customerOrderDAO.countTabOrders(customerId, "completed");
     }
 
     public Map<String, Object> getSelectedOrderDetail(int orderId, int customerId) throws SQLException {
@@ -63,30 +65,44 @@ public class CustomerOrderService {
         String payMethod = (String) raw.get("paymentMethod");
         detail.put("paymentMethodLabel", "CK".equals(payMethod) ? "Chuyển khoản QR" : "Thanh toán khi nhận hàng (COD)");
         
-        detail.put("subtotal", raw.get("totalAmount"));
-        detail.put("discount", raw.get("discountAmount"));
-        detail.put("total", raw.get("finalAmount"));
+        detail.put("subtotal", raw.get("totalAmount") != null ? raw.get("totalAmount") : 0);
+        detail.put("discount", raw.get("discountAmount") != null ? raw.get("discountAmount") : 0);
+        detail.put("total", raw.get("finalAmount") != null ? raw.get("finalAmount") : 0);
 
-        // Xây dựng Timeline chuẩn (TUYỆT ĐỐI KHÔNG LỘ THÔNG TIN NHÂN VIÊN THAO TÁC / CHANGED_BY)
+        Map<String, Integer> statusRank = Map.of(
+            "PENDING_PAYMENT", 0,
+            "CONFIRMED", 1,
+            "PREPARING", 2,
+            "DISPATCHED", 3,
+            "SHIPPING", 3,
+            "DELIVERED", 4,
+            "CANCELLED", -1
+        );
+
+        int currentRank = statusRank.getOrDefault(dbStatus, 0);
+
         List<Map<String, Object>> history = customerOrderDAO.findTimelineByOrderId(orderId);
         List<Map<String, Object>> timeline = new ArrayList<>();
         
         String[] steps = {"CONFIRMED", "PREPARING", "DISPATCHED", "DELIVERED"};
         String[] labels = {"Đã xác nhận đơn", "Đang chuẩn bị hàng", "Đang giao vận chuyển", "Đã giao thành công"};
+        int[] ranks = {1, 2, 3, 4};
 
         for (int i = 0; i < steps.length; i++) {
             Map<String, Object> step = new HashMap<>();
             step.put("label", labels[i]);
-            step.put("done", false);
-            step.put("time", null);
-
+            boolean isDone = (currentRank >= ranks[i]) && !"CANCELLED".equals(dbStatus);
+            step.put("done", isDone);
+            
+            Object stepTime = null;
             for (Map<String, Object> h : history) {
                 String hStatus = (String) h.get("status");
                 if (steps[i].equals(hStatus) || ("CONFIRMED".equals(steps[i]) && "PENDING_PAYMENT".equals(hStatus))) {
-                    step.put("done", true);
-                    step.put("time", h.get("changedAt"));
+                    stepTime = h.get("changedAt");
+                    break;
                 }
             }
+            step.put("time", stepTime);
             timeline.add(step);
         }
         detail.put("timeline", timeline);

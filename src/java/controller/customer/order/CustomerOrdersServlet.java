@@ -23,6 +23,10 @@ public class CustomerOrdersServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         User user = (session != null) ? (User) session.getAttribute(AppConfig.SESSION_USER) : null;
+        
+        if (user == null && session != null) {
+            user = (User) session.getAttribute("user");
+        }
 
         if (user == null) {
             resp.sendRedirect(req.getContextPath() + "/login");
@@ -31,11 +35,16 @@ public class CustomerOrdersServlet extends HttpServlet {
 
         try {
             int customerId = user.getUserId();
-            String statusFilter = req.getParameter("status"); // PENDING, SHIPPING, DELIVERED, CANCELLED
-            String codeParam = req.getParameter("code"); // VD: DH12 -> tách lấy số 12
+            String tab = req.getParameter("tab");
+            if (tab == null || tab.isBlank()) {
+                tab = "active";
+            }
+            
+            String codeParam = req.getParameter("code");
 
-            List<Map<String, Object>> orders = customerOrderService.getCustomerOrders(customerId, statusFilter);
-            Map<String, Integer> statusCounts = customerOrderService.getStatusCounts(customerId);
+            List<Map<String, Object>> orders = customerOrderService.getCustomerOrders(customerId, tab);
+            int activeCount = customerOrderService.getActiveCount(customerId);
+            int completedCount = customerOrderService.getCompletedCount(customerId);
 
             Map<String, Object> selectedOrder = null;
             if (!orders.isEmpty()) {
@@ -50,7 +59,6 @@ public class CustomerOrdersServlet extends HttpServlet {
                     selectedOrder = customerOrderService.getSelectedOrderDetail(targetOrderId, customerId);
                 }
                 
-                // Mặc định chọn đơn đầu tiên trong danh sách nếu không truyền code hoặc code không hợp lệ
                 if (selectedOrder == null) {
                     Map<String, Object> firstOrder = orders.get(0);
                     selectedOrder = customerOrderService.getSelectedOrderDetail((int) firstOrder.get("rawId"), customerId);
@@ -58,8 +66,9 @@ public class CustomerOrdersServlet extends HttpServlet {
             }
 
             req.setAttribute("orders", orders);
-            req.setAttribute("statusFilter", statusFilter != null ? statusFilter : "");
-            req.setAttribute("statusCounts", statusCounts);
+            req.setAttribute("tab", tab);
+            req.setAttribute("activeCount", activeCount);
+            req.setAttribute("completedCount", completedCount);
             req.setAttribute("selectedOrder", selectedOrder);
 
             req.getRequestDispatcher("/WEB-INF/views/customer/orders.jsp").forward(req, resp);
@@ -89,13 +98,13 @@ public class CustomerOrdersServlet extends HttpServlet {
                 if (cancelled) {
                     session.setAttribute("successMsg", "Đã huỷ thành công đơn hàng #" + orderId);
                 } else {
-                    session.setAttribute("errorMsg", "Không thể huỷ đơn hàng này (đã được xử lý hoặc giao hàng).");
+                    session.setAttribute("errorMsg", "Không thể huỷ đơn hàng này.");
                 }
             }
-            resp.sendRedirect(req.getContextPath() + "/account/orders");
+            resp.sendRedirect(req.getContextPath() + "/account/orders?tab=active");
         } catch (Exception e) {
             session.setAttribute("errorMsg", "Lỗi xử lý huỷ đơn: " + e.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/account/orders");
+            resp.sendRedirect(req.getContextPath() + "/account/orders?tab=active");
         }
     }
 }
