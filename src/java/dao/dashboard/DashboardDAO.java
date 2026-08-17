@@ -87,7 +87,10 @@ public class DashboardDAO {
 
     public List<dto.BestSellingProductDTO> getBestSellingProducts(int limit, Integer staffId) {
         List<dto.BestSellingProductDTO> list = new ArrayList<>();
-        String sql = "SELECT p.product_id, p.name, pi.file_path, SUM(oi.quantity) as total_sold " +
+        String sql = "SELECT p.product_id, p.name, pi.file_path, " +
+                     "SUM(oi.quantity) as total_sold, " +
+                     "SUM(oi.subtotal) as total_revenue, " +
+                     "COUNT(DISTINCT o.order_id) as order_count " +
                      "FROM order_items oi " +
                      "JOIN orders o ON oi.order_id = o.order_id " +
                      "JOIN product_variants pv ON oi.variant_id = pv.variant_id " +
@@ -119,6 +122,8 @@ public class DashboardDAO {
                     dto.setName(rs.getString("name"));
                     dto.setImageUrl(rs.getString("file_path"));
                     dto.setTotalSold(rs.getInt("total_sold"));
+                    dto.setTotalRevenue(rs.getDouble("total_revenue"));
+                    dto.setOrderCount(rs.getInt("order_count"));
                     list.add(dto);
                 }
             }
@@ -160,6 +165,45 @@ public class DashboardDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     map.put(rs.getString("order_date"), rs.getDouble("daily_revenue"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
+    public LinkedHashMap<String, Integer> getOrderStatusStats(String startDate, String endDate, Integer staffId) {
+        LinkedHashMap<String, Integer> map = new LinkedHashMap<>();
+        
+        String sql = "SELECT status, COUNT(*) as status_count FROM orders WHERE 1=1";
+                     
+        boolean hasDateFilter = (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty());
+        if (hasDateFilter) {
+            sql += " AND created_at BETWEEN ? AND ?";
+        }
+        
+        if (staffId != null) {
+            sql += " AND assigned_sale_staff_id = ?";
+        }
+        
+        sql += " GROUP BY status";
+        
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            int paramIndex = 1;
+            if (hasDateFilter) {
+                ps.setString(paramIndex++, startDate + " 00:00:00");
+                ps.setString(paramIndex++, endDate + " 23:59:59");
+            }
+            if (staffId != null) {
+                ps.setInt(paramIndex++, staffId);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    map.put(rs.getString("status"), rs.getInt("status_count"));
                 }
             }
         } catch (SQLException e) {
