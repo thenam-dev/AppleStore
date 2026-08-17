@@ -34,6 +34,7 @@
             <a class="${activeItem eq 'categories' ? 'active' : ''}" href="${appPath}/admin/categories">Danh mục</a>
             <a class="${activeItem eq 'users' ? 'active' : ''}" href="${appPath}/admin/users">Người dùng</a>
             <a class="${activeItem eq 'vouchers' ? 'active' : ''}" href="${appPath}/admin/promotions">Mã giảm giá</a>
+            <a class="${activeItem eq 'vouchers' ? 'active' : ''}" href="${appPath}/staff/orders">Mã giảm giá</a>
         </nav>
     </div>
     <div class="admin-sidebar-footer">

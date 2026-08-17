@@ -1,4 +1,4 @@
-package controller.customer.cart;
+package controller.customer.promotion;
 
 import model.entity.promtion.Promotion;
 import service.promotion.PromotionService;

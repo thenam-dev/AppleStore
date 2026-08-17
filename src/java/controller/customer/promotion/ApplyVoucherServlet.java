@@ -1,4 +1,4 @@
-package controller.customer.cart;
+package controller.customer.promotion;
 
 import config.AppConfig;
 import model.entity.promtion.Promotion;

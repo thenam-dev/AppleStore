@@ -101,14 +101,23 @@ public class PromotionUpdateServlet extends HttpServlet {
         }
 
         try {
+            // Nạp lại danh sách bảng bên trái để trang không bị lỗi trống dữ liệu
+            req.setAttribute("promotions", promotionService.findAllWithPaging(null, null, null, null, 0, 10));
+            req.setAttribute("currentPage", 1);
+            req.setAttribute("totalPages", 1);
+            req.setAttribute("activeCount", promotionService.countAll(null, "1"));
+            req.setAttribute("totalRedeemed", promotionService.getTotalRedeemedCount());
+            req.setAttribute("expiringSoon", promotionService.getExpiringSoonCount());
+            req.setAttribute("dateFormatter", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+
             req.setAttribute("categories", new java.util.ArrayList<>());
             req.setAttribute("products", new java.util.ArrayList<>());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Bật ngược lại form. Lúc này form đã có đủ data báo lỗi + data của dropdown
-        req.getRequestDispatcher("/WEB-INF/views/admin/promotions/form.jsp").forward(req, resp);
+        // Bật ngược lại giao diện list.jsp kèm thông báo lỗi
+        req.getRequestDispatcher("/WEB-INF/views/admin/promotions/list.jsp").forward(req, resp);
     }
 
     // SAFE PARSER HELPER

@@ -6,12 +6,14 @@ package model.entity.order;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  *
  * @author admin
  */
 public class Order {
+
     private int orderId;
     private int customerId;
     private String deliveryAddress;
@@ -26,6 +28,8 @@ public class Order {
     private BigDecimal finalAmount;
     private String paymentMethod; // CK | COD
     private LocalDateTime createdAt;
+    private List<OrderItem> items;
+    private List<OrderStatusHistory> statusHistory;
 
     public int getOrderId() {
         return orderId;
@@ -139,8 +143,26 @@ public class Order {
         this.createdAt = createdAt;
     }
 
+    public List<OrderItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<OrderItem> items) {
+        this.items = items;
+    }
+
+    public List<OrderStatusHistory> getStatusHistory() {
+        return statusHistory;
+    }
+
+    public void setStatusHistory(List<OrderStatusHistory> statusHistory) {
+        this.statusHistory = statusHistory;
+    }
+
     public String getFormattedCreatedAt() {
-        if (this.createdAt == null) return "";
+        if (this.createdAt == null) {
+            return "";
+        }
         return this.createdAt.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy", new java.util.Locale("vi", "VN")));
     }
 }
