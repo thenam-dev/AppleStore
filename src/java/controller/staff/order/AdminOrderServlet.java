@@ -23,7 +23,6 @@ public class AdminOrderServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
         try {
-            // SỬA LỖI 1: Khớp đúng đường dẫn URL của bạn
             if ("/staff/orders".equals(path)) {
                 String statusFilter = req.getParameter("status");
                 String keyword = req.getParameter("keyword");
@@ -51,13 +50,12 @@ public class AdminOrderServlet extends HttpServlet {
                     req.setAttribute("selectedOrder", selectedOrder);
                 }
 
-                // SỬA LỖI 2: Khớp đúng đường dẫn file thực tế trong WEB-INF của bạn
                 req.getRequestDispatcher("/WEB-INF/views/staff/orders.jsp").forward(req, resp);
             }
         } catch (Exception e) {
-            getServletContext().log("Lỗi AdminOrderServlet GET", e);
-            // Ném thẳng lỗi ra màn hình để xem cái gì đang thực sự bị hỏng
-            throw new ServletException("Lỗi hệ thống: " + e.getMessage(), e);
+            getServletContext().log("Lỗi tại AdminOrderServlet doGet", e);
+            req.setAttribute("errorMessage", "Đã xảy ra lỗi hệ thống: " + e.getMessage());
+            req.getRequestDispatcher("/WEB-INF/views/staff/orders.jsp").forward(req, resp);
         }
     }
 
@@ -65,7 +63,11 @@ public class AdminOrderServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         HttpSession session = req.getSession();
-        User currentUser = (User) session.getAttribute(AppConfig.SESSION_USER);
+        
+        User currentUser = (User) session.getAttribute("user");
+        if (currentUser == null) {
+            currentUser = (User) session.getAttribute(AppConfig.SESSION_USER);
+        }
 
         try {
             int orderId = Integer.parseInt(req.getParameter("code"));
@@ -75,7 +77,6 @@ public class AdminOrderServlet extends HttpServlet {
 
             Integer staffId = (currentUser != null) ? currentUser.getUserId() : null;
             
-            // Gọi Service thực hiện cập nhật trạng thái và tự động phân công shipper
             staffOrderService.updateOrderStatus(orderId, newStatus, staffId, note);
 
             session.setAttribute("successMsg", "Đã cập nhật trạng thái đơn hàng thành công.");
@@ -86,7 +87,8 @@ public class AdminOrderServlet extends HttpServlet {
             }
 
         } catch (Exception e) {
-            session.setAttribute("errorMsg", "Lỗi cập nhật trạng thái: " + e.getMessage());
+            getServletContext().log("Lỗi tại AdminOrderServlet doPost", e);
+            session.setAttribute("errorMsg", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
             resp.sendRedirect(req.getContextPath() + "/staff/orders");
         }
     }

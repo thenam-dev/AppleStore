@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,9 +72,9 @@ public class PromotionListServlet extends HttpServlet {
             // Forward thẳng về list.jsp gộp chung
             req.getRequestDispatcher("/WEB-INF/views/admin/promotions/list.jsp").forward(req, resp);
 
-        } catch (SQLException sqlEx) {
-            getServletContext().log("Lỗi cơ sở dữ liệu tại PromotionListServlet", sqlEx);
-            req.setAttribute("errorMessage", "[BE] Lỗi truy xuất cơ sở dữ liệu: " + sqlEx.getMessage());
+        } catch (Exception e) {
+            getServletContext().log("Lỗi tại PromotionListServlet", e);
+            req.setAttribute("errorMessage", "Đã xảy ra lỗi hệ thống: " + e.getMessage());
             req.getRequestDispatcher("/WEB-INF/views/admin/promotions/list.jsp").forward(req, resp);
         }
     }

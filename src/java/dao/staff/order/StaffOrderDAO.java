@@ -68,7 +68,14 @@ public class StaffOrderDAO {
     }
 
     public Optional<Order> findById(int orderId) throws SQLException {
-        String sql = "SELECT * FROM orders WHERE order_id = ?";
+        // Đã JOIN thêm deliveries và users để lấy tên Shipper phụ trách
+        String sql = """
+            SELECT o.*, u.full_name AS shipper_name, d.staff_id AS shipper_id 
+            FROM orders o 
+            LEFT JOIN deliveries d ON o.order_id = d.order_id 
+            LEFT JOIN users u ON d.staff_id = u.user_id 
+            WHERE o.order_id = ?
+        """;
         Order order = null;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -88,11 +95,17 @@ public class StaffOrderDAO {
                     if (rs.getTimestamp("created_at") != null) {
                         order.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
                     }
+                    order.setShipperName(rs.getString("shipper_name"));
+                    int shipperId = rs.getInt("shipper_id");
+                    if (!rs.wasNull()) {
+                        order.setShipperId(shipperId);
+                    }
                 }
             }
         }
         if (order != null) {
             order.setItems(findOrderItemsByOrderId(orderId));
+            order.setStatusHistory(findStatusHistoryByOrderId(orderId));
         }
         return Optional.ofNullable(order);
     }
@@ -113,6 +126,8 @@ public class StaffOrderDAO {
                     item.setQuantity(rs.getInt("quantity"));
                     item.setUnitPrice(rs.getBigDecimal("unit_price"));
                     item.setSubtotal(rs.getBigDecimal("subtotal"));
+                    item.setAddonLabelSnapshot(rs.getString("addon_label_snapshot"));
+                    item.setAddonPriceSnapshot(rs.getBigDecimal("addon_price_snapshot"));
                     items.add(item);
                 }
             }
@@ -130,7 +145,6 @@ public class StaffOrderDAO {
         }
     }
 
-    // Đảm bảo ghi nhận lịch sử vào bảng order_status_history đúng thiết kế DB[cite: 3]
     public void insertStatusHistory(int orderId, String status, Integer changedBy, String note) throws SQLException {
         String sql = "INSERT INTO order_status_history (order_id, status, changed_by, note) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
@@ -151,7 +165,7 @@ public class StaffOrderDAO {
                 AND d.status IN ('ASSIGNED', 'PICKED_UP', 'IN_TRANSIT')
             WHERE u.role = 'DELIVERY' AND u.status = 'ACTIVE'
             GROUP BY u.user_id
-            ORDER BY active_tasks ASC
+            ORDER BY active_tasks ASC, RAND()
             LIMIT 1
         """;
         try (Connection conn = DBConnection.getConnection();
@@ -204,7 +218,6 @@ public class StaffOrderDAO {
         return list;
     }
     
-    // Lấy nhật ký thay đổi trạng thái từ bảng order_status_history kết hợp tên nhân viên từ users
     public List<OrderStatusHistory> findStatusHistoryByOrderId(int orderId) throws SQLException {
         String sql = """
             SELECT h.history_id, h.order_id, h.status, h.changed_by, h.note, h.changed_at, u.full_name 

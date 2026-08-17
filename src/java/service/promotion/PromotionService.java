@@ -29,7 +29,7 @@ public class PromotionService {
         // Ensure code uniqueness
         Promotion existing = promotionDAO.findByCode(promo.getCode());
         if (existing != null) {
-            throw new IllegalArgumentException("[BE] Mã khuyến mãi đã tồn tại.");
+            throw new IllegalArgumentException("Mã khuyến mãi đã tồn tại.");
         }
 
         promo.setCreatedBy(adminId);
@@ -42,7 +42,7 @@ public class PromotionService {
 
         Promotion existing = promotionDAO.findByCode(promo.getCode());
         if (existing != null && existing.getPromoId() != promo.getPromoId()) {
-            throw new IllegalArgumentException("[BE] Mã khuyến mãi này đang được sử dụng cho một chương trình khác.");
+            throw new IllegalArgumentException("Mã khuyến mãi này đang được sử dụng cho một chương trình khác.");
         }
 
         promotionDAO.update(promo);
@@ -62,44 +62,44 @@ public class PromotionService {
      */
     private void validatePromotion(Promotion promo, boolean isEdit) {
         if (promo.getCode() == null || promo.getCode().trim().isEmpty()) {
-            throw new IllegalArgumentException("[BE] Mã giảm giá không được để trống.");
+            throw new IllegalArgumentException("Mã giảm giá không được để trống.");
         }
         promo.setCode(promo.getCode().trim().toUpperCase());
         if (promo.getCode().length() > 50) {
-            throw new IllegalArgumentException("[BE] Mã giảm giá không được vượt quá 50 ký tự.");
+            throw new IllegalArgumentException("Mã giảm giá không được vượt quá 50 ký tự.");
         }
 
         if (promo.getDiscountValue() == null || promo.getDiscountValue().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("[BE] Giá trị giảm giá phải lớn hơn 0.");
+            throw new IllegalArgumentException("Giá trị giảm giá phải lớn hơn 0.");
         }
 
         // Khớp với CHECK (discount_type IN ('PERCENT','FIXED')) và CK_promotions_discount_value
         if ("PERCENT".equals(promo.getDiscountType())) {
             if (promo.getDiscountValue().compareTo(new BigDecimal("100")) > 0) {
-                throw new IllegalArgumentException("[BE] Mức giảm phần trăm (%) tối đa là 100.");
+                throw new IllegalArgumentException("Mức giảm phần trăm (%) tối đa là 100.");
             }
             if (promo.getDiscountMax() != null && promo.getDiscountMax().compareTo(BigDecimal.ZERO) < 0) {
-                throw new IllegalArgumentException("[BE] Mức giảm tối đa không được là số âm.");
+                throw new IllegalArgumentException("Mức giảm tối đa không được là số âm.");
             }
         } else if ("FIXED".equals(promo.getDiscountType())) {
             if (promo.getDiscountValue().compareTo(new BigDecimal("99999999.99")) > 0) {
-                throw new IllegalArgumentException("[BE] Giá trị giảm giá quá lớn, vượt mức cho phép.");
+                throw new IllegalArgumentException("Giá trị giảm giá quá lớn, vượt mức cho phép.");
             }
             promo.setDiscountMax(BigDecimal.ZERO);
         } else {
-            throw new IllegalArgumentException("[BE] Loại giảm giá không hợp lệ.");
+            throw new IllegalArgumentException("Loại giảm giá không hợp lệ.");
         }
 
         if (promo.getMinOrderValue() != null && promo.getMinOrderValue().compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("[BE] Giá trị đơn hàng tối thiểu không được là số âm.");
+            throw new IllegalArgumentException("Giá trị đơn hàng tối thiểu không được là số âm.");
         }
         if (promo.getMaxUses() != null && promo.getMaxUses() < 0) {
-            throw new IllegalArgumentException("[BE] Giới hạn số lượt dùng không được là số âm.");
+            throw new IllegalArgumentException("Giới hạn số lượt dùng không được là số âm.");
         }
 
         // Khớp với CHECK benefit_target (chỉ cho phép MERCHANDISE và PRODUCT theo yêu cầu của bạn)
         if (!"MERCHANDISE".equals(promo.getBenefitTarget()) && !"PRODUCT".equals(promo.getBenefitTarget())) {
-            throw new IllegalArgumentException("[BE] Mục tiêu được giảm chỉ hỗ trợ MERCHANDISE hoặc PRODUCT.");
+            throw new IllegalArgumentException("Mục tiêu được giảm chỉ hỗ trợ MERCHANDISE hoặc PRODUCT.");
         }
 
         // KHỚP TUYỆT ĐỐI VỚI CK_promotions_scope_logic TRONG SQL
@@ -109,35 +109,35 @@ public class PromotionService {
             promo.setCategoryId(null);
         } else if ("PRODUCT".equals(scope)) {
             if (promo.getProductId() == null || promo.getProductId() <= 0) {
-                throw new IllegalArgumentException("[BE] Phạm vi theo sản phẩm bắt buộc phải chọn Sản phẩm áp dụng.");
+                throw new IllegalArgumentException("Phạm vi theo sản phẩm bắt buộc phải chọn Sản phẩm áp dụng.");
             }
             promo.setCategoryId(null); // Bắt buộc null để khớp DB Check
         } else if ("CATEGORY".equals(scope)) {
             if (promo.getCategoryId() == null || promo.getCategoryId() <= 0) {
-                throw new IllegalArgumentException("[BE] Phạm vi theo danh mục bắt buộc phải chọn Danh mục áp dụng.");
+                throw new IllegalArgumentException("Phạm vi theo danh mục bắt buộc phải chọn Danh mục áp dụng.");
             }
             promo.setProductId(null); // Bắt buộc null để khớp DB Check
         } else {
-            throw new IllegalArgumentException("[BE] Phạm vi áp dụng không hợp lệ.");
+            throw new IllegalArgumentException("Phạm vi áp dụng không hợp lệ.");
         }
 
         // Khớp với CK_promotions_valid_dates (valid_until > valid_from)
         if (promo.getValidFrom() == null || promo.getValidUntil() == null) {
-            throw new IllegalArgumentException("[BE] Vui lòng nhập đầy đủ thời gian hiệu lực.");
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ thời gian hiệu lực.");
         }
         if (!promo.getValidUntil().isAfter(promo.getValidFrom())) {
-            throw new IllegalArgumentException("[BE] Thời gian hiệu lực không hợp lệ (Ngày kết thúc phải SAU ngày bắt đầu).");
+            throw new IllegalArgumentException("Thời gian hiệu lực không hợp lệ (Ngày kết thúc phải SAU ngày bắt đầu).");
         }
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime nowBuffer = now.minusMinutes(1);
 
         if (promo.getValidUntil().isBefore(now)) {
-            throw new IllegalArgumentException("[BE] Thời gian kết thúc không được nằm ở quá khứ.");
+            throw new IllegalArgumentException("Thời gian kết thúc không được nằm ở quá khứ.");
         }
 
         if (!isEdit && promo.getValidFrom().isBefore(nowBuffer)) {
-            throw new IllegalArgumentException("[BE] Thời gian bắt đầu chiến dịch không được nằm ở quá khứ.");
+            throw new IllegalArgumentException("Thời gian bắt đầu chiến dịch không được nằm ở quá khứ.");
         }
     }
 
