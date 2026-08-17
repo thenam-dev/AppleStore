@@ -15,13 +15,15 @@ import java.util.List;
 import java.util.Optional;
 
 public class ProductDAO {
+
     private static final String PRODUCT_COLUMNS = """
             p.product_id, p.created_by, p.category_id, c.name AS category_name,
             p.name, p.description, p.brand, p.model_code, p.release_year, p.product_condition,
             p.import_type, p.origin_country, p.warranty_months, p.warranty_provider,
             p.status, p.view_count, p.rating, p.sold_quantity, p.is_featured,
             p.created_at, p.updated_at, vs.min_price, COALESCE(vs.total_stock, 0) AS total_stock,
-            COALESCE(vs.variant_count, 0) AS variant_count
+            COALESCE(vs.variant_count, 0) AS variant_count,
+            pi.file_path AS primary_image_url
             """;
 
     private static final String PRODUCT_FROM = """
@@ -36,6 +38,7 @@ public class ProductDAO {
                 FROM product_variants
                 GROUP BY product_id
             ) vs ON vs.product_id = p.product_id
+            LEFT JOIN product_images pi ON pi.product_id = p.product_id AND pi.is_primary = 1
             WHERE 1 = 1
             """;
 
@@ -51,8 +54,7 @@ public class ProductDAO {
         params.add(pageSize);
         params.add(Math.max(0, (page - 1) * pageSize));
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             bindParams(statement, params);
             try (ResultSet resultSet = statement.executeQuery()) {
                 List<Product> products = new ArrayList<>();
@@ -69,8 +71,7 @@ public class ProductDAO {
         List<Object> params = new ArrayList<>();
         appendBaseFilters(sql, params, keyword, categoryId, status);
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             bindParams(statement, params);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -84,8 +85,7 @@ public class ProductDAO {
     public Optional<Product> findById(int productId) throws SQLException {
         String sql = "SELECT " + PRODUCT_COLUMNS + ' ' + PRODUCT_FROM + " AND p.product_id = ?";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, productId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -105,8 +105,7 @@ public class ProductDAO {
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             setProductMutationParams(statement, product);
             statement.executeUpdate();
 
@@ -128,8 +127,7 @@ public class ProductDAO {
                 WHERE product_id = ?
                 """;
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, product.getCategoryId());
             statement.setString(2, product.getName());
             statement.setString(3, product.getDescription());
@@ -151,8 +149,7 @@ public class ProductDAO {
     public boolean updateStatus(int productId, String status) throws SQLException {
         String sql = "UPDATE products SET status = ? WHERE product_id = ?";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, status);
             statement.setInt(2, productId);
             return statement.executeUpdate() > 0;
@@ -162,8 +159,7 @@ public class ProductDAO {
     public boolean existsByName(String name) throws SQLException {
         String sql = "SELECT 1 FROM products WHERE name = ? LIMIT 1";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, name);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next();
@@ -174,8 +170,7 @@ public class ProductDAO {
     public boolean existsByNameForOtherProduct(String name, int productId) throws SQLException {
         String sql = "SELECT 1 FROM products WHERE name = ? AND product_id <> ? LIMIT 1";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, name);
             statement.setInt(2, productId);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -191,8 +186,7 @@ public class ProductDAO {
 
         String sql = "SELECT 1 FROM products WHERE model_code = ? LIMIT 1";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, modelCode);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next();
@@ -207,8 +201,7 @@ public class ProductDAO {
 
         String sql = "SELECT 1 FROM products WHERE model_code = ? AND product_id <> ? LIMIT 1";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, modelCode);
             statement.setInt(2, productId);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -310,6 +303,7 @@ public class ProductDAO {
         product.setMinPrice(resultSet.getBigDecimal("min_price"));
         product.setTotalStock(resultSet.getInt("total_stock"));
         product.setVariantCount(resultSet.getInt("variant_count"));
+        product.setPrimaryImageUrl(resultSet.getString("primary_image_url"));
         return product;
     }
 
@@ -340,5 +334,72 @@ public class ProductDAO {
             return null;
         }
         return timestamp.toLocalDateTime();
+    }
+
+    // 1. Lấy sản phẩm nổi bật
+    public List<Product> findFeaturedProducts(int limit) throws SQLException {
+        // Nối SQL: Lấy các cột + Từ các bảng + Thêm điều kiện Nổi bật & Đang bán + Giới hạn số lượng
+        String sql = "SELECT " + PRODUCT_COLUMNS + " " + PRODUCT_FROM
+                + " AND p.is_featured = 1 AND p.status = 'ACTIVE' LIMIT ?";
+
+        List<Product> products = new ArrayList<>();
+
+        // Mở kết nối Database
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            // Truyền giá trị cho dấu ? (limit)
+            statement.setInt(1, limit);
+
+            // Thực thi truy vấn
+            try (ResultSet resultSet = statement.executeQuery()) {
+                // Duyệt qua từng dòng kết quả
+                while (resultSet.next()) {
+                    products.add(mapProduct(resultSet)); // mapProduct đã tự động xử lý lấy primary_image_url
+                }
+            }
+        }
+        return products;
+    }
+
+    // 2. Lấy sản phẩm mới nhất
+    public List<Product> findNewProducts(int limit) throws SQLException {
+        // Nối SQL: Sắp xếp theo năm phát hành mới nhất, nếu trùng năm thì lấy product_id lớn nhất (mới thêm vào)
+        String sql = "SELECT " + PRODUCT_COLUMNS + " " + PRODUCT_FROM
+                + " AND p.status = 'ACTIVE' ORDER BY p.release_year DESC, p.product_id DESC LIMIT ?";
+
+        List<Product> products = new ArrayList<>();
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, limit);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    products.add(mapProduct(resultSet));
+                }
+            }
+        }
+        return products;
+    }
+
+    // 3. Lấy sản phẩm bán chạy nhất
+    public List<Product> findBestSellerProducts(int limit) throws SQLException {
+        // Nối SQL: Sắp xếp theo số lượng đã bán (sold_quantity) giảm dần
+        String sql = "SELECT " + PRODUCT_COLUMNS + " " + PRODUCT_FROM
+                + " AND p.status = 'ACTIVE' ORDER BY p.sold_quantity DESC, p.product_id DESC LIMIT ?";
+
+        List<Product> products = new ArrayList<>();
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, limit);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    products.add(mapProduct(resultSet));
+                }
+            }
+        }
+        return products;
     }
 }
