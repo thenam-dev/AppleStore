@@ -41,9 +41,15 @@
                     <a class="btn btn-app-primary" href="${appPath}/register">Đăng ký</a>
                 </c:when>
                 <c:otherwise>
-                    <span class="btn btn-app-ghost disabled" aria-disabled="true">
-                        ${sessionScope.user.fullName != null ? sessionScope.user.fullName : sessionScope.user.email}
-                    </span>
+                    <div class="dropdown">
+                        <button class="btn btn-app-ghost dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            ${sessionScope.user.fullName != null ? sessionScope.user.fullName : sessionScope.user.email}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end app-dropdown-menu">
+                            <li><a class="dropdown-item" href="${appPath}/change-password">Đổi mật khẩu</a></li>
+                            <li><a class="dropdown-item" href="${appPath}/logout">Đăng xuất</a></li>
+                        </ul>
+                    </div>
                 </c:otherwise>
             </c:choose>
             <a class="cart-link" href="${appPath}/cart" aria-label="Xem giỏ hàng">

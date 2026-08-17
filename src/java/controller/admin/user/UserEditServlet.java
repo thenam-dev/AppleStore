@@ -12,6 +12,7 @@ import java.sql.SQLException;
 
 @WebServlet(name = "UserEditServlet", urlPatterns = {"/admin/users/edit"})
 public class UserEditServlet extends UserServletSupport {
+    /** Mở form chỉnh sửa thông tin người dùng theo tham số id. */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

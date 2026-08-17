@@ -15,6 +15,7 @@ import java.util.List;
 
 @WebServlet(name = "ProductListServlet", urlPatterns = {"/admin/products"})
 public class ProductListServlet extends ProductServletSupport {
+    /** Xử lý yêu cầu mở danh sách sản phẩm và chuyển sang fallback nếu filter hoặc DB lỗi. */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -25,6 +26,7 @@ public class ProductListServlet extends ProductServletSupport {
         }
     }
 
+    /** Lấy filter, phân trang, thống kê sản phẩm rồi forward sang list.jsp. */
     private void showProductList(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, ServletException, IOException {
         String keyword = request.getParameter("keyword");
@@ -62,6 +64,7 @@ public class ProductListServlet extends ProductServletSupport {
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }
 
+    /** Chuẩn bị dữ liệu rỗng để màn danh sách vẫn hiển thị được khi truy vấn sản phẩm thất bại. */
     private void showProductListFallback(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {
         request.setAttribute("products", Collections.emptyList());

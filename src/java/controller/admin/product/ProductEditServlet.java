@@ -12,6 +12,7 @@ import java.sql.SQLException;
 
 @WebServlet(name = "ProductEditServlet", urlPatterns = {"/admin/products/edit"})
 public class ProductEditServlet extends ProductServletSupport {
+    /** Mở form thêm mới hoặc form chỉnh sửa sản phẩm dựa trên tham số id. */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

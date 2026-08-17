@@ -21,6 +21,7 @@ public class UserDAO {
             google_id, is_email_verified, failed_login_count, locked_until, created_at, updated_at
             """;
 
+    /** Lấy danh sách user theo keyword, role, status, sort và phân trang. */
     public List<User> findAll(String keyword, String role, String status, String sort, int page, int pageSize)
             throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT ")
@@ -45,6 +46,7 @@ public class UserDAO {
         }
     }
 
+    /** Đếm user sau khi áp dụng bộ lọc keyword, role và status. */
     public int countAll(String keyword, String role, String status) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users WHERE 1 = 1");
         List<Object> params = new ArrayList<>();
@@ -62,6 +64,7 @@ public class UserDAO {
         }
     }
 
+    /** Tìm user theo ID, trả về Optional.empty nếu không tồn tại. */
     public Optional<User> findById(int userId) throws SQLException {
         String sql = "SELECT " + USER_COLUMNS + " FROM users WHERE user_id = ?";
 
@@ -76,6 +79,7 @@ public class UserDAO {
         }
     }
 
+    /** Cập nhật thông tin quản trị của user theo user_id. */
     public boolean update(User user) throws SQLException {
         String sql = """
                 UPDATE users
@@ -95,6 +99,7 @@ public class UserDAO {
         }
     }
 
+    /** Cập nhật riêng trạng thái tài khoản user. */
     public boolean updateStatus(int userId, String status) throws SQLException {
         String sql = "UPDATE users SET status = ? WHERE user_id = ?";
 
@@ -105,6 +110,7 @@ public class UserDAO {
         }
     }
 
+    /** Tìm user theo email, dùng cho đăng nhập và kiểm tra trùng email. */
     public Optional<User> findByEmail(String email) throws SQLException {
         String sql = "SELECT " + USER_COLUMNS + ", password_hash FROM users WHERE email = ?";
 
@@ -121,6 +127,7 @@ public class UserDAO {
         }
     }
 
+    /** Kiểm tra email đã tồn tại hay chưa. */
     public boolean existsByEmail(String email) throws SQLException {
         String sql = "SELECT 1 FROM users WHERE email = ? LIMIT 1";
 
@@ -132,6 +139,7 @@ public class UserDAO {
         }
     }
 
+    /** Kiểm tra số điện thoại đã tồn tại hay chưa. */
     public boolean existsByPhone(String phone) throws SQLException {
         if (phone == null || phone.isBlank()) {
             return false;
@@ -147,6 +155,7 @@ public class UserDAO {
         }
     }
 
+    /** Tạo tài khoản customer mới và trả về user_id được sinh ra. */
     public int insertCustomer(User user, String passwordHash) throws SQLException {
         String sql = """
                 INSERT INTO users (full_name, email, password_hash, phone, role, status, is_email_verified)
@@ -170,6 +179,7 @@ public class UserDAO {
         }
     }
 
+    /** Ghi nhận đăng nhập thành công và reset số lần đăng nhập sai. */
     public void recordLoginSuccess(int userId) throws SQLException {
         String sql = "UPDATE users SET failed_login_count = 0, locked_until = NULL WHERE user_id = ?";
 
@@ -179,6 +189,7 @@ public class UserDAO {
         }
     }
 
+    /** Ghi nhận đăng nhập thất bại, tăng số lần sai và khóa tạm nếu cần. */
     public void recordLoginFailure(int userId, int failedLoginCount, LocalDateTime lockedUntil) throws SQLException {
         String sql = "UPDATE users SET failed_login_count = ?, locked_until = ? WHERE user_id = ?";
 
@@ -190,6 +201,31 @@ public class UserDAO {
         }
     }
 
+    public Optional<String> findPasswordHashById(int userId) throws SQLException {
+        String sql = "SELECT password_hash FROM users WHERE user_id = ?";
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return Optional.ofNullable(resultSet.getString("password_hash"));
+                }
+                return Optional.empty();
+            }
+        }
+    }
+
+    public boolean updatePasswordHash(int userId, String newPasswordHash) throws SQLException {
+        String sql = "UPDATE users SET password_hash = ? WHERE user_id = ?";
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, newPasswordHash);
+            statement.setInt(2, userId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    /** Kiểm tra email có trùng với user khác khi cập nhật hay không. */
     public boolean existsByEmailForOtherUser(String email, int userId) throws SQLException {
         String sql = "SELECT 1 FROM users WHERE email = ? AND user_id <> ? LIMIT 1";
 
@@ -202,6 +238,7 @@ public class UserDAO {
         }
     }
 
+    /** Kiểm tra số điện thoại có trùng với user khác khi cập nhật hay không. */
     public boolean existsByPhoneForOtherUser(String phone, int userId) throws SQLException {
         if (phone == null || phone.isBlank()) {
             return false;
@@ -218,12 +255,14 @@ public class UserDAO {
         }
     }
 
+    /** Bind danh sách tham số vào PreparedStatement theo đúng thứ tự đã build SQL. */
     private void bindParams(PreparedStatement statement, List<Object> params) throws SQLException {
         for (int i = 0; i < params.size(); i++) {
             statement.setObject(i + 1, params.get(i));
         }
     }
 
+    /** Gắn điều kiện keyword, role và status vào SQL động. */
     private void appendFilters(StringBuilder sql, List<Object> params, String keyword, String role, String status) {
         if (keyword != null && !keyword.isBlank()) {
             sql.append(" AND (LOWER(full_name) LIKE ? OR LOWER(email) LIKE ? OR phone LIKE ?)");
@@ -245,6 +284,7 @@ public class UserDAO {
         }
     }
 
+    /** Chuyển sort key thành ORDER BY cố định để tránh SQL động không kiểm soát. */
     private String resolveOrderBy(String sort) {
         if ("name_asc".equals(sort)) {
             return "full_name ASC, user_id ASC";
@@ -264,6 +304,7 @@ public class UserDAO {
         return "created_at DESC, user_id DESC";
     }
 
+    /** Map một dòng ResultSet thành entity User. */
     private User mapUser(ResultSet resultSet) throws SQLException {
         User user = new User();
         user.setUserId(resultSet.getInt("user_id"));
@@ -283,6 +324,7 @@ public class UserDAO {
         return user;
     }
 
+    /** Chuyển Timestamp từ JDBC sang LocalDateTime cho entity. */
     private java.time.LocalDateTime toLocalDateTime(Timestamp timestamp) {
         if (timestamp == null) {
             return null;
@@ -290,6 +332,7 @@ public class UserDAO {
         return timestamp.toLocalDateTime();
     }
 
+    /** Chuyển chuỗi rỗng thành null trước khi bind vào database. */
     private String emptyToNull(String value) {
         if (value == null || value.isBlank()) {
             return null;

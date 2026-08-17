@@ -42,6 +42,7 @@ public class ProductDAO {
             WHERE 1 = 1
             """;
 
+    /** Lấy danh sách sản phẩm kèm giá thấp nhất, tồn kho và số biến thể theo filter/sort/phân trang. */
     public List<Product> findAll(String keyword, Integer categoryId, String status, String sort, int page, int pageSize)
             throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT ")
@@ -66,6 +67,7 @@ public class ProductDAO {
         }
     }
 
+    /** Đếm số sản phẩm thỏa keyword, danh mục và trạng thái. */
     public int countAll(String keyword, Integer categoryId, String status) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM products p WHERE 1 = 1");
         List<Object> params = new ArrayList<>();
@@ -82,6 +84,7 @@ public class ProductDAO {
         }
     }
 
+    /** Tìm một sản phẩm theo ID, trả về Optional.empty nếu không tồn tại. */
     public Optional<Product> findById(int productId) throws SQLException {
         String sql = "SELECT " + PRODUCT_COLUMNS + ' ' + PRODUCT_FROM + " AND p.product_id = ?";
 
@@ -96,6 +99,7 @@ public class ProductDAO {
         }
     }
 
+    /** Thêm sản phẩm mới vào bảng products và trả về product_id được sinh ra. */
     public int insert(Product product) throws SQLException {
         String sql = """
                 INSERT INTO products (
@@ -118,6 +122,7 @@ public class ProductDAO {
         }
     }
 
+    /** Cập nhật thông tin chính của sản phẩm theo product_id. */
     public boolean update(Product product) throws SQLException {
         String sql = """
                 UPDATE products
@@ -146,6 +151,7 @@ public class ProductDAO {
         }
     }
 
+    /** Cập nhật riêng trạng thái sản phẩm mà không đụng các trường khác. */
     public boolean updateStatus(int productId, String status) throws SQLException {
         String sql = "UPDATE products SET status = ? WHERE product_id = ?";
 
@@ -156,6 +162,7 @@ public class ProductDAO {
         }
     }
 
+    /** Kiểm tra tên sản phẩm đã tồn tại hay chưa khi tạo mới. */
     public boolean existsByName(String name) throws SQLException {
         String sql = "SELECT 1 FROM products WHERE name = ? LIMIT 1";
 
@@ -167,6 +174,7 @@ public class ProductDAO {
         }
     }
 
+    /** Kiểm tra tên có trùng với sản phẩm khác khi cập nhật hay không. */
     public boolean existsByNameForOtherProduct(String name, int productId) throws SQLException {
         String sql = "SELECT 1 FROM products WHERE name = ? AND product_id <> ? LIMIT 1";
 
@@ -179,6 +187,7 @@ public class ProductDAO {
         }
     }
 
+    /** Kiểm tra mã model đã tồn tại hay chưa khi tạo mới. */
     public boolean existsByModelCode(String modelCode) throws SQLException {
         if (modelCode == null || modelCode.isBlank()) {
             return false;
@@ -194,6 +203,7 @@ public class ProductDAO {
         }
     }
 
+    /** Kiểm tra mã model có trùng với sản phẩm khác khi cập nhật hay không. */
     public boolean existsByModelCodeForOtherProduct(String modelCode, int productId) throws SQLException {
         if (modelCode == null || modelCode.isBlank()) {
             return false;
@@ -210,10 +220,12 @@ public class ProductDAO {
         }
     }
 
+    /** Gắn các điều kiện filter vào SQL danh sách sản phẩm. */
     private void appendFilters(StringBuilder sql, List<Object> params, String keyword, Integer categoryId, String status) {
         appendBaseFilters(sql, params, keyword, categoryId, status);
     }
 
+    /** Gắn điều kiện keyword, categoryId và status dùng chung cho list/count. */
     private void appendBaseFilters(StringBuilder sql, List<Object> params, String keyword, Integer categoryId, String status) {
         if (keyword != null && !keyword.isBlank()) {
             sql.append(" AND (LOWER(p.name) LIKE ? OR LOWER(COALESCE(p.model_code, '')) LIKE ?)");
@@ -233,6 +245,7 @@ public class ProductDAO {
         }
     }
 
+    /** Chuyển sort key thành ORDER BY cố định để tránh chèn SQL động không kiểm soát. */
     private String resolveOrderBy(String sort) {
         if ("oldest".equals(sort)) {
             return "p.product_id ASC";
@@ -258,6 +271,7 @@ public class ProductDAO {
         return "p.product_id DESC";
     }
 
+    /** Bind dữ liệu sản phẩm vào PreparedStatement khi insert. */
     private void setProductMutationParams(PreparedStatement statement, Product product) throws SQLException {
         setNullableInteger(statement, 1, product.getCreatedBy());
         statement.setInt(2, product.getCategoryId());
@@ -275,6 +289,7 @@ public class ProductDAO {
         statement.setBoolean(14, product.isFeatured());
     }
 
+    /** Map ResultSet từ câu SELECT sản phẩm sang entity Product. */
     private Product mapProduct(ResultSet resultSet) throws SQLException {
         Product product = new Product();
         product.setProductId(resultSet.getInt("product_id"));
@@ -307,12 +322,14 @@ public class ProductDAO {
         return product;
     }
 
+    /** Bind danh sách tham số vào PreparedStatement theo thứ tự đã build SQL. */
     private void bindParams(PreparedStatement statement, List<Object> params) throws SQLException {
         for (int i = 0; i < params.size(); i++) {
             statement.setObject(i + 1, params.get(i));
         }
     }
 
+    /** Bind chuỗi nullable vào PreparedStatement. */
     private void setNullableString(PreparedStatement statement, int index, String value) throws SQLException {
         if (value == null || value.isBlank()) {
             statement.setNull(index, java.sql.Types.VARCHAR);
@@ -321,6 +338,7 @@ public class ProductDAO {
         statement.setString(index, value);
     }
 
+    /** Bind số nguyên nullable vào PreparedStatement. */
     private void setNullableInteger(PreparedStatement statement, int index, Integer value) throws SQLException {
         if (value == null) {
             statement.setNull(index, java.sql.Types.INTEGER);
@@ -329,6 +347,7 @@ public class ProductDAO {
         statement.setInt(index, value);
     }
 
+    /** Chuyển Timestamp từ JDBC sang LocalDateTime cho entity. */
     private java.time.LocalDateTime toLocalDateTime(Timestamp timestamp) {
         if (timestamp == null) {
             return null;

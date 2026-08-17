@@ -12,6 +12,7 @@ import java.sql.SQLException;
 
 @WebServlet(name = "ProductUpdateServlet", urlPatterns = {"/admin/products/update"})
 public class ProductUpdateServlet extends ProductServletSupport {
+    /** Nhận dữ liệu form sản phẩm, phân nhánh tạo mới hoặc cập nhật rồi redirect về danh sách. */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -33,6 +34,7 @@ public class ProductUpdateServlet extends ProductServletSupport {
         }
     }
 
+    /** Giữ lại dữ liệu đã nhập và quay về form khi validate hoặc lưu sản phẩm thất bại. */
     private void forwardBackToForm(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {
         Product product = createDefaultProduct();
