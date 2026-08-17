@@ -4,7 +4,6 @@ import model.entity.promtion.Promotion;
 import model.entity.catalog.Category;
 import model.entity.catalog.Product;
 import service.promotion.PromotionService;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -24,19 +23,23 @@ public class PromotionEditServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            List<Category> categories = new ArrayList<>();
+            List<Category> categories = new ArrayList<>(); 
             List<Product> products = new ArrayList<>();
+            
             req.setAttribute("categories", categories);
             req.setAttribute("products", products);
 
             String editId = req.getParameter("id");
             boolean isEdit = false;
+            
+            // 2. Khởi tạo sẵn một Promotion rỗng để truyền sang JSP cho luồng "Tạo mới" không bị lỗi Null
+            Promotion p = new Promotion(); 
 
             if (editId != null && !editId.trim().isEmpty()) {
-                Promotion p = promotionService.getPromotionById(Integer.parseInt(editId));
-                if (p != null) {
+                Promotion existingPromo = promotionService.getPromotionById(Integer.parseInt(editId));
+                if (existingPromo != null) {
+                    p = existingPromo;
                     isEdit = true;
-                    req.setAttribute("promo", p);
                     
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
                     if (p.getValidFrom() != null) {
@@ -45,18 +48,22 @@ public class PromotionEditServlet extends HttpServlet {
                     if (p.getValidUntil() != null) {
                         req.setAttribute("validUntilStr", p.getValidUntil().format(formatter));
                     }
+                } else {
+                    // Truyền ID nhưng không có trong DB
+                    req.setAttribute("errorMessage", "[BE] Không tìm thấy mã khuyến mãi yêu cầu.");
                 }
             }
             
+            req.setAttribute("promo", p);
             req.setAttribute("isEdit", isEdit);
             req.getRequestDispatcher("/WEB-INF/views/admin/promotions/form.jsp").forward(req, resp);
 
         } catch (NumberFormatException numEx) {
-            req.setAttribute("errorMessage", "Định dạng ID mã khuyến mãi không hợp lệ.");
+            req.setAttribute("errorMessage", "[BE] Định dạng ID mã khuyến mãi không hợp lệ.");
             req.getRequestDispatcher("/WEB-INF/views/admin/promotions/form.jsp").forward(req, resp);
         } catch (SQLException sqlEx) {
             getServletContext().log("Lỗi DB tại PromotionEditServlet", sqlEx);
-            req.setAttribute("errorMessage", "Lỗi kết nối cơ sở dữ liệu: " + sqlEx.getMessage());
+            req.setAttribute("errorMessage", "[BE] Lỗi kết nối cơ sở dữ liệu: " + sqlEx.getMessage());
             req.getRequestDispatcher("/WEB-INF/views/admin/promotions/form.jsp").forward(req, resp);
         }
     }

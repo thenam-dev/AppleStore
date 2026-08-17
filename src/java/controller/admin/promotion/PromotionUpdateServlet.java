@@ -23,8 +23,7 @@ public class PromotionUpdateServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Promotion p = new Promotion(); // Khởi tạo sẵn để nếu có lỗi thì đẩy lại dữ liệu về form
-
+        Promotion p = new Promotion();
         try {
             String promoIdStr = req.getParameter("promoId");
             if (promoIdStr != null && !promoIdStr.isBlank()) {
@@ -33,30 +32,23 @@ public class PromotionUpdateServlet extends HttpServlet {
 
             p.setCode(req.getParameter("code"));
             p.setDiscountType(req.getParameter("discountType"));
-            p.setDiscountValue(new BigDecimal(req.getParameter("discountValue")));
-
-            String discountMaxStr = req.getParameter("discountMax");
-            p.setDiscountMax(discountMaxStr != null && !discountMaxStr.isBlank() ? new BigDecimal(discountMaxStr) : BigDecimal.ZERO);
-
-            String minOrderStr = req.getParameter("minOrderValue");
-            p.setMinOrderValue(minOrderStr != null && !minOrderStr.isBlank() ? new BigDecimal(minOrderStr) : BigDecimal.ZERO);
-
             p.setBenefitTarget(req.getParameter("benefitTarget"));
+            p.setScope(req.getParameter("scope"));
 
-            String maxUsesStr = req.getParameter("maxUses");
-            p.setMaxUses(maxUsesStr != null && !maxUsesStr.isBlank() ? Integer.parseInt(maxUsesStr) : null);
+            p.setDiscountValue(parseBigDecimal(req.getParameter("discountValue")));
+            p.setDiscountMax(parseBigDecimal(req.getParameter("discountMax")));
+            p.setMinOrderValue(parseBigDecimal(req.getParameter("minOrderValue")));
+            p.setMaxUses(parseIntegerNullable(req.getParameter("maxUses")));
 
-            String scope = req.getParameter("scope");
-            p.setScope(scope);
-
+            String scope = p.getScope();
             String categoryIdStr = req.getParameter("categoryId");
             String productIdStr = req.getParameter("productId");
 
-            if ("CATEGORY".equals(scope) && categoryIdStr != null && !categoryIdStr.isBlank()) {
-                p.setCategoryId(Integer.parseInt(categoryIdStr));
+            if ("CATEGORY".equals(scope)) {
+                p.setCategoryId(parseIntegerNullable(categoryIdStr));
                 p.setProductId(null);
-            } else if ("PRODUCT".equals(scope) && productIdStr != null && !productIdStr.isBlank()) {
-                p.setProductId(Integer.parseInt(productIdStr));
+            } else if ("PRODUCT".equals(scope)) {
+                p.setProductId(parseIntegerNullable(productIdStr));
                 p.setCategoryId(null);
             } else {
                 p.setCategoryId(null);
@@ -64,17 +56,18 @@ public class PromotionUpdateServlet extends HttpServlet {
             }
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
-            p.setValidFrom(LocalDateTime.parse(req.getParameter("validFrom"), formatter));
-            p.setValidUntil(LocalDateTime.parse(req.getParameter("validUntil"), formatter));
+            String validFromStr = req.getParameter("validFrom");
+            String validUntilStr = req.getParameter("validUntil");
+
+            p.setValidFrom(validFromStr != null && !validFromStr.isBlank() ? LocalDateTime.parse(validFromStr, formatter) : null);
+            p.setValidUntil(validUntilStr != null && !validUntilStr.isBlank() ? LocalDateTime.parse(validUntilStr, formatter) : null);
 
             p.setCanStack(req.getParameter("canStack") != null);
             p.setIsActive(req.getParameter("isActive") != null);
 
-            // Xử lý lưu Database
             if (p.getPromoId() > 0) {
                 promotionService.updatePromotion(p);
             } else {
-                // Thay dòng int adminId = 1; bằng:
                 User loggedInAdmin = (User) req.getSession().getAttribute("loggedInUser");
                 int adminId = (loggedInAdmin != null) ? loggedInAdmin.getUserId() : 1;
                 promotionService.createPromotion(p, adminId);
@@ -82,26 +75,24 @@ public class PromotionUpdateServlet extends HttpServlet {
 
             resp.sendRedirect(req.getContextPath() + "/admin/promotions");
 
-        } catch (NumberFormatException numEx) {
-            forwardErrorToForm(req, resp, p, "Vui lòng nhập đúng định dạng số cho các trường: ID, số lượng, hoặc giá trị giảm.");
-        } catch (DateTimeParseException dateEx) {
-            forwardErrorToForm(req, resp, p, "Định dạng ngày tháng không hợp lệ.");
         } catch (IllegalArgumentException illEx) {
-            // Đây chính là lỗi Validation (ví dụ trùng code) được ném ra từ PromotionService
+            // Hiển thị message từ BE (đã có chữ [BE])
             forwardErrorToForm(req, resp, p, illEx.getMessage());
+        } catch (DateTimeParseException dateEx) {
+            forwardErrorToForm(req, resp, p, "[BE] Định dạng ngày tháng không hợp lệ.");
         } catch (SQLException sqlEx) {
             getServletContext().log("Lỗi DB tại PromotionUpdateServlet", sqlEx);
-            forwardErrorToForm(req, resp, p, "Lỗi khi lưu vào cơ sở dữ liệu: " + sqlEx.getMessage());
+            forwardErrorToForm(req, resp, p, "[BE] Lỗi DB: " + sqlEx.getMessage());
+        } catch (Exception ex) {
+            forwardErrorToForm(req, resp, p, "[BE] Lỗi hệ thống: " + ex.getMessage());
         }
     }
 
-    // Hàm phụ trợ để tái cấu trúc lại Form khi có lỗi mà không làm mất dữ liệu người dùng đã gõ
     private void forwardErrorToForm(HttpServletRequest req, HttpServletResponse resp, Promotion p, String errorMessage) throws ServletException, IOException {
         req.setAttribute("errorMessage", errorMessage);
         req.setAttribute("promo", p);
         req.setAttribute("isEdit", p.getPromoId() > 0);
 
-        // Push lại ngày giờ dạng chuỗi để input datetime-local hiển thị lại
         if (p.getValidFrom() != null) {
             req.setAttribute("validFromStr", p.getValidFrom().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
         }
@@ -109,6 +100,37 @@ public class PromotionUpdateServlet extends HttpServlet {
             req.setAttribute("validUntilStr", p.getValidUntil().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
         }
 
+        try {
+            req.setAttribute("categories", new java.util.ArrayList<>());
+            req.setAttribute("products", new java.util.ArrayList<>());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Bật ngược lại form. Lúc này form đã có đủ data báo lỗi + data của dropdown
         req.getRequestDispatcher("/WEB-INF/views/admin/promotions/form.jsp").forward(req, resp);
+    }
+
+    // SAFE PARSER HELPER
+    private BigDecimal parseBigDecimal(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        try {
+            return new BigDecimal(value.trim());
+        } catch (NumberFormatException e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private Integer parseIntegerNullable(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

@@ -6,18 +6,21 @@ package model.entity.cart;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
 /**
  *
  * @author ACER
  */
 public class CartItem {
+
     private int cartItemId;
     private int cartId;
     private int variantId;
     private int quantity;
     private Integer addonId; // có thể null
     private LocalDateTime addedAt;
-
+    private int productId;
+    private int categoryId;
     // Field bổ sung phục vụ hiển thị / tính tiền, lấy từ JOIN trong CartDAO
     private String productName;
     private String variantLabel;
@@ -134,7 +137,7 @@ public class CartItem {
     public void setAddonPrice(BigDecimal addonPrice) {
         this.addonPrice = addonPrice;
     }
-    
+
     public String getImageUrl() {
         return imageUrl;
     }
@@ -143,12 +146,34 @@ public class CartItem {
         this.imageUrl = imageUrl;
     }
 
-    /** True nếu số lượng trong giỏ đã vượt tồn kho hiện tại - JSP dùng để tô đỏ cảnh báo bằng EL. */
+    public int getProductId() {
+        return productId;
+    }
+
+    public void setProductId(int productId) {
+        this.productId = productId;
+    }
+
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    /**
+     * True nếu số lượng trong giỏ đã vượt tồn kho hiện tại - JSP dùng để tô đỏ
+     * cảnh báo bằng EL.
+     */
     public boolean isOverStock() {
         return quantity > stockQuantity;
     }
 
-    /** Thành tiền của dòng = (đơn giá + phụ kiện) * số lượng. JSP gọi trực tiếp ${item.lineTotal}. */
+    /**
+     * Thành tiền của dòng = (đơn giá + phụ kiện) * số lượng. JSP gọi trực tiếp
+     * ${item.lineTotal}.
+     */
     public BigDecimal getLineTotal() {
         BigDecimal addon = addonPrice == null ? BigDecimal.ZERO : addonPrice;
         BigDecimal price = unitPrice == null ? BigDecimal.ZERO : unitPrice;

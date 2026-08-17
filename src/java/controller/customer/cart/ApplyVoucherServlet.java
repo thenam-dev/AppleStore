@@ -21,12 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * Xử lý áp mã khuyến mãi. Luôn PRG: xử lý xong (thành công hay lỗi) đều
- * redirect về /checkout để khách thấy ngay giá đã cập nhật trên chính
- * màn thanh toán, thay vì quay lại /cart (đúng luồng: chọn mã ở
- * /vouchers -> áp dụng -> quay lại /checkout để xem lại tổng tiền).
- */
 @WebServlet(name = "ApplyVoucherServlet", urlPatterns = {"/apply-voucher"})
 public class ApplyVoucherServlet extends HttpServlet {
 
@@ -40,10 +34,6 @@ public class ApplyVoucherServlet extends HttpServlet {
         HttpSession session = req.getSession();
         String voucherCode = req.getParameter("voucherCode");
 
-        // SỬA: lấy customerId đúng theo pattern CartServlet/CheckoutServlet đang dùng
-        // trong toàn dự án - session lưu object User dưới key AppConfig.SESSION_USER,
-        // không phải Integer thô dưới key "user". Ép kiểu (Integer) trên object User
-        // sẽ ném ClassCastException, không được các catch bên dưới bắt.
         Integer customerId = getCustomerId(req);
         if (customerId == null) {
             redirectToLogin(req, resp);
@@ -51,7 +41,6 @@ public class ApplyVoucherServlet extends HttpServlet {
         }
 
         try {
-            // Lấy giỏ hàng thật và tính tổng tiền
             List<CartItem> items = cartService.getCartItems(customerId);
             if (items.isEmpty()) {
                 session.setAttribute("errorMsg", "Giỏ hàng của bạn đang trống.");
@@ -63,12 +52,14 @@ public class ApplyVoucherServlet extends HttpServlet {
                     .map(CartItem::getLineTotal)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // Ghi chú: CheckoutService hiện đang fix phí ship = 0, dùng chung giá trị này.
             BigDecimal shippingFee = BigDecimal.ZERO;
 
-            // Kiểm tra mã và tính tiền giảm thật
-            Promotion validPromo = promotionService.validateCouponForCheckout(voucherCode, cartSubtotal);
-            BigDecimal discountAmount = promotionService.calculateDiscountAmount(validPromo, cartSubtotal, shippingFee, null);
+            // ---- CẬP NHẬT: Truyền thêm List<CartItem> để bóc tách và validate chính xác ----
+            Promotion validPromo = promotionService.validateCouponForCheckout(voucherCode, cartSubtotal, items);
+            
+            // Tính tiền giảm dựa trên diện tích sản phẩm hợp lệ (eligibleAmount)
+            BigDecimal eligibleAmount = promotionService.calculateEligibleAmount(items, validPromo);
+            BigDecimal discountAmount = promotionService.calculateDiscountAmount(validPromo, cartSubtotal, shippingFee, eligibleAmount);
 
             session.setAttribute("appliedPromo", validPromo);
             session.setAttribute("discountAmount", discountAmount);
@@ -82,11 +73,9 @@ public class ApplyVoucherServlet extends HttpServlet {
             session.setAttribute("errorMsg", "Lỗi hệ thống khi xử lý mã giảm giá.");
         }
 
-        // PRG: luôn quay về /checkout để thấy tổng tiền vừa cập nhật
         resp.sendRedirect(req.getContextPath() + "/checkout");
     }
 
-    /** Giống hệt cách CartServlet lấy customerId - dùng chung 1 chuẩn cho toàn hệ thống. */
     private Integer getCustomerId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         Object sessionUser = session == null ? null : session.getAttribute(AppConfig.SESSION_USER);
