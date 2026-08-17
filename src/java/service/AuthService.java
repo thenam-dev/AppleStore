@@ -9,10 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-/**
- * Business rules for the customer register/login flow. Keeps the same
- * validate-then-persist convention as {@link UserService}.
- */
+
 public class AuthService {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
@@ -31,11 +28,7 @@ public class AuthService {
         this.userDAO = userDAO;
     }
 
-    /**
-     * Creates a new customer account.
-     *
-     * @return the created user (without the password hash populated)
-     */
+   
     public User register(String fullName, String email, String phone, String password, String confirmPassword)
             throws SQLException {
         String normalizedFullName = trimRequired(fullName, "Vui lòng nhập họ tên.");
@@ -78,11 +71,7 @@ public class AuthService {
         return user;
     }
 
-    /**
-     * Authenticates a customer/staff login attempt.
-     *
-     * @return the authenticated user (without the password hash populated)
-     */
+    
     public User login(String email, String password) throws SQLException {
         String normalizedEmail = trimRequired(email, "Vui lòng nhập email.").toLowerCase();
         if (password == null || password.isEmpty()) {
@@ -116,6 +105,34 @@ public class AuthService {
         userDAO.recordLoginSuccess(user.getUserId());
         user.setPasswordHash(null);
         return user;
+    }
+
+   
+    public void changePassword(int userId, String currentPassword, String newPassword, String confirmNewPassword)
+            throws SQLException {
+        if (currentPassword == null || currentPassword.isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng nhập mật khẩu hiện tại.");
+        }
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new IllegalArgumentException("Mật khẩu mới phải có ít nhất 8 ký tự.");
+        }
+        if (!newPassword.equals(confirmNewPassword)) {
+            throw new IllegalArgumentException("Xác nhận mật khẩu mới không khớp.");
+        }
+
+        Optional<String> currentHash = userDAO.findPasswordHashById(userId);
+        if (currentHash.isEmpty() || currentHash.get() == null) {
+            throw new IllegalStateException("Không tìm thấy tài khoản hoặc tài khoản chưa đặt mật khẩu.");
+        }
+        if (!PasswordUtil.matches(currentPassword, currentHash.get())) {
+            throw new IllegalArgumentException("Mật khẩu hiện tại không đúng.");
+        }
+        if (PasswordUtil.matches(newPassword, currentHash.get())) {
+            throw new IllegalArgumentException("Mật khẩu mới phải khác mật khẩu hiện tại.");
+        }
+
+        String newHash = PasswordUtil.hash(newPassword);
+        userDAO.updatePasswordHash(userId, newHash);
     }
 
     private void handleFailedAttempt(User user) throws SQLException {

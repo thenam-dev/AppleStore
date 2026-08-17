@@ -85,7 +85,7 @@ public class PromotionService {
     public int getExpiringSoonCount() throws SQLException {
         return promotionDAO.countExpiringSoon();
     }
-    
+
     public int countAll(String keyword, String statusFilter) throws SQLException {
         return promotionDAO.countAll(keyword, statusFilter);
     }
@@ -165,13 +165,13 @@ public class PromotionService {
         // Không cho phép giảm âm tiền
         return discountAmount.compareTo(baseAmount) > 0 ? baseAmount : discountAmount;
     }
-    
+
     public void recordPromotionUsage(Connection conn, int orderId, int customerId, Promotion promo, BigDecimal discountApplied) throws SQLException {
         if (promo == null) return;
         promotionDAO.insertOrderPromotion(conn, orderId, promo.getPromoId(), customerId, discountApplied, promo.getCode(), promo.getBenefitTarget());
         promotionDAO.incrementUsedCount(conn, promo.getPromoId());
     }
-    
+
     public List<Promotion> getAvailableVouchersForCart() throws SQLException {
         return promotionDAO.findAvailableVouchersForCart();
     }

@@ -201,6 +201,30 @@ public class UserDAO {
         }
     }
 
+    public Optional<String> findPasswordHashById(int userId) throws SQLException {
+        String sql = "SELECT password_hash FROM users WHERE user_id = ?";
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return Optional.ofNullable(resultSet.getString("password_hash"));
+                }
+                return Optional.empty();
+            }
+        }
+    }
+
+    public boolean updatePasswordHash(int userId, String newPasswordHash) throws SQLException {
+        String sql = "UPDATE users SET password_hash = ? WHERE user_id = ?";
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, newPasswordHash);
+            statement.setInt(2, userId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
     /** Kiểm tra email có trùng với user khác khi cập nhật hay không. */
     public boolean existsByEmailForOtherUser(String email, int userId) throws SQLException {
         String sql = "SELECT 1 FROM users WHERE email = ? AND user_id <> ? LIMIT 1";
