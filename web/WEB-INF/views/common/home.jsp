@@ -24,94 +24,20 @@
         -->
         <c:set var="ctx" value="${pageContext.request.contextPath}" />
 
-        <!-- Header trang -->
-        <header class="site-header">
-            <div class="container header-main">
-                <a class="brand" href="${ctx}/index.jsp" aria-label="Cửa hàng Apple trực tuyến">
-                    <img src="${ctx}/assets/images/logo-mark.svg" alt="Biểu tượng AOS">
-                    <span>
-                        <strong>Cửa hàng AOS</strong>
-                        <small>Giao diện Apple</small>
-                    </span>
-                </a>
-                <c:choose>
-                    <c:when test="${not empty sessionScope.user and (sessionScope.user.role eq 'ADMIN' or sessionScope.user.role eq 'SALE_STAFF')}">
-                        <a href="${ctx}/admin/dashboard" class="btn btn-app-primary ms-auto me-3">
-                            Vào trang quản trị
-                        </a>
-                    </c:when>
-                    <c:otherwise>
-                        <div class="ms-auto"></div>
-                    </c:otherwise>
-                </c:choose>
-                <div class="header-actions">
-                    <div class="dropdown">
-                        <button class="btn btn-app-ghost dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Tài khoản
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end app-dropdown-menu">
-                            <c:choose>
-                                <c:when test="${not empty sessionScope.user}">
-                                    <!-- Đã đăng nhập -->
-                                    <li class="px-3 py-2 text-muted small">Xin chào, ${sessionScope.user.fullName}</li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="${ctx}/profile">Hồ sơ cá nhân</a></li>
-                                    <li><a class="dropdown-item" href="${ctx}/order-history">Lịch sử đơn hàng</a></li>
-                                    <li><a class="dropdown-item" href="${ctx}/wishlist">Yêu thích</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" href="${ctx}/logout">Đăng xuất</a></li>
-                                    </c:when>
-                                    <c:otherwise>
-                                    <!-- Chưa đăng nhập -->
-                                    <li><a class="dropdown-item" href="${ctx}/login">Đăng nhập</a></li>
-                                    <li><a class="dropdown-item" href="${ctx}/register">Đăng ký</a></li>
-                                    </c:otherwise>
-                                </c:choose>
-                        </ul>
-                    </div>
-                    <a class="cart-link" href="${ctx}/cart" aria-label="Xem giỏ hàng">
-                        <span>Giỏ hàng</span>
-                        <span class="cart-count">${not empty sessionScope.cartCount ? sessionScope.cartCount : '0'}</span>
-                    </a>
-                    <button class="mobile-menu-button" type="button" data-mobile-toggle aria-expanded="false" aria-label="Mở menu di động">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-                </div>
+        <!-- Header trang (Dùng chung) -->
+        <jsp:include page="/WEB-INF/views/common/header.jsp" />
+
+        <!-- Category Nav dành riêng cho trang chủ -->
+        <nav class="category-nav" style="background-color: var(--surface-default); border-bottom: 1px solid var(--border-subtle); padding: 0.5rem 0;">
+            <div class="container category-nav-inner" style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="${ctx}/products?category=iphone" style="color: var(--text-default); text-decoration: none; font-size: 0.9rem;">iPhone</a>
+                <a href="${ctx}/products?category=mac" style="color: var(--text-default); text-decoration: none; font-size: 0.9rem;">Mac</a>
+                <a href="${ctx}/products?category=ipad" style="color: var(--text-default); text-decoration: none; font-size: 0.9rem;">iPad</a>
+                <a href="${ctx}/products?category=watch" style="color: var(--text-default); text-decoration: none; font-size: 0.9rem;">Apple Watch</a>
+                <a href="${ctx}/products?category=airpods" style="color: var(--text-default); text-decoration: none; font-size: 0.9rem;">AirPods</a>
+                <a href="${ctx}/products?category=accessories" style="color: var(--text-default); text-decoration: none; font-size: 0.9rem;">Phụ kiện</a>
             </div>
-            <nav class="category-nav">
-                <div class="container category-nav-inner">
-                    <a href="${ctx}/products?category=iphone">iPhone</a>
-                    <a href="${ctx}/products?category=mac">Mac</a>
-                    <a href="${ctx}/products?category=ipad">iPad</a>
-                    <a href="${ctx}/products?category=watch">Apple Watch</a>
-                    <a href="${ctx}/products?category=airpods">AirPods</a>
-                    <a href="${ctx}/products?category=accessories">Phụ kiện</a>
-                    <a href="${ctx}/products">Tất cả sản phẩm</a>
-                </div>
-            </nav>
-            <div class="mobile-drawer" data-mobile-panel>
-                <div class="container mobile-drawer-inner">
-                    <form class="mobile-search" action="${ctx}/products" method="get" name="mobileSearchForm">
-                        <label class="visually-hidden" for="mobile-search-input">Tìm kiếm sản phẩm</label>
-                        <input id="mobile-search-input" class="form-control" type="search" name="keyword" placeholder="Tìm kiếm sản phẩm">
-                    </form>
-                    <div class="mobile-links">
-                        <a href="${ctx}/products?category=iphone">iPhone</a>
-                        <a href="${ctx}/products?category=mac">Mac</a>
-                        <a href="${ctx}/products?category=ipad">iPad</a>
-                        <a href="${ctx}/products?category=watch">Apple Watch</a>
-                        <a href="${ctx}/products?category=airpods">AirPods</a>
-                        <a href="${ctx}/products?category=accessories">Phụ kiện</a>
-                        <a href="${ctx}/login">Đăng nhập</a>
-                        <a href="${ctx}/register">Đăng ký</a>
-                        <a href="${ctx}/wishlist.html">Yêu thích</a>
-                        <a href="${ctx}/components/component-demo.html">Bản thử nghiệm</a>
-                    </div>
-                </div>
-            </div>
-        </header>
+        </nav>
 
         <main>
             <!-- Hero trang chủ -->
@@ -252,13 +178,13 @@
                                                                   type="currency" currencySymbol="$" maxFractionDigits="0"/></strong>
                                             </div>
                                             <!-- Nút xem chi tiết và thêm vào giỏ ... -->
-                                            <div class="product-actions">
-                                                <a class="btn btn-app-outline w-100" href="${ctx}/product?id=${p.productId}">Xem chi tiết</a>
-                                                <form action="${ctx}/cart" method="post" class="w-100">
+                                            <div class="product-actions d-flex gap-2 mt-3">
+                                                <a class="btn btn-app-outline btn-sm flex-grow-1" href="${ctx}/product?id=${p.productId}">Chi tiết</a>
+                                                <form action="${ctx}/cart" method="post" class="flex-grow-1">
                                                     <input type="hidden" name="action" value="add">
-                                                    <input type="hidden" name="productId" value="${p.productId}">
+                                                    <input type="hidden" name="variantId" value="${p.defaultVariantId}">
                                                     <input type="hidden" name="quantity" value="1">
-                                                    <button class="btn btn-app-primary w-100" type="submit">Thêm vào giỏ</button>
+                                                    <button class="btn btn-app-primary btn-sm w-100" type="submit" ${empty p.defaultVariantId ? 'disabled' : ''}>Mua ngay</button>
                                                 </form>
                                             </div>
                                         </div>
