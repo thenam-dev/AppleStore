@@ -33,6 +33,15 @@ public class Product implements Serializable {
     private int totalStock;
     private int variantCount;
     private String primaryImageUrl;
+    private Integer defaultVariantId;
+
+    public Integer getDefaultVariantId() {
+        return defaultVariantId;
+    }
+
+    public void setDefaultVariantId(Integer defaultVariantId) {
+        this.defaultVariantId = defaultVariantId;
+    }
 
     public int getProductId() {
         return productId;
