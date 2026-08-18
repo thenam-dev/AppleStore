@@ -1,4 +1,4 @@
-package controller.customer.cart;
+package controller.customer.promotion;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;

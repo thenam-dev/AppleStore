@@ -39,6 +39,29 @@ public class CheckoutServlet extends HttpServlet {
                 .map(CartItem::getLineTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // =====================================================================
+        // CHỐT CHẶN 2: TÁI KIỂM TRA MÃ KHI LOAD LẠI TRANG CHECKOUT
+        // =====================================================================
+        HttpSession session = request.getSession();
+        Promotion appliedPromo = (Promotion) session.getAttribute("appliedPromo");
+        if (appliedPromo != null) {
+            try {
+                service.promotion.PromotionService promoService = new service.promotion.PromotionService();
+                // Validate lại với giỏ hàng mới nhất
+                Promotion validPromo = promoService.validateCouponForCheckout(appliedPromo.getCode(), cartTotal, items);
+                BigDecimal eligibleAmount = promoService.calculateEligibleAmount(items, validPromo);
+                BigDecimal discountAmount = promoService.calculateDiscountAmount(validPromo, cartTotal, BigDecimal.ZERO, eligibleAmount);
+                
+                session.setAttribute("appliedPromo", validPromo);
+                session.setAttribute("discountAmount", discountAmount);
+            } catch (Exception e) {
+                // Nếu giỏ hàng thay đổi khiến mã không còn hợp lệ -> Tự động thu hồi
+                session.removeAttribute("appliedPromo");
+                session.removeAttribute("discountAmount");
+                request.setAttribute("errorMsg", "Mã giảm giá đã tự động gỡ bỏ: " + e.getMessage());
+            }
+        }
+
         request.setAttribute("cartItems", items);
         request.setAttribute("cartTotal", cartTotal);
         request.getRequestDispatcher("/WEB-INF/views/customer/checkout.jsp").forward(request, response);
