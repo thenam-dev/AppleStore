@@ -1,15 +1,15 @@
 package service.order;
 
-import dao.order.CustomerOrderDAO;
+import dao.order.OrderDAO;
 import java.sql.SQLException;
 import java.util.*;
 
 public class CustomerOrderService {
 
-    private final CustomerOrderDAO customerOrderDAO = new CustomerOrderDAO();
+    private final OrderDAO orderDAO = new OrderDAO();
 
     public List<Map<String, Object>> getCustomerOrders(int customerId, String tab) throws SQLException {
-        List<Map<String, Object>> rawOrders = customerOrderDAO.findOrdersByCustomer(customerId, tab);
+        List<Map<String, Object>> rawOrders = orderDAO.findOrdersByCustomer(customerId, tab);
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (Map<String, Object> ro : rawOrders) {
@@ -38,16 +38,20 @@ public class CustomerOrderService {
         return result;
     }
 
+    public int getAllCount(int customerId) throws SQLException {
+        return orderDAO.countTabOrders(customerId, "all");
+    }
+
     public int getActiveCount(int customerId) throws SQLException {
-        return customerOrderDAO.countTabOrders(customerId, "active");
+        return orderDAO.countTabOrders(customerId, "active");
     }
 
     public int getCompletedCount(int customerId) throws SQLException {
-        return customerOrderDAO.countTabOrders(customerId, "completed");
+        return orderDAO.countTabOrders(customerId, "completed");
     }
 
     public Map<String, Object> getSelectedOrderDetail(int orderId, int customerId) throws SQLException {
-        Map<String, Object> raw = customerOrderDAO.findOrderDetail(orderId, customerId);
+        Map<String, Object> raw = orderDAO.findOrderDetail(orderId, customerId);
         if (raw == null) return null;
 
         Map<String, Object> detail = new HashMap<>();
@@ -81,7 +85,7 @@ public class CustomerOrderService {
 
         int currentRank = statusRank.getOrDefault(dbStatus, 0);
 
-        List<Map<String, Object>> history = customerOrderDAO.findTimelineByOrderId(orderId);
+        List<Map<String, Object>> history = orderDAO.findTimelineByOrderId(orderId);
         List<Map<String, Object>> timeline = new ArrayList<>();
         
         String[] steps = {"CONFIRMED", "PREPARING", "DISPATCHED", "DELIVERED"};
@@ -110,7 +114,7 @@ public class CustomerOrderService {
     }
 
     public boolean cancelOrder(int orderId, int customerId) throws SQLException {
-        return customerOrderDAO.cancelOrderByCustomer(orderId, customerId);
+        return orderDAO.cancelOrderByCustomer(orderId, customerId);
     }
 
     private String mapUiStatus(String dbStatus) {

@@ -62,7 +62,8 @@ public class PromotionUpdateServlet extends HttpServlet {
             p.setValidFrom(validFromStr != null && !validFromStr.isBlank() ? LocalDateTime.parse(validFromStr, formatter) : null);
             p.setValidUntil(validUntilStr != null && !validUntilStr.isBlank() ? LocalDateTime.parse(validUntilStr, formatter) : null);
 
-            p.setCanStack(req.getParameter("canStack") != null);
+            // Xóa canStack theo yêu cầu
+            p.setCanStack(false);
             p.setIsActive(req.getParameter("isActive") != null);
 
             if (p.getPromoId() > 0) {
@@ -76,7 +77,6 @@ public class PromotionUpdateServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/admin/promotions");
 
         } catch (IllegalArgumentException illEx) {
-            // Hiển thị message từ BE (đã có chữ [BE])
             forwardErrorToForm(req, resp, p, illEx.getMessage());
         } catch (DateTimeParseException dateEx) {
             forwardErrorToForm(req, resp, p, "[BE] Định dạng ngày tháng không hợp lệ.");
@@ -100,46 +100,22 @@ public class PromotionUpdateServlet extends HttpServlet {
             req.setAttribute("validUntilStr", p.getValidUntil().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
         }
 
-        try {
-            // Nạp lại danh sách bảng bên trái để trang không bị lỗi trống dữ liệu
-            req.setAttribute("promotions", promotionService.findAllWithPaging(null, null, null, null, 0, 10));
-            req.setAttribute("currentPage", 1);
-            req.setAttribute("totalPages", 1);
-            req.setAttribute("activeCount", promotionService.countAll(null, "1"));
-            req.setAttribute("totalRedeemed", promotionService.getTotalRedeemedCount());
-            req.setAttribute("expiringSoon", promotionService.getExpiringSoonCount());
-            req.setAttribute("dateFormatter", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        req.setAttribute("categories", new java.util.ArrayList<>()); // Thay bằng load thật nếu cần
+        req.setAttribute("products", new java.util.ArrayList<>());
 
-            req.setAttribute("categories", new java.util.ArrayList<>());
-            req.setAttribute("products", new java.util.ArrayList<>());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // Bật ngược lại giao diện list.jsp kèm thông báo lỗi
-        req.getRequestDispatcher("/WEB-INF/views/admin/promotions/list.jsp").forward(req, resp);
+        // Trả về trang FORM riêng
+        req.getRequestDispatcher("/WEB-INF/views/admin/promotions/form.jsp").forward(req, resp);
     }
 
-    // SAFE PARSER HELPER
     private BigDecimal parseBigDecimal(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-        try {
-            return new BigDecimal(value.trim());
-        } catch (NumberFormatException e) {
-            return BigDecimal.ZERO;
-        }
+        if (value == null || value.trim().isEmpty()) return BigDecimal.ZERO;
+        try { return new BigDecimal(value.trim()); } 
+        catch (NumberFormatException e) { return BigDecimal.ZERO; }
     }
 
     private Integer parseIntegerNullable(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            return Integer.parseInt(value.trim());
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        if (value == null || value.trim().isEmpty()) return null;
+        try { return Integer.parseInt(value.trim()); } 
+        catch (NumberFormatException e) { return null; }
     }
 }

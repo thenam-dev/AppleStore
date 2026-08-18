@@ -205,12 +205,24 @@ public class CheckoutService {
 
             // Ghi nhận việc dùng voucher (order_promotions + tăng used_count). Tự mở
             // Connection riêng vì kiến trúc hiện tại không dùng Global Transaction.
+            // Ghi nhận việc dùng voucher (order_promotions + tăng used_count). Tự mở
+            // Connection riêng vì kiến trúc hiện tại không dùng Global Transaction.
             if (form.appliedPromo != null && form.discountAmount != null) {
                 PromotionService promotionService = new PromotionService();
                 try (Connection conn = DBConnection.getConnection()) {
-                    promotionService.recordPromotionUsage(conn, orderId, form.customerId, form.appliedPromo, form.discountAmount);
+                    // Bắt kết quả trả về từ hàm recordPromotionUsage
+                    boolean isPromoApplied = promotionService.recordPromotionUsage(conn, orderId, form.customerId, form.appliedPromo, form.discountAmount);
+                    
+                    // Nếu false tức là DB từ chối tăng used_count vì đã chạm ngưỡng max_uses
+                    if (!isPromoApplied) {
+                        // Rollback nghiệp vụ: Hoàn lại tồn kho đã trừ và xóa đơn hàng
+                        compensate(orderId, decreasedStock);
+                        result.success = false;
+                        result.message = "Rất tiếc, mã khuyến mãi '" + form.appliedPromo.getCode() + "' vừa hết lượt sử dụng trong lúc bạn đang thanh toán. Vui lòng bỏ mã hoặc chọn mã khác.";
+                        return result;
+                    }
                 } catch (SQLException e) {
-                    // Best-effort lưu voucher, nếu lỗi thì log lại
+                    // Best-effort lưu voucher, nếu lỗi SQL thông thường thì log lại
                     e.printStackTrace();
                 }
             }
