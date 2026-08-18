@@ -339,4 +339,21 @@ public class UserDAO {
         }
         return value.trim();
     }
+    
+        /** Cập nhật thông tin cá nhân của user (Dùng cho trang Profile). */
+    public boolean updateProfile(User user) throws SQLException {
+        String sql = """
+                UPDATE users
+                SET full_name = ?, phone = ?, avatar_url = ?
+                WHERE user_id = ?
+                """;
+        try (Connection connection = DBConnection.getConnection(); 
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, user.getFullName());
+            statement.setString(2, emptyToNull(user.getPhone()));
+            statement.setString(3, emptyToNull(user.getAvatarUrl()));
+            statement.setInt(4, user.getUserId());
+            return statement.executeUpdate() > 0;
+        }
+    }
 }
