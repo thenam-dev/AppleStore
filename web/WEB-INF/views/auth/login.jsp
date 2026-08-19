@@ -50,6 +50,17 @@
                             <label for="rm" style="margin:0;font-weight:400">Ghi nhớ đăng nhập</label>
                         </div>
                         <button type="submit" class="btn block">Đăng nhập</button>
+
+                        <div style="display:flex; align-items:center; margin:24px 0 16px;">
+                            <div style="flex-grow:1; height:1px; background:#e0e0e0;"></div>
+                            <span style="padding:0 12px; color:#888; font-size:12px; font-weight:600;">HOẶC</span>
+                            <div style="flex-grow:1; height:1px; background:#e0e0e0;"></div>
+                        </div>
+
+                        <a href="${ctx}/auth/google-login" class="btn block" style="background:#fff; color:#495057; border:1px solid #ced4da; display:flex; align-items:center; justify-content:center; gap:10px; font-weight:500;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo" width="18" height="18">
+                            Đăng nhập nhanh bằng Google
+                        </a>
                     </form>
                     <p style="text-align:center;font-size:13px;color:var(--ash);margin:16px 0 0">
                         Chưa có tài khoản? <a href="${ctx}/register" style="color:var(--ink);border-bottom:1px solid var(--line)">Đăng ký ngay</a>
