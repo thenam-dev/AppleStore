@@ -15,42 +15,36 @@
         <span class="wm" style="color:#fff;font-size:14px">AOS · APPLESTORE</span>
       </a>
       <p style="margin:0;max-width:260px">
-        Cửa hàng trực tuyến chuyên các sản phẩm Apple chính hãng —
-        giỏ hàng, thanh toán và theo dõi đơn hàng ngay trên web.
+        Công ty Cổ phần Thương mại và Dịch vụ APPLESTORE Việt Nam 
+        trải qua nhiều năm hoạt động, APPLESTORE hiện nay được biết đến như 1 đơn vị dẫn đầu trong ngành bán lẻ Điện thoại di động - Máy tính bảng - MacBook - Phụ kiện công nghệ Apple chính hãng, giá tốt.
       </p>
     </div>
     <div>
       <h4>Sản phẩm</h4>
       <ul>
         <li><a href="${ctx}/products?categoryId=1">iPhone</a></li>
-        <li><a href="${ctx}/products?categoryId=3">Mac</a></li>
+        <li><a href="${ctx}/products?categoryId=3">MacBook</a></li>
         <li><a href="${ctx}/products?categoryId=2">iPad</a></li>
         <li><a href="${ctx}/products?categoryId=7">Phụ kiện</a></li>
       </ul>
     </div>
     <div>
-      <h4>Hỗ trợ</h4>
+      <h4>Chính sách</h4>
       <ul>
-        <li><a href="${ctx}/cart">Giỏ hàng của bạn</a></li>
-        <li><a href="${ctx}/vouchers">Mã khuyến mãi</a></li>
-        <li><a href="${ctx}/products">Tất cả sản phẩm</a></li>
+        <li><a href="">Chính sách mua hàng</a></li>
+        <li><a href="">Chính sách bảo hành</a></li>
+        <li><a href="">Chính sách vận chuyển</a></li>
+        <li><a href="">Chính sách bảo mật</a></li>
       </ul>
     </div>
-    <div>
-      <h4>Tài khoản</h4>
+      <div>
+      <h4>Hỗ trợ khách hàng</h4>
       <ul>
-        <c:choose>
-          <c:when test="${not empty sessionScope.user}">
-            <li><a href="${ctx}/change-password">Đổi mật khẩu</a></li>
-            <li><a href="${ctx}/logout">Đăng xuất</a></li>
-          </c:when>
-          <c:otherwise>
-            <li><a href="${ctx}/login">Đăng nhập</a></li>
-            <li><a href="${ctx}/register">Đăng ký</a></li>
-          </c:otherwise>
-        </c:choose>
+        <li><a href="">Giải đáp mua hàng online</a></li>
+        <li><a href="">Phương thức thanh toán</a></li>
+        <li><a href="">Câu hỏi thường gặp</a></li>
       </ul>
     </div>
   </div>
-  <div class="copy">© 2026 AOS · APPLESTORE — ĐỒ ÁN WEB SWP391</div>
+  <div class="copy">© 2026 AOS · APPLESTORE — PROJECT WEB SWP391</div>
 </footer>

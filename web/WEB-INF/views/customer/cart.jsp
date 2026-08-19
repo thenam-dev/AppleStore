@@ -12,6 +12,9 @@
   trả JSON {success,message,cartItemCount} thay vì PRG, để cập nhật tại chỗ
   (không reload trang, không cần nút "Cập nhật", không dùng confirm() khi xoá).
   Form submit thường (không có header đó) vẫn theo PRG như cũ.
+  Mọi lần cộng/trừ/xoá thành công đều hiện toast (góc trên bên phải, xem
+  .toast-stack trong style.css). Bấm "-" khi số lượng đang là 1 sẽ xoá luôn
+  dòng đó khỏi giỏ thay vì đứng yên ở mức tối thiểu 1 (removeRow()).
 --%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%@ taglib prefix="c"   uri="jakarta.tags.core" %>
@@ -123,12 +126,12 @@
           </div>
         </div>
 
-        <div class="panel" style="position:sticky;top:16px">
-          <div class="panel-head"><h3>Tóm tắt đơn hàng</h3></div>
+        <div class="panel" style="position:sticky;top:calc(var(--sf-header-h) + 16px)">
+          <div class="panel-head"><h3>Thông tin đơn hàng</h3></div>
           <div class="panel-pad">
-            <div class="sum-row"><span>Đã chọn</span><span><span id="selectedCount">${cartItemCount}</span>/${cartItemCount} món</span></div>
+            <div class="sum-row"><span>Số lượng sản phẩm</span><span><span id="selectedCount">${cartItemCount}</div>
             <div class="sum-row"><span>Tạm tính</span><span id="selectedSubtotal"><fmt:formatNumber value="${cartTotal}" type="number" maxFractionDigits="0"/> ₫</span></div>
-            <div class="sum-row"><span>Phí vận chuyển</span><span style="color:var(--ash)">Tính khi thanh toán</span></div>
+            <div class="sum-row"><span>Phí vận chuyển</span><span style="color:var(--ash)">Miễn phí</span></div>
             <div class="sum-row total"><span>Tổng cộng</span><span id="selectedTotal"><fmt:formatNumber value="${cartTotal}" type="number" maxFractionDigits="0"/> ₫</span></div>
             <div class="help" id="selectNoneWarn" style="display:none;color:var(--danger);margin-top:6px">Vui lòng chọn ít nhất 1 sản phẩm để thanh toán</div>
             <button type="submit" form="cart-selection-form" id="checkoutSubmitBtn" class="btn titan block" style="margin-top:16px">Tiến hành thanh toán</button>
@@ -181,6 +184,8 @@
           recalc();
 
           // ---------- Toast dùng chung cho cập nhật số lượng / xoá sản phẩm ----------
+          // Nảy vào từ phải, thu về phải lúc biến mất, có thanh thời gian
+          // (.toast-timer) co dần theo DURATION (xem style.css .toast/.toast-timer).
           function showToast(message, variant) {
             var stack = document.getElementById('toast-stack');
             if (!stack) {
@@ -189,16 +194,27 @@
               stack.className = 'toast-stack';
               document.body.appendChild(stack);
             }
+            var DURATION = 2600;
+            var ENTER_MS = 320; // khớp thời gian transition transform lúc .toast.show (style.css)
             var toast = document.createElement('div');
             toast.className = 'toast ' + (variant === 'err' ? 'err' : 'ok');
-            toast.innerHTML = '<svg width="16" height="16"><use href="#' + (variant === 'err' ? 'i-alert' : 'i-check') + '"/></svg><span></span>';
+            toast.innerHTML = '<svg width="16" height="16"><use href="#' + (variant === 'err' ? 'i-alert' : 'i-check') + '"/></svg>' +
+              '<span></span><i class="toast-timer"></i>';
             toast.querySelector('span').textContent = message;
             stack.appendChild(toast);
+            var timer = toast.querySelector('.toast-timer');
+            timer.style.transitionDuration = Math.max(DURATION - ENTER_MS, 0) + 'ms';
             requestAnimationFrame(function () { toast.classList.add('show'); });
+            // Chỉ bắt đầu co thanh thời gian SAU KHI toast nảy vào xong hẳn
+            // (ENTER_MS) - kích cùng lúc với lúc chèn vào DOM (chung 1 rAF
+            // với .show) khiến trình duyệt gộp 2 thay đổi transform lại,
+            // thanh co gần như tức thì (nhìn như biến mất luôn, không co dần).
+            setTimeout(function () { timer.style.transform = 'scaleX(0)'; }, ENTER_MS);
             setTimeout(function () {
               toast.classList.remove('show');
+              toast.classList.add('hide');
               setTimeout(function () { toast.remove(); }, 220);
-            }, 2600);
+            }, DURATION);
           }
 
           function updateHeaderBadge(count) {
@@ -212,7 +228,10 @@
             if (!badge) {
               badge = document.createElement('span');
               badge.className = 'dot-n';
-              link.appendChild(badge);
+              // Ghim vào .sf-cart-icon (bọc riêng cái icon) nếu có, để badge
+              // bám đúng góc icon - không phải link.appendChild() thẳng vào
+              // .ic (giờ là cả viên thuốc "Giỏ hàng" + icon, xem header.jsp).
+              (link.querySelector('.sf-cart-icon') || link).appendChild(badge);
             }
             badge.textContent = count;
           }
@@ -240,8 +259,8 @@
             });
           }
 
-          // ---------- Cộng/trừ/nhập số lượng - cập nhật ngay, không cần nút "Cập nhật" ----------
-          // ---------- Xoá sản phẩm - xoá ngay + hiện toast, không dùng confirm() nữa ----------
+          // ---------- Cộng/trừ/nhập số lượng - cập nhật ngay----------
+          // ---------- Xoá sản phẩm - xoá ngay + hiện toast----------
           document.querySelectorAll('.line-item').forEach(function (row) {
             var cartItemId = row.dataset.cartItemId;
             var unitPrice = parseFloat(row.dataset.unitPrice || '0');
@@ -288,6 +307,7 @@
                     cartCountLabel.textContent = data.cartItemCount + ' món';
                   }
                   updateHeaderBadge(data.cartItemCount);
+                  showToast(data.message || 'Đã cập nhật số lượng', 'ok');
 
                   // Server đã chấp nhận số lượng mới -> chắc chắn không còn vượt tồn
                   // kho / hết hàng cho DÒNG NÀY nữa, gỡ cảnh báo cũ (nếu có) để tránh
@@ -308,9 +328,52 @@
                 });
             }
 
+            // Xoá dòng này khỏi giỏ - dùng chung cho nút thùng rác lẫn cho việc
+            // bấm "-" khi số lượng đang là 1 (rule mới: còn 1 sản phẩm mà bấm
+            // trừ thì xoá luôn khỏi giỏ thay vì đứng yên ở mức tối thiểu 1).
+            function removeRow() {
+              if (pending) { return; }
+              pending = true;
+              if (removeBtn) { removeBtn.disabled = true; }
+              qtyInput.disabled = true;
+
+              postCart({ action: 'remove', cartItemId: cartItemId })
+                .then(function (data) {
+                  if (!data) { return; }
+                  if (!data.success) {
+                    showToast(data.message || 'Không thể xoá sản phẩm', 'err');
+                    return;
+                  }
+                  showToast(data.message || 'Đã xoá sản phẩm khỏi giỏ hàng', 'ok');
+                  updateHeaderBadge(data.cartItemCount);
+                  if (!data.cartItemCount) {
+                    // Giỏ hàng trống hẳn - tải lại trang để hiện đúng trạng thái rỗng
+                    window.location.reload();
+                    return;
+                  }
+                  row.remove();
+                  boxes = boxes.filter(function (box) { return box !== checkbox; });
+                  if (cartCountLabel) { cartCountLabel.textContent = data.cartItemCount + ' món'; }
+                  recalc();
+                })
+                .catch(function () {
+                  showToast('Không thể kết nối máy chủ, vui lòng thử lại', 'err');
+                })
+                .finally(function () {
+                  pending = false;
+                  if (removeBtn) { removeBtn.disabled = false; }
+                  qtyInput.disabled = false;
+                });
+            }
+
             row.querySelectorAll('.qty-btn').forEach(function (btn) {
               btn.addEventListener('click', function () {
-                var step = btn.getAttribute('data-qty-action') === 'increase' ? 1 : -1;
+                var isDecrease = btn.getAttribute('data-qty-action') !== 'increase';
+                if (isDecrease && parseInt(qtyInput.value, 10) <= 1) {
+                  removeRow();
+                  return;
+                }
+                var step = isDecrease ? -1 : 1;
                 applyQuantity(parseInt(qtyInput.value, 10) + step);
               });
             });
@@ -321,32 +384,7 @@
             if (removeBtn) {
               removeBtn.addEventListener('click', function () {
                 if (removeBtn.disabled) { return; }
-                removeBtn.disabled = true;
-
-                postCart({ action: 'remove', cartItemId: cartItemId })
-                  .then(function (data) {
-                    if (!data) { return; }
-                    if (!data.success) {
-                      showToast(data.message || 'Không thể xoá sản phẩm', 'err');
-                      removeBtn.disabled = false;
-                      return;
-                    }
-                    showToast(data.message || 'Đã xoá sản phẩm khỏi giỏ hàng', 'ok');
-                    updateHeaderBadge(data.cartItemCount);
-                    if (!data.cartItemCount) {
-                      // Giỏ hàng trống hẳn - tải lại trang để hiện đúng trạng thái rỗng
-                      window.location.reload();
-                      return;
-                    }
-                    row.remove();
-                    boxes = boxes.filter(function (box) { return box !== checkbox; });
-                    if (cartCountLabel) { cartCountLabel.textContent = data.cartItemCount + ' món'; }
-                    recalc();
-                  })
-                  .catch(function () {
-                    showToast('Không thể kết nối máy chủ, vui lòng thử lại', 'err');
-                    removeBtn.disabled = false;
-                  });
+                removeRow();
               });
             }
           });

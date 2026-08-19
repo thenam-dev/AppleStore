@@ -12,9 +12,10 @@
   chỉ là JSP không in ra nữa; đừng gỡ session.setAttribute("successMsg", ...) bên servlet
   vì chỗ khác (nếu có) có thể còn cần.
 
-  errorMsg đơn (không kèm fieldErrors) hiện dạng TOAST đỏ (góc dưới phải, tự biến
-  mất) thay vì banner cố định đầu trang - trang nào cũng có sẵn CSS .toast/.toast-stack
-  (style.css) và #i-alert (icons.jsp) nên dùng lại được luôn, không cần thêm gì.
+  errorMsg đơn (không kèm fieldErrors) hiện dạng TOAST đỏ (góc trên phải, ngay
+  dưới header, tự biến mất) thay vì banner cố định đầu trang - trang nào cũng
+  có sẵn CSS .toast/.toast-stack (style.css) và #i-alert (icons.jsp) nên dùng
+  lại được luôn, không cần thêm gì.
   Khi có fieldErrors (nhiều lỗi cần đọc kỹ từng ô, vd. form nhiều trường) vẫn giữ
   banner cố định như cũ vì toast tự ẩn quá nhanh để đọc hết cả danh sách.
   File dùng chung — sửa phải báo team (rule 11).
@@ -44,17 +45,30 @@
             stack.className = 'toast-stack';
             document.body.appendChild(stack);
           }
+          // Nảy vào từ phải, thu về phải lúc biến mất, có thanh thời gian
+          // (.toast-timer) co dần theo DURATION (xem style.css .toast/.toast-timer).
+          var DURATION = 4000;
+          var ENTER_MS = 320; // khớp thời gian transition transform lúc .toast.show (style.css)
           var toast = document.createElement('div');
           toast.className = 'toast err';
           toast.setAttribute('role', 'alert');
-          toast.innerHTML = '<svg width="16" height="16"><use href="#i-alert"/></svg><span></span>';
+          toast.innerHTML = '<svg width="16" height="16"><use href="#i-alert"/></svg>' +
+            '<span></span><i class="toast-timer"></i>';
           toast.querySelector('span').textContent = message;
           stack.appendChild(toast);
+          var timer = toast.querySelector('.toast-timer');
+          timer.style.transitionDuration = Math.max(DURATION - ENTER_MS, 0) + 'ms';
           requestAnimationFrame(function () { toast.classList.add('show'); });
+          // Chỉ bắt đầu co thanh thời gian SAU KHI toast nảy vào xong hẳn
+          // (ENTER_MS) - kích cùng lúc với lúc chèn vào DOM (chung 1 rAF với
+          // .show) khiến trình duyệt gộp 2 thay đổi transform lại, thanh co
+          // gần như tức thì (nhìn như biến mất luôn, không co dần được).
+          setTimeout(function () { timer.style.transform = 'scaleX(0)'; }, ENTER_MS);
           setTimeout(function () {
             toast.classList.remove('show');
+            toast.classList.add('hide');
             setTimeout(function () { toast.remove(); }, 220);
-          }, 4000);
+          }, DURATION);
         })();
       </script>
     </c:when>
