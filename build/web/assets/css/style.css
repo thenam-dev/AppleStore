@@ -113,6 +113,30 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 /* trạng thái lỗi: thêm class err vào .field (rule 6) */
 .field.err .input,.field.err .select,.field.err .textarea{border-color:var(--danger);background:#FFFBFB}
 .err-msg{display:flex;gap:6px;font-size:12px;color:var(--danger);margin-top:6px}
+.input[readonly],.textarea[readonly]{background:#F7F8FA;color:var(--graphite)}
+
+/* lựa chọn dạng thẻ bo tròn dùng chung cho phương thức thanh toán / địa chỉ
+   giao hàng ở trang checkout - input để sr-only, trạng thái chọn cập nhật
+   ngay khi bấm nhờ CSS :has(), không cần JS hay reload trang (rule 2). */
+.pm-option{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:13px 15px;cursor:pointer;transition:border-color .15s}
+.pm-option:has(input:checked){border-color:var(--ink)}
+.pm-dot{width:16px;height:16px;border-radius:50%;border:1px solid var(--line);flex:none;transition:border .15s}
+.pm-option:has(input:checked) .pm-dot{border:5px solid var(--ink)}
+
+/* checkbox tick chọn sản phẩm trong giỏ để thanh toán 1 phần (rule 4) */
+.cart-chk{width:17px;height:17px;flex:none;accent-color:var(--ink);cursor:pointer}
+
+/* toast báo "đã thêm vào giỏ hàng" ở trang chi tiết sản phẩm - đứng yên tại
+   trang, không điều hướng sang /cart (xem product-detail.jsp). */
+.toast-stack{position:fixed;right:20px;bottom:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{display:flex;align-items:center;gap:10px;min-width:240px;max-width:340px;padding:13px 16px;border-radius:var(--r-sm);
+  background:#fff;border:1px solid var(--line);box-shadow:var(--sh-2);font-size:13.5px;color:var(--ink);
+  opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{border-left:3px solid var(--ok);color:#0B6B4F}
+.toast.err{border-left:3px solid var(--danger);color:#9E2B2B}
+.toast svg{flex:none}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 18px}
 .field.full{grid-column:1/-1}

@@ -55,7 +55,7 @@ public class LoginServlet extends HttpServlet {
             session.setMaxInactiveInterval(rememberMe ? REMEMBER_ME_MAX_AGE_SECONDS : DEFAULT_MAX_AGE_SECONDS);
 
             String target = (redirectTo != null) ? request.getContextPath() + redirectTo
-                    : request.getContextPath() + "/index.jsp";
+                    : request.getContextPath() + "/home";
             response.sendRedirect(target);
         } catch (SQLException ex) {
             request.setAttribute("errorMsg", "Hiện chưa thể đăng nhập. Vui lòng thử lại sau.");

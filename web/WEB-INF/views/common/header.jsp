@@ -63,7 +63,7 @@
                     <c:if test="${not empty sessionScope.user.fullName}">
                         <c:set var="avatarLetter" value="${fn:toUpperCase(fn:substring(sessionScope.user.fullName, 0, 1))}"/>
                     </c:if>
-                    <a class="av" href="${ctx}/change-password" title="<c:out value='${sessionScope.user.fullName}'/> · Đổi mật khẩu">
+                    <a class="av" href="${ctx}/profile" title="<c:out value='${sessionScope.user.fullName}'/> · Xem hồ sơ">
                         <c:out value="${avatarLetter}"/>
                     </a>
                     <a class="ic" href="${ctx}/logout" title="Đăng xuất">

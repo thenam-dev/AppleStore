@@ -30,6 +30,12 @@ public class CartServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Không cache trang giỏ hàng (bfcache) - tránh hiện lại dữ liệu cũ khi
+        // bấm Back sau khi giỏ hàng đã thay đổi ở server (rule 5).
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
+
         Integer customerId = getCustomerId(request);
         if (customerId == null) {
             redirectToLogin(request, response);
@@ -61,6 +67,10 @@ public class CartServlet extends HttpServlet {
 
         Integer customerId = getCustomerId(request);
         if (customerId == null) {
+            if (isAjax(request)) {
+                writeJson(response, false, "Vui lòng đăng nhập để thêm vào giỏ hàng", null);
+                return;
+            }
             redirectToLogin(request, response);
             return;
         }
@@ -82,6 +92,16 @@ public class CartServlet extends HttpServlet {
                 result = new CartService.Result(false, "Hành động không hợp lệ");
         }
 
+        if (isAjax(request)) {
+            // Bấm "Thêm vào giỏ hàng" ở trang chi tiết sản phẩm chỉ hiện toast và
+            // đứng yên tại trang, KHÔNG điều hướng sang /cart -> trả JSON trực tiếp
+            // thay vì PRG (không cần flash message qua session vì không có trang
+            // nào forward/redirect tới để đọc lại).
+            Integer cartItemCount = result.isSuccess() ? cartService.getCartItemCount(customerId) : null;
+            writeJson(response, result.isSuccess(), result.getMessage(), cartItemCount);
+            return;
+        }
+
         if (result.isSuccess()) {
             session.setAttribute("successMsg", result.getMessage());
         } else {
@@ -90,6 +110,31 @@ public class CartServlet extends HttpServlet {
 
         // PRG: luôn redirect về GET /cart sau khi xử lý xong POST
         response.sendRedirect(request.getContextPath() + "/cart");
+    }
+
+    /** Request gửi từ fetch() ở phía JS sẽ kèm header này (xem product-detail.jsp). */
+    private boolean isAjax(HttpServletRequest request) {
+        return "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
+    }
+
+    private void writeJson(HttpServletResponse response, boolean success, String message, Integer cartItemCount)
+            throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        StringBuilder json = new StringBuilder();
+        json.append("{\"success\":").append(success);
+        json.append(",\"message\":\"").append(escapeJson(message)).append('"');
+        if (cartItemCount != null) {
+            json.append(",\"cartItemCount\":").append(cartItemCount);
+        }
+        json.append('}');
+        response.getWriter().write(json.toString());
+    }
+
+    private String escapeJson(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " ").replace("\r", "");
     }
 
     private CartService.Result handleAdd(HttpServletRequest request, int customerId) {
