@@ -262,11 +262,14 @@ public class PromotionDAO {
         }
     }
 
-    public void incrementUsedCount(Connection conn, int promoId) throws SQLException {
-        String sql = "UPDATE promotions SET used_count = used_count + 1 WHERE promo_id = ?";
+    // Sửa thành boolean để báo cho Service biết việc tăng lượt dùng có thành công không
+    public boolean incrementUsedCount(Connection conn, int promoId) throws SQLException {
+        // Câu lệnh chỉ cập nhật khi max_uses bị NULL (không giới hạn) HOẶC used_count < max_uses
+        String sql = "UPDATE promotions SET used_count = used_count + 1 WHERE promo_id = ? AND (max_uses IS NULL OR used_count < max_uses)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, promoId);
-            ps.executeUpdate();
+            int rowsUpdated = ps.executeUpdate();
+            return rowsUpdated > 0; // Trả về true nếu chưa hết lượt, false nếu đã hết
         }
     }
     

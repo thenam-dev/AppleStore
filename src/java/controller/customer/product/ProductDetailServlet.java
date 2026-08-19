@@ -2,6 +2,7 @@ package controller.customer.product;
 
 import dao.catalog.ProductDAO;
 import dao.catalog.ProductVariantDAO;
+import dao.review.ReviewDAO;
 import model.entity.catalog.Product;
 import model.entity.catalog.ProductVariant;
 
@@ -18,6 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import model.entity.review.Review;
 
 /**
  * Trang chi tiết sản phẩm cho khách hàng (guest).
@@ -43,6 +45,7 @@ public class ProductDetailServlet extends ProductServletSupport {
 
     private final ProductDAO productDAO = new ProductDAO();
     private final ProductVariantDAO productVariantDAO = new ProductVariantDAO();
+    private final ReviewDAO reviewDAO = new ReviewDAO(); // Thêm ReviewDAO
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -79,12 +82,16 @@ public class ProductDetailServlet extends ProductServletSupport {
         ProductVariant defaultVariant = pickDefaultVariant(variants);
         List<Product> relatedProducts = findRelatedProducts(product);
 
+        // Lấy danh sách đánh giá của sản phẩm này
+        List<Review> reviews = reviewDAO.getReviewsByProductId(productId);
+        
         request.setAttribute("product", product);
         request.setAttribute("variants", variants);
         request.setAttribute("variantColors", variantColors);
         request.setAttribute("variantStorages", variantStorages);
         request.setAttribute("defaultVariant", defaultVariant);
         request.setAttribute("relatedProducts", relatedProducts);
+        request.setAttribute("reviews", reviews); // Truyền reviews ra JSP
         request.setAttribute("lowStockThreshold", LOW_STOCK_THRESHOLD);
 
         request.getRequestDispatcher("/WEB-INF/views/guest/product-detail.jsp").forward(request, response);

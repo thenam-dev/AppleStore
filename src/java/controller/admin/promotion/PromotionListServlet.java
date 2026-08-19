@@ -1,8 +1,6 @@
 package controller.admin.promotion;
 
 import model.entity.promtion.Promotion;
-import model.entity.catalog.Category;
-import model.entity.catalog.Product;
 import service.promotion.PromotionService;
 
 import jakarta.servlet.ServletException;
@@ -12,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet(name = "PromotionListServlet", urlPatterns = {"/admin/promotions"})
@@ -23,7 +20,6 @@ public class PromotionListServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            // 1. Đọc tham số lọc & phân trang cho danh sách (Bảng bên trái)
             String keyword = req.getParameter("keyword");
             String statusFilter = req.getParameter("status");
             String sortCol = req.getParameter("sortCol");
@@ -40,7 +36,7 @@ public class PromotionListServlet extends HttpServlet {
             int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
             List<Promotion> promotions = promotionService.findAllWithPaging(keyword, statusFilter, sortCol, sortDir, offset, pageSize);
 
-            // 2. Số liệu KPI
+            // Số liệu KPI
             int activeCount = promotionService.countAll(null, "1");
             long totalRedeemed = promotionService.getTotalRedeemedCount();
             int expiringSoon = promotionService.getExpiringSoonCount();
@@ -56,20 +52,11 @@ public class PromotionListServlet extends HttpServlet {
             req.setAttribute("sortCol", sortCol);
             req.setAttribute("sortDir", sortDir);
 
+            req.setAttribute("totalRecords", totalRecords);
             req.setAttribute("activeCount", activeCount);
             req.setAttribute("totalRedeemed", totalRedeemed);
             req.setAttribute("expiringSoon", expiringSoon);
 
-            // 3. Khởi tạo dữ liệu cho Form (Panel bên phải - Mặc định là Tạo mới)
-            req.setAttribute("isEdit", false);
-            req.setAttribute("promo", new Promotion());
-            
-            List<Category> categories = new ArrayList<>();
-            List<Product> products = new ArrayList<>();
-            req.setAttribute("categories", categories);
-            req.setAttribute("products", products);
-
-            // Forward thẳng về list.jsp gộp chung
             req.getRequestDispatcher("/WEB-INF/views/admin/promotions/list.jsp").forward(req, resp);
 
         } catch (Exception e) {
