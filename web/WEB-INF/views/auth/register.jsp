@@ -30,14 +30,14 @@
                     <div class="grid-2">
                         <div class="field ${not empty errors.fullName ? 'err' : ''}">
                             <label>Họ và tên <span class="req">*</span></label>
-                            <input class="input" type="text" name="fullName" maxlength="100" value="<c:out value='${form.fullName}'/>">
+                            <input class="input" type="text" name="fullName" maxlength="100" value="<c:out value='${form.fullName}'/>" required>
                             <c:if test="${not empty errors.fullName}">
                                 <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.fullName}"/></div>
                                 </c:if>
                         </div>
                         <div class="field ${not empty errors.phone ? 'err' : ''}">
                             <label>Số điện thoại <span class="req">*</span></label>
-                            <input class="input" type="tel" name="phone" maxlength="10" value="<c:out value='${form.phone}'/>">
+                            <input class="input" type="tel" name="phone" maxlength="10" value="<c:out value='${form.phone}'/>" required>
                             <c:if test="${not empty errors.phone}">
                                 <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.phone}"/></div>
                                 </c:if>
@@ -46,7 +46,7 @@
 
                     <div class="field ${not empty errors.email ? 'err' : ''}">
                         <label>Email <span class="req">*</span></label>
-                        <input class="input" type="email" name="email" maxlength="100" value="<c:out value='${form.email}'/>">
+                        <input class="input" type="email" name="email" maxlength="100" value="<c:out value='${form.email}'/>" required>
                         <c:if test="${not empty errors.email}">
                             <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.email}"/></div>
                             </c:if>
@@ -55,7 +55,7 @@
                     <div class="grid-2">
                         <div class="field ${not empty errors.password ? 'err' : ''}">
                             <label>Mật khẩu <span class="req">*</span></label>
-                            <input class="input" type="password" name="password">
+                            <input class="input" type="password" name="password" required>
                             <c:choose>
                                 <c:when test="${not empty errors.password}">
                                     <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.password}"/></div>
@@ -65,7 +65,7 @@
                         </div>
                         <div class="field ${not empty errors.confirmPassword ? 'err' : ''}">
                             <label>Nhập lại mật khẩu <span class="req">*</span></label>
-                            <input class="input" type="password" name="confirmPassword">
+                            <input class="input" type="password" name="confirmPassword" required>
                             <c:if test="${not empty errors.confirmPassword}">
                                 <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.confirmPassword}"/></div>
                                 </c:if>
