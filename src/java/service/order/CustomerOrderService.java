@@ -1,12 +1,16 @@
 package service.order;
 
+import dao.catalog.ProductVariantDAO;
 import dao.order.CustomerOrderDAO;
+import dao.order.OrderDAO;
 import java.sql.SQLException;
 import java.util.*;
 
 public class CustomerOrderService {
 
     private final CustomerOrderDAO customerOrderDAO = new CustomerOrderDAO();
+    private final OrderDAO orderDAO = new OrderDAO();
+    private final StockRestoreHelper stockRestoreHelper = new StockRestoreHelper(orderDAO, new ProductVariantDAO());
 
     public List<Map<String, Object>> getCustomerOrders(int customerId, String tab) throws SQLException {
         List<Map<String, Object>> rawOrders = customerOrderDAO.findOrdersByCustomer(customerId, tab);
@@ -109,8 +113,27 @@ public class CustomerOrderService {
         return detail;
     }
 
+    /**
+     * Khách tự huỷ đơn (chỉ áp dụng khi đơn còn PENDING_PAYMENT/CONFIRMED -
+     * xem điều kiện atomic trong CustomerOrderDAO.cancelOrderByCustomer). Số
+     * lượng đã trừ lúc đặt hàng mới chỉ là "giữ chỗ" (order chưa DELIVERED)
+     * nên phải hoàn lại tồn kho ngay khi huỷ, nếu không kho sẽ bị mất oan.
+     */
     public boolean cancelOrder(int orderId, int customerId) throws SQLException {
-        return customerOrderDAO.cancelOrderByCustomer(orderId, customerId);
+        boolean cancelled = customerOrderDAO.cancelOrderByCustomer(orderId, customerId);
+        if (!cancelled) {
+            return false;
+        }
+
+        stockRestoreHelper.restore(orderId, customerId);
+
+        try {
+            orderDAO.insertStatusHistory(orderId, "CANCELLED", customerId, "Khách tự huỷ đơn");
+        } catch (SQLException e) {
+            // Best-effort: đơn đã huỷ + hoàn kho thành công, chỉ ghi lịch sử lỗi -> log lại thay vì chặn
+            e.printStackTrace();
+        }
+        return true;
     }
 
     private String mapUiStatus(String dbStatus) {

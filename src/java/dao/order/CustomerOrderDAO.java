@@ -113,12 +113,22 @@ public class CustomerOrderDAO {
         return list;
     }
 
+    /**
+     * Đổi trạng thái đơn sang CANCELLED, chỉ thành công nếu đơn còn đang
+     * PENDING_PAYMENT/CONFIRMED và đúng chủ đơn - điều kiện nằm trong WHERE
+     * nên atomic ở mức 1 câu lệnh SQL (tránh huỷ trùng khi khách bấm 2 lần).
+     * Việc hoàn tồn kho được xử lý riêng ở tầng Service SAU KHI bước này trả
+     * về true, vì đây chỉ là 1 hàm DAO đơn lẻ, không nên gánh luôn nghiệp vụ
+     * trừ/hoàn kho.
+     */
     public boolean cancelOrderByCustomer(int orderId, int customerId) throws SQLException {
-        String sql = "UPDATE orders SET status = 'CANCELLED', cancelled_at = NOW() WHERE order_id = ? AND customer_id = ? AND status IN ('PENDING_PAYMENT', 'CONFIRMED')";
+        String sql = "UPDATE orders SET status = 'CANCELLED', cancelled_at = NOW(), cancelled_by = ? "
+                + "WHERE order_id = ? AND customer_id = ? AND status IN ('PENDING_PAYMENT', 'CONFIRMED')";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, orderId);
-            ps.setInt(2, customerId);
+            ps.setInt(1, customerId);
+            ps.setInt(2, orderId);
+            ps.setInt(3, customerId);
             return ps.executeUpdate() > 0;
         }
     }
