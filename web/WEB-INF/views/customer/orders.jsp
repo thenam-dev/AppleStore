@@ -1,5 +1,5 @@
 <%--
-  orders.jsp — đơn hàng của tôi, chia 2 tab và hiển thị chi tiết thời gian tiến độ.
+  orders.jsp — đơn hàng của tôi, chia 3 tab và hiển thị chi tiết thời gian tiến độ.
 --%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c"   uri="jakarta.tags.core" %>
@@ -15,7 +15,7 @@
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/icons.jsp"/>
-<c:set var="activeMenu" value="home"/>
+<c:set var="activeMenu" value="order"/>
 <jsp:include page="/WEB-INF/views/common/header.jsp"/>
 
 <div style="max-width: 1100px; margin: 30px auto; padding: 0 20px; min-height: 520px;">
@@ -23,9 +23,12 @@
     <jsp:include page="/WEB-INF/views/common/flash.jsp"/>
     <h2 style="font-size: 22px; text-transform: uppercase; margin-bottom: 20px; font-weight: 700;">Đơn hàng của tôi</h2>
 
-    <!-- TAB CHUYỂN ĐỔI: ĐANG XỬ LÝ / ĐÃ HOÀN THÀNH -->
-    <div style="display:flex;gap:12px;margin-bottom:20px;border-bottom:1px solid var(--line, #eee);padding-bottom:12px">
-      <a class="btn ${empty tab or tab eq 'active' ? '' : 'quiet'} sm" href="${ctx}/account/orders?tab=active">
+    <!-- TAB CHUYỂN ĐỔI: TẤT CẢ / ĐANG XỬ LÝ / ĐÃ HOÀN THÀNH -->
+    <div style="display:flex;gap:12px;margin-bottom:20px;border-bottom:1px solid var(--line, #eee);padding-bottom:12px; overflow-x:auto;">
+      <a class="btn ${empty tab or tab eq 'all' ? '' : 'quiet'} sm" href="${ctx}/account/orders?tab=all">
+        📋 Tất cả (${not empty allCount ? allCount : 0})
+      </a>
+      <a class="btn ${tab eq 'active' ? '' : 'quiet'} sm" href="${ctx}/account/orders?tab=active">
         📦 Đang xử lý (${not empty activeCount ? activeCount : 0})
       </a>
       <a class="btn ${tab eq 'completed' ? '' : 'quiet'} sm" href="${ctx}/account/orders?tab=completed">
@@ -69,10 +72,11 @@
                   </div>
                 </div>
                 <div style="display:flex;gap:8px; justify-content: flex-end;">
-                  <a class="btn sm" href="${ctx}/account/orders?tab=${not empty param.tab ? param.tab : 'active'}&code=${o.code}">Xem tiến độ</a>
+                  <a class="btn sm" href="${ctx}/account/orders?tab=${not empty param.tab ? param.tab : 'all'}&code=${o.code}">Xem tiến độ</a>
                   <c:if test="${o.status eq 'PENDING'}">
                     <form method="post" action="${ctx}/order/cancel" style="margin:0;">
                       <input type="hidden" name="code" value="${o.code}">
+                      <input type="hidden" name="tab" value="${not empty param.tab ? param.tab : 'all'}">
                       <button type="submit" class="btn ghost sm danger">Huỷ đơn</button>
                     </form>
                   </c:if>

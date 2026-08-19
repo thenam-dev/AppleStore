@@ -204,24 +204,29 @@
 
                       <div style="display:flex; flex-direction:column; gap:10px;">
                         <c:choose>
-                          <%-- Bước 1: Đang chờ đóng gói -> Bấm để chuyển sang Đang chuẩn bị hàng --%>
+                          <%-- Bước 1: Đang chờ đóng gói -> Chuyển sang Đang chuẩn bị --%>
                           <c:when test="${selectedOrder.status eq 'CONFIRMED'}">
                             <input type="hidden" name="status" value="PREPARING">
                             <button type="submit" class="btn block">📦 Đóng gói (Chuyển sang Đang chuẩn bị)</button>
                           </c:when>
                           
-                          <%-- Bước 2: Đang chuẩn bị -> Bấm để giao vận (Tự động gán Shipper ít task nhất) --%>
+                          <%-- Bước 2: Đang chuẩn bị -> Chuyển sang Giao vận (Giao cho Shipper) --%>
                           <c:when test="${selectedOrder.status eq 'PREPARING'}">
                             <input type="hidden" name="status" value="DISPATCHED">
                             <button type="submit" class="btn block">🚀 Giao vận chuyển (Tự động gán Shipper)</button>
                           </c:when>
                           
-                          <%-- Bước 3: Đang giao -> Shipper hoặc Staff xác nhận đã giao thành công --%>
+                          <%-- 
+                            ĐÃ XÓA BƯỚC XÁC NHẬN DELIVERED Ở ĐÂY. 
+                            Khi đơn hàng ở trạng thái 'DISPATCHED' (Đang giao), Sale Staff sẽ KHÔNG còn nút bấm nào nữa, 
+                            trách nhiệm xác nhận giao thành công sẽ do Shipper thao tác trong trang nhiệm vụ của họ. 
+                          --%>
                           <c:when test="${selectedOrder.status eq 'DISPATCHED'}">
-                            <input type="hidden" name="status" value="DELIVERED">
-                            <button type="submit" class="btn block">✅ Xác nhận giao thành công</button>
+                            <div style="font-size:13px; color:var(--ash); text-align:center; padding: 6px;">
+                              Đơn hàng đang được Shipper giao vận.
+                            </div>
                           </c:when>
-                          
+
                           <c:otherwise>
                             <div style="font-size:13px; color:var(--ash); text-align:center; padding: 6px;">
                               Đơn hàng đã hoàn tất hoặc đã huỷ.
@@ -230,7 +235,7 @@
                         </c:choose>
                         
                         <!-- Nút Huỷ đơn hàng chung -->
-                        <c:if test="${selectedOrder.status ne 'DELIVERED' and selectedOrder.status ne 'CANCELLED'}">
+                        <c:if test="${selectedOrder.status ne 'DELIVERED' and selectedOrder.status ne 'CANCELLED' and selectedOrder.status ne 'DISPATCHED'}">
                           <button type="submit" name="status" value="CANCELLED" class="btn block danger">❌ Huỷ đơn hàng</button>
                         </c:if>
                       </div>

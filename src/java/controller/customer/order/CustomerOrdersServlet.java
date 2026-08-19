@@ -37,12 +37,14 @@ public class CustomerOrdersServlet extends HttpServlet {
             int customerId = user.getUserId();
             String tab = req.getParameter("tab");
             if (tab == null || tab.isBlank()) {
-                tab = "active";
+                tab = "all"; // Mặc định hiển thị tất cả đơn hàng
             }
             
             String codeParam = req.getParameter("code");
 
             List<Map<String, Object>> orders = customerOrderService.getCustomerOrders(customerId, tab);
+            
+            int allCount = customerOrderService.getAllCount(customerId);
             int activeCount = customerOrderService.getActiveCount(customerId);
             int completedCount = customerOrderService.getCompletedCount(customerId);
 
@@ -67,6 +69,7 @@ public class CustomerOrdersServlet extends HttpServlet {
 
             req.setAttribute("orders", orders);
             req.setAttribute("tab", tab);
+            req.setAttribute("allCount", allCount);
             req.setAttribute("activeCount", activeCount);
             req.setAttribute("completedCount", completedCount);
             req.setAttribute("selectedOrder", selectedOrder);
@@ -101,10 +104,12 @@ public class CustomerOrdersServlet extends HttpServlet {
                     session.setAttribute("errorMsg", "Không thể huỷ đơn hàng này.");
                 }
             }
-            resp.sendRedirect(req.getContextPath() + "/account/orders?tab=active");
+            // Quay lại đúng tab mà khách hàng vừa gửi request (hoặc "all" nếu không có)
+            String tabRedirect = req.getParameter("tab") != null ? req.getParameter("tab") : "all";
+            resp.sendRedirect(req.getContextPath() + "/account/orders?tab=" + tabRedirect);
         } catch (Exception e) {
             session.setAttribute("errorMsg", "Lỗi xử lý huỷ đơn: " + e.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/account/orders?tab=active");
+            resp.sendRedirect(req.getContextPath() + "/account/orders?tab=all");
         }
     }
 }

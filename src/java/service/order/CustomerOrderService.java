@@ -1,19 +1,16 @@
 package service.order;
 
-import dao.catalog.ProductVariantDAO;
-import dao.order.CustomerOrderDAO;
+
 import dao.order.OrderDAO;
 import java.sql.SQLException;
 import java.util.*;
 
 public class CustomerOrderService {
 
-    private final CustomerOrderDAO customerOrderDAO = new CustomerOrderDAO();
     private final OrderDAO orderDAO = new OrderDAO();
-    private final StockRestoreHelper stockRestoreHelper = new StockRestoreHelper(orderDAO, new ProductVariantDAO());
 
     public List<Map<String, Object>> getCustomerOrders(int customerId, String tab) throws SQLException {
-        List<Map<String, Object>> rawOrders = customerOrderDAO.findOrdersByCustomer(customerId, tab);
+        List<Map<String, Object>> rawOrders = orderDAO.findOrdersByCustomer(customerId, tab);
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (Map<String, Object> ro : rawOrders) {
@@ -42,16 +39,20 @@ public class CustomerOrderService {
         return result;
     }
 
+    public int getAllCount(int customerId) throws SQLException {
+        return orderDAO.countTabOrders(customerId, "all");
+    }
+
     public int getActiveCount(int customerId) throws SQLException {
-        return customerOrderDAO.countTabOrders(customerId, "active");
+        return orderDAO.countTabOrders(customerId, "active");
     }
 
     public int getCompletedCount(int customerId) throws SQLException {
-        return customerOrderDAO.countTabOrders(customerId, "completed");
+        return orderDAO.countTabOrders(customerId, "completed");
     }
 
     public Map<String, Object> getSelectedOrderDetail(int orderId, int customerId) throws SQLException {
-        Map<String, Object> raw = customerOrderDAO.findOrderDetail(orderId, customerId);
+        Map<String, Object> raw = orderDAO.findOrderDetail(orderId, customerId);
         if (raw == null) return null;
 
         Map<String, Object> detail = new HashMap<>();
@@ -85,7 +86,7 @@ public class CustomerOrderService {
 
         int currentRank = statusRank.getOrDefault(dbStatus, 0);
 
-        List<Map<String, Object>> history = customerOrderDAO.findTimelineByOrderId(orderId);
+        List<Map<String, Object>> history = orderDAO.findTimelineByOrderId(orderId);
         List<Map<String, Object>> timeline = new ArrayList<>();
         
         String[] steps = {"CONFIRMED", "PREPARING", "DISPATCHED", "DELIVERED"};
@@ -113,27 +114,8 @@ public class CustomerOrderService {
         return detail;
     }
 
-    /**
-     * Khách tự huỷ đơn (chỉ áp dụng khi đơn còn PENDING_PAYMENT/CONFIRMED -
-     * xem điều kiện atomic trong CustomerOrderDAO.cancelOrderByCustomer). Số
-     * lượng đã trừ lúc đặt hàng mới chỉ là "giữ chỗ" (order chưa DELIVERED)
-     * nên phải hoàn lại tồn kho ngay khi huỷ, nếu không kho sẽ bị mất oan.
-     */
     public boolean cancelOrder(int orderId, int customerId) throws SQLException {
-        boolean cancelled = customerOrderDAO.cancelOrderByCustomer(orderId, customerId);
-        if (!cancelled) {
-            return false;
-        }
-
-        stockRestoreHelper.restore(orderId, customerId);
-
-        try {
-            orderDAO.insertStatusHistory(orderId, "CANCELLED", customerId, "Khách tự huỷ đơn");
-        } catch (SQLException e) {
-            // Best-effort: đơn đã huỷ + hoàn kho thành công, chỉ ghi lịch sử lỗi -> log lại thay vì chặn
-            e.printStackTrace();
-        }
-        return true;
+        return orderDAO.cancelOrderByCustomer(orderId, customerId);
     }
 
     private String mapUiStatus(String dbStatus) {
