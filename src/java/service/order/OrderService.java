@@ -1,4 +1,4 @@
-package service.order;
+    package service.order;
 
 import dao.review.ReviewDAO;
 import dao.order.OrderDAO;
@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.util.*;
 import model.entity.review.Review;
 
-public class CustomerOrderService {
+public class OrderService {
 
     private final OrderDAO orderDAO = new OrderDAO();
 

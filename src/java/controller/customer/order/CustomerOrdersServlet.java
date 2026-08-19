@@ -2,7 +2,7 @@ package controller.customer.order;
 
 import config.AppConfig;
 import model.entity.user.User;
-import service.order.CustomerOrderService;
+import service.order.OrderService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -17,7 +17,7 @@ import java.util.Map;
 @WebServlet(name = "CustomerOrdersServlet", urlPatterns = {"/account/orders", "/order/cancel"})
 public class CustomerOrdersServlet extends HttpServlet {
 
-    private final CustomerOrderService customerOrderService = new CustomerOrderService();
+    private final OrderService customerOrderService = new OrderService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
