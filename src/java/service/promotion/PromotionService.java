@@ -277,12 +277,22 @@ public class PromotionService {
         return discountAmount.compareTo(baseAmount) > 0 ? baseAmount : discountAmount;
     }
 
-    public void recordPromotionUsage(Connection conn, int orderId, int customerId, Promotion promo, BigDecimal discountApplied) throws SQLException {
+    public boolean recordPromotionUsage(Connection conn, int orderId, int customerId, Promotion promo, BigDecimal discountApplied) throws SQLException {
         if (promo == null) {
-            return;
+            return false;
         }
-        promotionDAO.insertOrderPromotion(conn, orderId, promo.getPromoId(), customerId, discountApplied, promo.getCode(), promo.getBenefitTarget());
-        promotionDAO.incrementUsedCount(conn, promo.getPromoId());
+        
+        // 1. Cố gắng tăng số lượt sử dụng TRƯỚC
+        boolean incrementSuccess = promotionDAO.incrementUsedCount(conn, promo.getPromoId());
+        
+        // 2. Nếu tăng thành công (tức là còn lượt sử dụng), mới ghi nhận vào bảng order_promotions
+        if (incrementSuccess) {
+            promotionDAO.insertOrderPromotion(conn, orderId, promo.getPromoId(), customerId, discountApplied, promo.getCode(), promo.getBenefitTarget());
+            return true;
+        }
+        
+        // Nếu hết lượt, trả về false để CheckoutService biết đường Rollback
+        return false;
     }
 
     public List<Promotion> getAvailableVouchersForCart() throws SQLException {
