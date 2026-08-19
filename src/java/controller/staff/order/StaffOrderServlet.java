@@ -14,8 +14,8 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "AdminOrderServlet", urlPatterns = {"/staff/orders", "/staff/orders/status"})
-public class AdminOrderServlet extends HttpServlet {
+@WebServlet(name = "StaffOrderServlet", urlPatterns = {"/staff/orders", "/staff/orders/status"})
+public class StaffOrderServlet extends HttpServlet {
 
     private final StaffOrderService staffOrderService = new StaffOrderService();
 
@@ -48,12 +48,15 @@ public class AdminOrderServlet extends HttpServlet {
                     int orderId = Integer.parseInt(codeParam);
                     Order selectedOrder = staffOrderService.getOrderById(orderId);
                     req.setAttribute("selectedOrder", selectedOrder);
+
+                    dao.order.OrderDAO orderDAO = new dao.order.OrderDAO();
+                    req.setAttribute("orderTimeline", orderDAO.findTimelineByOrderId(orderId));
                 }
 
                 req.getRequestDispatcher("/WEB-INF/views/staff/orders.jsp").forward(req, resp);
             }
         } catch (Exception e) {
-            getServletContext().log("Lỗi tại AdminOrderServlet doGet", e);
+            getServletContext().log("Lỗi tại StaffOrderServlet doGet", e);
             req.setAttribute("errorMessage", "Đã xảy ra lỗi hệ thống: " + e.getMessage());
             req.getRequestDispatcher("/WEB-INF/views/staff/orders.jsp").forward(req, resp);
         }
@@ -87,7 +90,7 @@ public class AdminOrderServlet extends HttpServlet {
             }
 
         } catch (Exception e) {
-            getServletContext().log("Lỗi tại AdminOrderServlet doPost", e);
+            getServletContext().log("Lỗi tại StaffOrderServlet doPost", e);
             session.setAttribute("errorMsg", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
             resp.sendRedirect(req.getContextPath() + "/staff/orders");
         }
