@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
  * (success/message/fieldErrors) để các JSP hiển thị lỗi theo từng ô.
  */
 public class AuthService {
+
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^0\\d{9}$");
     private static final int MAX_FAILED_ATTEMPTS = 5;
@@ -33,12 +34,14 @@ public class AuthService {
     }
 
     public static class RegisterResult {
+
         public boolean success;
         public String message;
         public Map<String, String> fieldErrors = new HashMap<>();
     }
 
     public static class LoginResult {
+
         public boolean success;
         public String message;
         public Integer attemptsLeft;
@@ -46,14 +49,17 @@ public class AuthService {
     }
 
     public static class ChangePasswordResult {
+
         public boolean success;
         public String message;
         public Map<String, String> fieldErrors = new HashMap<>();
     }
 
-    /** Validate + kiểm tra trùng email/SĐT. */
+    /**
+     * Validate + kiểm tra trùng email/SĐT.
+     */
     private Map<String, String> validateRegistration(String fullName, String email, String phone,
-                                                       String password, String confirmPassword) throws SQLException {
+            String password, String confirmPassword) throws SQLException {
         Map<String, String> errors = new HashMap<>();
 
         String normalizedFullName = fullName == null ? "" : fullName.trim();
@@ -175,7 +181,7 @@ public class AuthService {
     }
 
     public ChangePasswordResult changePassword(int userId, String currentPassword, String newPassword,
-                                                String confirmNewPassword) throws SQLException {
+            String confirmNewPassword) throws SQLException {
         ChangePasswordResult result = new ChangePasswordResult();
         Map<String, String> errors = new HashMap<>();
 
@@ -209,5 +215,38 @@ public class AuthService {
         result.success = true;
         result.message = "Đổi mật khẩu thành công.";
         return result;
+    }
+
+    public LoginResult processGoogleLogin(String email, String fullName, String pictureUrl, String googleId) throws SQLException {
+        LoginResult result = new LoginResult();
+        Optional<User> userOptional = userDAO.findByEmail(email);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+                result.success = false;
+                result.message = "Tài khoản của bạn chưa kích hoạt hoặc đã bị khóa.";
+                return result;
+            }
+            result.success = true;
+            result.user = user;
+            return result;
+        } else {
+            // Chưa tồn tại -> Tự động Đăng ký
+            User newUser = new User();
+            newUser.setFullName(fullName);
+            newUser.setEmail(email);
+            newUser.setGoogleId(googleId);
+            newUser.setAvatarUrl(pictureUrl);
+
+            int newId = userDAO.insertGoogleCustomer(newUser);
+            newUser.setUserId(newId);
+            newUser.setRole("CUSTOMER");
+            newUser.setStatus("ACTIVE");
+
+            result.success = true;
+            result.user = newUser;
+            return result;
+        }
     }
 }

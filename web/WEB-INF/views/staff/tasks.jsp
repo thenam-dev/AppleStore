@@ -22,9 +22,6 @@
   <div class="adm-main">
     <div class="adm-bar">
       <h2>📦 Nhiệm vụ giao hàng của tôi</h2>
-      <div class="who">
-        <span class="av" style="font-weight: 600;"><c:out value="${sessionScope.user.fullName}"/></span>
-      </div>
     </div>
 
     <div class="adm-body">

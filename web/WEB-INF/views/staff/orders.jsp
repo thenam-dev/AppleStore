@@ -26,16 +26,14 @@
     <div class="adm-bar">
       <h2>Đơn hàng</h2>
       <span class="badge warn">${pendingCount} đơn chờ xử lý</span>
-      <div class="who"><span class="av"><c:out value="${currUser.fullName}"/></span></div>
     </div>
 
     <div class="adm-body">
       <jsp:include page="/WEB-INF/views/common/flash.jsp"/>
 
-      <!-- KHUNG .SPLIT CHIA 2 CỘT CHUẨN XÁC -->
       <div class="split">
         
-        <!-- ================= CỘT TRÁI: DANH SÁCH TẤT CẢ ĐƠN HÀNG ================= -->
+        <!-- ================= CỘT TRÁI ================= -->
         <div class="panel">
           <div class="panel-head"><h3>Danh sách tất cả đơn hàng</h3></div>
           
@@ -115,13 +113,12 @@
           </c:choose>
         </div>
 
-        <!-- ================= CỘT PHẢI: CHI TIẾT & NÚT BẤM WORKFLOW TỰ ĐỘNG ================= -->
+        <!-- ================= CỘT PHẢI ================= -->
         <div style="display:flex;flex-direction:column;gap:18px">
           
           <c:choose>
             <c:when test="${not empty selectedOrder}">
               
-              <!-- 1. PANEL THÔNG TIN CHI TIẾT ĐƠN & SẢN PHẨM -->
               <div class="panel">
                 <div class="panel-head">
                   <h3>Chi tiết đơn #${selectedOrder.orderId}</h3>
@@ -140,14 +137,12 @@
                     <b>Thanh toán:</b> <c:out value="${selectedOrder.paymentMethod}"/>
                   </div>
 
-                  <!-- Hiển thị Shipper phụ trách nếu đơn đã giao vận -->
                   <c:if test="${not empty selectedOrder.shipperName}">
                     <div style="margin-bottom:12px; padding:8px 12px; background:#f0f7ff; border:1px solid #cce5ff; border-radius:4px; font-size:13px;">
                       <b>🚀 Shipper phụ trách:</b> <c:out value="${selectedOrder.shipperName}"/>
                     </div>
                   </c:if>
 
-                  <!-- BẢNG SẢN PHẨM TRONG ĐƠN -->
                   <table class="table" style="border-top:1px solid var(--line); font-size: 13px;">
                     <thead>
                       <tr>
@@ -177,7 +172,6 @@
                     </tbody>
                   </table>
 
-                  <!-- TỔNG KẾT TIỀN -->
                   <div style="max-width:260px;margin-left:auto;padding-top:10px">
                     <div class="sum-row"><span>Tạm tính</span><span><fmt:formatNumber value="${not empty selectedOrder.totalAmount ? selectedOrder.totalAmount : 0}" type="number" maxFractionDigits="0"/> ₫</span></div>
                     <c:if test="${selectedOrder.discountAmount > 0}">
@@ -188,65 +182,92 @@
                 </div>
               </div>
 
-              <!-- 2. PANEL XỬ LÝ QUY TRÌNH TỰ ĐỘNG (THEO ĐÚNG WORKFLOW) -->
+              <!-- 2. PANEL LỊCH SỬ VÀ XỬ LÝ WORKFLOW -->
               <c:if test="${canManage}">
                 <div class="panel">
-                  <div class="panel-head"><h3>Xử lý đơn hàng</h3></div>
+                  <div class="panel-head"><h3>Lịch sử & Xử lý</h3></div>
                   <div class="panel-pad">
+
+                    <!-- LỊCH SỬ THAY ĐỔI & GHI CHÚ -->
+                    <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px dashed var(--line);">
+                      <label style="font-size: 12px; font-weight: 700; color: var(--ash); text-transform: uppercase; display: block; margin-bottom: 8px;">Tiến trình trạng thái</label>
+                      <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <c:forEach var="h" items="${orderTimeline}">
+                          <div style="font-size: 12.5px; background: #f8f9fa; padding: 10px; border-radius: 4px; border-left: 3px solid var(--titan);">
+                            <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 4px;">
+                              <span>Trạng thái: <span style="color:var(--titan)"><c:out value="${h.status}"/></span></span>
+                              <span style="color: var(--ash); font-size: 11px;">
+                                <c:choose>
+                                  <c:when test="${not empty h.changedAt}">
+                                    <fmt:formatDate value="${h.changedAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                  </c:when>
+                                  <c:otherwise>Chưa cập nhật</c:otherwise>
+                                </c:choose>
+                              </span>
+                            </div>
+                            <c:if test="${not empty h.note}">
+                              <div style="color: var(--graphite); font-style: italic; border-top: 1px solid #eaeaea; padding-top: 6px; margin-top: 4px;">
+                                Lời nhắn: <c:out value="${h.note}"/>
+                              </div>
+                            </c:if>
+                          </div>
+                        </c:forEach>
+                        <c:if test="${empty orderTimeline}">
+                          <div style="font-size: 13px; color: var(--ash);">Chưa có ghi nhận lịch sử nào.</div>
+                        </c:if>
+                      </div>
+                    </div>
+
+                    <!-- FORM NÚT BẤM -->
                     <form method="post" action="${ctx}/staff/orders/status">
                       <input type="hidden" name="code" value="${selectedOrder.orderId}">
                       <input type="hidden" name="returnUrl" value="${ctx}/staff/orders?code=${selectedOrder.orderId}">
                       
-                      <div class="field" style="margin-bottom:12px;">
-                        <label>Ghi chú nội bộ (tuỳ chọn)</label>
-                        <textarea class="textarea" name="note" maxlength="300" placeholder="Ví dụ: Đã đóng gói xong, chuẩn bị bàn giao shipper..."></textarea>
-                      </div>
+                      <!-- ẨN Ô GHI CHÚ NẾU ĐƠN ĐÃ GIAO / HUỶ -->
+                      <c:if test="${selectedOrder.status eq 'CONFIRMED' or selectedOrder.status eq 'PREPARING'}">
+                        <div class="field" style="margin-bottom:12px;">
+                          <label>Ghi chú nội bộ (tuỳ chọn)</label>
+                          <textarea class="textarea" name="note" maxlength="300" placeholder="Ví dụ: Đã đóng gói xong, chuẩn bị giao shipper..."></textarea>
+                        </div>
+                      </c:if>
 
                       <div style="display:flex; flex-direction:column; gap:10px;">
                         <c:choose>
-                          <%-- Bước 1: Đang chờ đóng gói -> Chuyển sang Đang chuẩn bị --%>
                           <c:when test="${selectedOrder.status eq 'CONFIRMED'}">
                             <input type="hidden" name="status" value="PREPARING">
-                            <button type="submit" class="btn block">📦 Đóng gói (Chuyển sang Đang chuẩn bị)</button>
+                            <button type="submit" class="btn block">📦 Xác nhận đóng gói (Chuyển sang Đang chuẩn bị)</button>
                           </c:when>
                           
-                          <%-- Bước 2: Đang chuẩn bị -> Chuyển sang Giao vận (Giao cho Shipper) --%>
                           <c:when test="${selectedOrder.status eq 'PREPARING'}">
                             <input type="hidden" name="status" value="DISPATCHED">
                             <button type="submit" class="btn block">🚀 Giao vận chuyển (Tự động gán Shipper)</button>
                           </c:when>
                           
-                          <%-- 
-                            ĐÃ XÓA BƯỚC XÁC NHẬN DELIVERED Ở ĐÂY. 
-                            Khi đơn hàng ở trạng thái 'DISPATCHED' (Đang giao), Sale Staff sẽ KHÔNG còn nút bấm nào nữa, 
-                            trách nhiệm xác nhận giao thành công sẽ do Shipper thao tác trong trang nhiệm vụ của họ. 
-                          --%>
                           <c:when test="${selectedOrder.status eq 'DISPATCHED'}">
-                            <div style="font-size:13px; color:var(--ash); text-align:center; padding: 6px;">
-                              Đơn hàng đang được Shipper giao vận.
+                            <div style="font-size:13px; color:var(--ash); text-align:center; padding: 8px; border: 1px solid var(--line); border-radius: 4px; background: #fafafa;">
+                              Đơn hàng đang được Shipper phụ trách giao.
                             </div>
                           </c:when>
 
                           <c:otherwise>
-                            <div style="font-size:13px; color:var(--ash); text-align:center; padding: 6px;">
-                              Đơn hàng đã hoàn tất hoặc đã huỷ.
+                            <div style="font-size:13px; color:var(--ash); text-align:center; padding: 8px; border: 1px solid var(--line); border-radius: 4px; background: #fafafa;">
+                              Đơn hàng đã hoàn tất quá trình hoặc đã huỷ.
                             </div>
                           </c:otherwise>
                         </c:choose>
                         
-                        <!-- Nút Huỷ đơn hàng chung -->
                         <c:if test="${selectedOrder.status ne 'DELIVERED' and selectedOrder.status ne 'CANCELLED' and selectedOrder.status ne 'DISPATCHED'}">
                           <button type="submit" name="status" value="CANCELLED" class="btn block danger">❌ Huỷ đơn hàng</button>
                         </c:if>
                       </div>
                     </form>
+
                   </div>
                 </div>
               </c:if>
 
             </c:when>
             <c:otherwise>
-              <!-- TRƯỜNG HỢP CHƯA CHỌN ĐƠN NÀO -->
               <div class="panel" style="text-align: center; padding: 40px; color: var(--ash);">
                 <div class="ring" style="margin: 0 auto 12px;"><svg width="24" height="24"><use href="#i-box"/></svg></div>
                 <h4>Chưa chọn đơn hàng</h4>

@@ -180,15 +180,14 @@
                                             <span class="address-phone">${addr.recipientPhone}</span>
                                         </div>
                                         <div class="address-detail">
-                                            ${addr.addressDetail}<br>
-                                            ${addr.ward}, ${addr.district}, ${addr.province}
+                                            ${addr.addressDetail}
                                             <c:if test="${addr.isDefault == 1}">
                                                 <br><span class="default-badge" style="display: inline-block; margin-top: 8px;">Mặc định</span>
                                             </c:if>
                                         </div>
                                         <div class="address-actions">
                                             <!-- Bổ sung hàm JS lấy nguyên dạng chuỗi thông qua dấu nháy kép -->
-                                            <a class="action-link" onclick='openModal(${addr.addressId}, "${addr.recipientName}", "${addr.recipientPhone}", "${addr.province}", "${addr.district}", "${addr.ward}", "${addr.addressDetail}")'>Cập nhật</a>
+                                            <a class="action-link" onclick='openModal(${addr.addressId}, "${addr.recipientName}", "${addr.recipientPhone}", "${addr.addressDetail}")'>Cập nhật</a>
                                             <c:if test="${addr.isDefault == 0}">
                                                 <form action="${ctx}/delete-address" method="post" style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn xóa địa chỉ này?');">
                                                     <input type="hidden" name="addressId" value="${addr.addressId}">
@@ -224,27 +223,15 @@
         <div class="modal-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div style="grid-column: span 1;">
                 <label style="display: block; font-weight: 500; margin-bottom: 8px; font-size: 14px;">Họ và tên</label>
-                <input class="input" type="text" name="recipientName" id="recipientName" required style="width: 100%; border: 1px solid var(--line); padding: 10px 14px; border-radius: 8px;">
+                <input class="input" type="text" name="recipientName" id="recipientName" required maxlength="100" style="width: 100%; border: 1px solid var(--line); padding: 10px 14px; border-radius: 8px;">
             </div>
             <div style="grid-column: span 1;">
                 <label style="display: block; font-weight: 500; margin-bottom: 8px; font-size: 14px;">Số điện thoại</label>
-                <input class="input" type="text" name="recipientPhone" id="recipientPhone" required style="width: 100%; border: 1px solid var(--line); padding: 10px 14px; border-radius: 8px;">
-            </div>
-            <div style="grid-column: span 2;">
-                <label style="display: block; font-weight: 500; margin-bottom: 8px; font-size: 14px;">Tỉnh/Thành phố</label>
-                <input class="input" type="text" name="province" id="province" required style="width: 100%; border: 1px solid var(--line); padding: 10px 14px; border-radius: 8px;">
-            </div>
-            <div style="grid-column: span 1;">
-                <label style="display: block; font-weight: 500; margin-bottom: 8px; font-size: 14px;">Quận/Huyện</label>
-                <input class="input" type="text" name="district" id="district" required style="width: 100%; border: 1px solid var(--line); padding: 10px 14px; border-radius: 8px;">
-            </div>
-            <div style="grid-column: span 1;">
-                <label style="display: block; font-weight: 500; margin-bottom: 8px; font-size: 14px;">Phường/Xã</label>
-                <input class="input" type="text" name="ward" id="ward" required style="width: 100%; border: 1px solid var(--line); padding: 10px 14px; border-radius: 8px;">
+                <input class="input" type="tel" name="recipientPhone" id="recipientPhone" required pattern="[0-9]{9,15}" title="Từ 9 đến 15 chữ số" style="width: 100%; border: 1px solid var(--line); padding: 10px 14px; border-radius: 8px;">
             </div>
             <div style="grid-column: span 2;">
                 <label style="display: block; font-weight: 500; margin-bottom: 8px; font-size: 14px;">Địa chỉ cụ thể</label>
-                <textarea class="input" name="addressDetail" id="addressDetail" rows="3" required style="width: 100%; resize: none; border: 1px solid var(--line); padding: 10px 14px; border-radius: 8px;"></textarea>
+                <textarea class="input" name="addressDetail" id="addressDetail" rows="3" required maxlength="500" style="width: 100%; resize: none; border: 1px solid var(--line); padding: 10px 14px; border-radius: 8px;"></textarea>
             </div>
         </div>
         <div class="modal-footer">
@@ -260,16 +247,13 @@
     const modal = document.getElementById('addressModal');
     const form = document.getElementById('addressForm');
     
-    function openModal(id, name, phone, province, district, ward, detail) {
+    function openModal(id, name, phone, detail) {
         if (id) {
             document.getElementById('modalTitle').innerText = 'Cập nhật địa chỉ';
             form.action = '${ctx}/update-address';
             document.getElementById('addressId').value = id;
             document.getElementById('recipientName').value = name;
             document.getElementById('recipientPhone').value = phone;
-            document.getElementById('province').value = province;
-            document.getElementById('district').value = district;
-            document.getElementById('ward').value = ward;
             document.getElementById('addressDetail').value = detail;
         } else {
             document.getElementById('modalTitle').innerText = 'Thêm địa chỉ mới';

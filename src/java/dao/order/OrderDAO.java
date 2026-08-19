@@ -285,7 +285,7 @@ public class OrderDAO {
     }
 
     public List<Map<String, Object>> findTimelineByOrderId(int orderId) throws SQLException {
-        String sql = "SELECT status, changed_at FROM order_status_history WHERE order_id = ? ORDER BY changed_at ASC";
+        String sql = "SELECT status, changed_at, note FROM order_status_history WHERE order_id = ? ORDER BY changed_at ASC";
         List<Map<String, Object>> list = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -295,6 +295,7 @@ public class OrderDAO {
                     Map<String, Object> map = new HashMap<>();
                     map.put("status", rs.getString("status"));
                     map.put("changedAt", rs.getTimestamp("changed_at"));
+                    map.put("note", rs.getString("note")); // Lấy thêm ghi chú
                     list.add(map);
                 }
             }
@@ -436,5 +437,29 @@ public class OrderDAO {
         item.setAddonLabelSnapshot(resultSet.getString("addon_label_snapshot"));
         item.setAddonPriceSnapshot(resultSet.getBigDecimal("addon_price_snapshot"));
         return item;
+    }
+    
+    public List<Map<String, Object>> findOrderItems(int orderId) throws SQLException {
+        List<Map<String, Object>> items = new java.util.ArrayList<>();
+        String sql = "SELECT order_item_id, product_name_snapshot, variant_label_snapshot, quantity, subtotal " +
+                     "FROM order_items WHERE order_id = ?";
+                     
+        try (java.sql.Connection conn = util.DBConnection.getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, orderId);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("orderItemId", rs.getInt("order_item_id"));
+                    item.put("productNameSnapshot", rs.getString("product_name_snapshot"));
+                    item.put("variantLabelSnapshot", rs.getString("variant_label_snapshot"));
+                    item.put("quantity", rs.getInt("quantity"));
+                    item.put("subtotal", rs.getBigDecimal("subtotal"));
+                    items.add(item);
+                }
+            }
+        }
+        return items;
     }
 }

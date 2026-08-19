@@ -1,11 +1,12 @@
-package service.order;
+    package service.order;
 
-
+import dao.review.ReviewDAO;
 import dao.order.OrderDAO;
 import java.sql.SQLException;
 import java.util.*;
+import model.entity.review.Review;
 
-public class CustomerOrderService {
+public class OrderService {
 
     private final OrderDAO orderDAO = new OrderDAO();
 
@@ -141,5 +142,25 @@ public class CustomerOrderService {
             case "CANCELLED": return "Đã huỷ";
             default: return dbStatus;
         }
+    }
+    
+    public Map<String, Object> getOrderDetailWithItems(int orderId, int customerId) throws SQLException {
+        // Lấy thông tin tóm tắt và timeline từ hàm cũ
+        Map<String, Object> detail = getSelectedOrderDetail(orderId, customerId);
+        if (detail == null) return null;
+
+        // Lấy chi tiết từng sản phẩm trong đơn (Bạn cần đảm bảo OrderDAO có hàm findOrderItems)
+        List<Map<String, Object>> items = orderDAO.findOrderItems(orderId);
+        ReviewDAO reviewDAO = new ReviewDAO();
+        
+        for (Map<String, Object> item : items) {
+            int orderItemId = (int) item.get("orderItemId");
+            // Gắn review vào item nếu đã từng đánh giá
+            Review review = reviewDAO.getReviewByItemAndCustomer(orderItemId, customerId);
+            item.put("review", review);
+        }
+        detail.put("items", items);
+        
+        return detail;
     }
 }
