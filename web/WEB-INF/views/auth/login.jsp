@@ -45,9 +45,12 @@
                             <label>Mật khẩu</label>
                             <input class="input" type="password" name="password" required>
                         </div>
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px">
-                            <input type="checkbox" name="remember" id="rm" value="1">
-                            <label for="rm" style="margin:0;font-weight:400">Ghi nhớ đăng nhập</label>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;font-size:13px">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <input type="checkbox" name="remember" id="rm" value="1">
+                                <label for="rm" style="margin:0;font-weight:400">Ghi nhớ đăng nhập</label>
+                            </div>
+                            <a href="${ctx}/forgot-password" style="color:var(--titan);font-weight:500;">Quên mật khẩu?</a>
                         </div>
                         <button type="submit" class="btn block">Đăng nhập</button>
 

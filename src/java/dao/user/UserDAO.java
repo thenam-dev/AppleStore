@@ -416,4 +416,25 @@ public class UserDAO {
             }
         }
     }
+
+    public boolean updatePasswordByEmail(String email, String newHashedPassword) {
+        String sql = "UPDATE users SET password_hash = ?, updated_at = ? WHERE email = ?";
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            // Set các tham số dấu (?)
+            statement.setString(1, newHashedPassword);
+            statement.setTimestamp(2, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+            statement.setString(3, email);
+
+            // Thực thi lệnh UPDATE
+            int rowsUpdated = statement.executeUpdate();
+
+            // Nếu có ít nhất 1 dòng bị thay đổi nghĩa là thành công
+            return rowsUpdated > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
