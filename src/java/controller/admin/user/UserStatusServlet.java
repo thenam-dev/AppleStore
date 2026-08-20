@@ -20,7 +20,7 @@ public class UserStatusServlet extends UserServletSupport {
             int userId = parseInt(request.getParameter("userId"), "ID người dùng không hợp lệ.");
             String status = request.getParameter("status");
 
-            userService.changeStatus(userId, status);
+            userService.changeStaffStatus(userId, status, getCurrentAdminId(request));
             redirectToUserListWithMessage(request, response, FLASH_SUCCESS_KEY, "Cập nhật trạng thái người dùng thành công.");
         } catch (SQLException | IllegalArgumentException ex) {
             redirectToUserListWithMessage(request, response, FLASH_ERROR_KEY, ex.getMessage());

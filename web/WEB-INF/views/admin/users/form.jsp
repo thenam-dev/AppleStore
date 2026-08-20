@@ -5,7 +5,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <c:set var="pageTitle" value="Chỉnh sửa người dùng · Quản trị HALO" />
+  <c:set var="pageTitle" value="Chỉnh sửa nhân sự · Quản trị HALO" />
   <jsp:include page="/WEB-INF/views/common/head.jsp" />
 </head>
 <body class="admin">
@@ -17,7 +17,7 @@
 
   <div class="adm-main">
     <div class="adm-bar">
-      <h2>Chỉnh sửa người dùng</h2>
+      <h2>Chỉnh sửa nhân sự</h2>
       <c:if test="${not empty user}">
         <span class="mono" style="font-size:11px;color:var(--ash)">ID ${user.userId}</span>
       </c:if>
@@ -37,7 +37,7 @@
           <div class="panel">
             <div class="empty">
               <div class="ring"><svg width="26" height="26"><use href="#i-user" /></svg></div>
-              <h3>Không tìm thấy người dùng</h3>
+              <h3>Không tìm thấy tài khoản nội bộ</h3>
               <p>Quay lại danh sách để chọn một tài khoản khác.</p>
               <a class="btn" href="${appPath}/admin/users">Về danh sách</a>
             </div>
@@ -46,7 +46,7 @@
         <c:otherwise>
           <form id="userForm" class="panel" action="${appPath}/admin/users/update" method="post">
             <input type="hidden" name="userId" value="${user.userId}">
-            <div class="panel-head"><h3>Thông tin tài khoản</h3></div>
+            <div class="panel-head"><h3>Thông tin tài khoản nội bộ</h3></div>
             <div class="panel-pad">
               <div class="grid-2">
                 <div class="field">
@@ -67,7 +67,7 @@
                   <select id="role" class="select" name="role" required>
                     <c:forEach var="role" items="${roles}">
                       <option value="${fn:escapeXml(role)}" ${user.role eq role ? 'selected' : ''}>
-                        ${role eq 'CUSTOMER' ? 'Khách hàng' : role eq 'ADMIN' ? 'Quản trị viên' : role eq 'SALE_STAFF' ? 'Nhân viên bán hàng' : role eq 'DELIVERY' ? 'Nhân viên giao hàng' : role}
+                        ${role eq 'ADMIN' ? 'Quản trị viên' : role eq 'SALE_STAFF' ? 'Nhân viên bán hàng' : role eq 'DELIVERY' ? 'Nhân viên giao hàng' : role}
                       </option>
                     </c:forEach>
                   </select>
@@ -84,10 +84,8 @@
                 </div>
                 <div class="field">
                   <label>Email xác minh</label>
-                  <div style="display:flex;align-items:center;gap:10px;height:44px">
-                    <input id="emailVerified" type="checkbox" name="emailVerified" ${user.emailVerified ? 'checked' : ''}>
-                    <label for="emailVerified" style="margin:0;font-weight:400;font-size:13.5px">Email đã xác minh</label>
-                  </div>
+                  <input class="input" type="text" value="${user.emailVerified ? 'Có' : 'Không'}" readonly>
+                  <div class="help">Nếu đổi email, hệ thống tự chuyển về chưa xác minh.</div>
                 </div>
               </div>
               <div style="display:flex;gap:9px;justify-content:flex-end">

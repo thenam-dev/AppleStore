@@ -13,6 +13,12 @@ public class UserService {
     private static final int DEFAULT_PAGE = 1;
     private static final int DEFAULT_PAGE_SIZE = AppConfig.PAGE_SIZE_ADMIN;
     private static final int MAX_PAGE_SIZE = 100;
+    private static final List<String> CUSTOMER_ROLES = List.of(AppConfig.ROLE_CUSTOMER);
+    private static final List<String> INTERNAL_ROLES = List.of(
+            AppConfig.ROLE_ADMIN,
+            AppConfig.ROLE_SALE_STAFF,
+            AppConfig.ROLE_DELIVERY
+    );
     private static final List<String> ALLOWED_ROLES = List.of(
             AppConfig.ROLE_CUSTOMER,
             AppConfig.ROLE_ADMIN,
@@ -74,6 +80,57 @@ public class UserService {
     }
 
     /**
+     * Lấy danh sách customer. Server luôn ép role CUSTOMER, không nhận role từ
+     * request.
+     */
+    public List<User> getCustomers(String keyword, String status, String sort, int page, int pageSize)
+            throws SQLException {
+        String normalizedStatus = normalizeOptional(status);
+        String normalizedSort = normalizeSort(sort);
+
+        if (normalizedStatus != null && !ALLOWED_STATUSES.contains(normalizedStatus)) {
+            throw new IllegalArgumentException("Bộ lọc trạng thái không hợp lệ.");
+        }
+
+        return userDAO.findAllByRoleGroup(
+                keyword,
+                CUSTOMER_ROLES,
+                AppConfig.ROLE_CUSTOMER,
+                normalizedStatus,
+                normalizedSort,
+                normalizePage(page),
+                normalizePageSize(pageSize)
+        );
+    }
+
+    /**
+     * Lấy danh sách tài khoản nội bộ, không bao gồm CUSTOMER.
+     */
+    public List<User> getStaffUsers(String keyword, String role, String status, String sort, int page, int pageSize)
+            throws SQLException {
+        String normalizedRole = normalizeOptional(role);
+        String normalizedStatus = normalizeOptional(status);
+        String normalizedSort = normalizeSort(sort);
+
+        if (normalizedRole != null && !INTERNAL_ROLES.contains(normalizedRole)) {
+            throw new IllegalArgumentException("Bộ lọc vai trò không hợp lệ.");
+        }
+        if (normalizedStatus != null && !ALLOWED_STATUSES.contains(normalizedStatus)) {
+            throw new IllegalArgumentException("Bộ lọc trạng thái không hợp lệ.");
+        }
+
+        return userDAO.findAllByRoleGroup(
+                keyword,
+                INTERNAL_ROLES,
+                normalizedRole,
+                normalizedStatus,
+                normalizedSort,
+                normalizePage(page),
+                normalizePageSize(pageSize)
+        );
+    }
+
+    /**
      * Đếm người dùng sau khi áp dụng bộ lọc trên màn danh sách.
      */
     public int countUsers(String keyword, String role, String status) throws SQLException {
@@ -91,11 +148,59 @@ public class UserService {
     }
 
     /**
+     * Đếm customer. Server luôn ép role CUSTOMER.
+     */
+    public int countCustomers(String keyword, String status) throws SQLException {
+        String normalizedStatus = normalizeOptional(status);
+
+        if (normalizedStatus != null && !ALLOWED_STATUSES.contains(normalizedStatus)) {
+            throw new IllegalArgumentException("Bộ lọc trạng thái không hợp lệ.");
+        }
+
+        return userDAO.countAllByRoleGroup(keyword, CUSTOMER_ROLES, AppConfig.ROLE_CUSTOMER, normalizedStatus);
+    }
+
+    /**
+     * Đếm tài khoản nội bộ sau khi lọc.
+     */
+    public int countStaffUsers(String keyword, String role, String status) throws SQLException {
+        String normalizedRole = normalizeOptional(role);
+        String normalizedStatus = normalizeOptional(status);
+
+        if (normalizedRole != null && !INTERNAL_ROLES.contains(normalizedRole)) {
+            throw new IllegalArgumentException("Bộ lọc vai trò không hợp lệ.");
+        }
+        if (normalizedStatus != null && !ALLOWED_STATUSES.contains(normalizedStatus)) {
+            throw new IllegalArgumentException("Bộ lọc trạng thái không hợp lệ.");
+        }
+
+        return userDAO.countAllByRoleGroup(keyword, INTERNAL_ROLES, normalizedRole, normalizedStatus);
+    }
+
+    /**
      * Lấy user theo ID và báo lỗi nghiệp vụ nếu không tồn tại.
      */
     public User getUserById(int userId) throws SQLException {
         return userDAO.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Người dùng không tồn tại."));
+    }
+
+    /**
+     * Lấy customer theo ID và chặn nếu target không phải CUSTOMER.
+     */
+    public User getCustomerById(int userId) throws SQLException {
+        User user = getUserById(userId);
+        ensureCustomer(user);
+        return user;
+    }
+
+    /**
+     * Lấy tài khoản nội bộ theo ID và chặn CUSTOMER.
+     */
+    public User getStaffUserById(int userId) throws SQLException {
+        User user = getUserById(userId);
+        ensureInternalUser(user);
+        return user;
     }
 
     /**
@@ -134,10 +239,82 @@ public class UserService {
     }
 
     /**
+     * Cập nhật tài khoản nội bộ. Không dùng cho CUSTOMER.
+     */
+    public void updateStaffUser(User user, int actorUserId) throws SQLException {
+        User existing = getStaffUserById(user.getUserId());
+        normalizeUser(user);
+        validateInternalUser(user);
+        validateSelfInternalUpdate(existing, user, actorUserId);
+        validateLastActiveAdmin(existing, user.getRole(), user.getStatus());
+
+        if (userDAO.existsByEmailForOtherUser(user.getEmail(), user.getUserId())) {
+            throw new IllegalArgumentException("Email đã được tài khoản khác sử dụng.");
+        }
+
+        if (userDAO.existsByPhoneForOtherUser(user.getPhone(), user.getUserId())) {
+            throw new IllegalArgumentException("Số điện thoại đã được tài khoản khác sử dụng.");
+        }
+
+        if (!existing.getEmail().equalsIgnoreCase(user.getEmail())) {
+            user.setEmailVerified(false);
+        } else {
+            user.setEmailVerified(existing.isEmailVerified());
+        }
+
+        if (!userDAO.update(user)) {
+            throw new IllegalArgumentException("Người dùng không tồn tại.");
+        }
+    }
+
+    /**
+     * Đổi trạng thái customer, không cập nhật thông tin cá nhân/role.
+     */
+    public void changeCustomerStatus(int userId, String status) throws SQLException {
+        User customer = getCustomerById(userId);
+        String normalizedStatus = normalizeRequired(status);
+        if (!ALLOWED_STATUSES.contains(normalizedStatus)) {
+            throw new IllegalArgumentException("Trạng thái không hợp lệ.");
+        }
+
+        if (!userDAO.updateStatus(customer.getUserId(), normalizedStatus)) {
+            throw new IllegalArgumentException("Người dùng không tồn tại.");
+        }
+    }
+
+    /**
+     * Đổi trạng thái tài khoản nội bộ với rule chống tự khóa/mất admin cuối.
+     */
+    public void changeStaffStatus(int userId, String status, int actorUserId) throws SQLException {
+        User existing = getStaffUserById(userId);
+        String normalizedStatus = normalizeRequired(status);
+        if (!ALLOWED_STATUSES.contains(normalizedStatus)) {
+            throw new IllegalArgumentException("Trạng thái không hợp lệ.");
+        }
+
+        if (existing.getUserId() == actorUserId && !isActiveStatus(normalizedStatus)) {
+            throw new IllegalArgumentException("Bạn không thể tự khóa hoặc vô hiệu hóa tài khoản của chính mình.");
+        }
+
+        validateLastActiveAdmin(existing, existing.getRole(), normalizedStatus);
+
+        if (!userDAO.updateStatus(existing.getUserId(), normalizedStatus)) {
+            throw new IllegalArgumentException("Người dùng không tồn tại.");
+        }
+    }
+
+    /**
      * Trả về danh sách role hợp lệ cho UI và validate.
      */
     public List<String> getAllowedRoles() {
         return ALLOWED_ROLES;
+    }
+
+    /**
+     * Trả về role nội bộ hợp lệ cho màn staff/admin.
+     */
+    public List<String> getAllowedInternalRoles() {
+        return INTERNAL_ROLES;
     }
 
     /**
@@ -187,6 +364,69 @@ public class UserService {
         if (!ALLOWED_STATUSES.contains(user.getStatus())) {
             throw new IllegalArgumentException("Trạng thái không hợp lệ.");
         }
+    }
+
+    /**
+     * Kiểm tra ràng buộc của tài khoản nội bộ.
+     */
+    private void validateInternalUser(User user) {
+        if (user.getUserId() <= 0) {
+            throw new IllegalArgumentException("ID người dùng không hợp lệ.");
+        }
+        if (user.getFullName().length() > 100) {
+            throw new IllegalArgumentException("Họ tên không được vượt quá 100 ký tự.");
+        }
+        if (!EMAIL_PATTERN.matcher(user.getEmail()).matches() || user.getEmail().length() > 255) {
+            throw new IllegalArgumentException("Email không hợp lệ.");
+        }
+        if (user.getPhone() != null && !PHONE_PATTERN.matcher(user.getPhone()).matches()) {
+            throw new IllegalArgumentException("Số điện thoại phải gồm 9 đến 15 chữ số.");
+        }
+        if (!INTERNAL_ROLES.contains(user.getRole())) {
+            throw new IllegalArgumentException("Vai trò nội bộ không hợp lệ.");
+        }
+        if (!ALLOWED_STATUSES.contains(user.getStatus())) {
+            throw new IllegalArgumentException("Trạng thái không hợp lệ.");
+        }
+    }
+
+    private void validateSelfInternalUpdate(User existing, User updated, int actorUserId) {
+        if (existing.getUserId() != actorUserId) {
+            return;
+        }
+
+        if (!AppConfig.ROLE_ADMIN.equals(updated.getRole())) {
+            throw new IllegalArgumentException("Bạn không thể tự hạ quyền quản trị của chính mình.");
+        }
+
+        if (!isActiveStatus(updated.getStatus())) {
+            throw new IllegalArgumentException("Bạn không thể tự khóa hoặc vô hiệu hóa tài khoản của chính mình.");
+        }
+    }
+
+    private void validateLastActiveAdmin(User existing, String newRole, String newStatus) throws SQLException {
+        boolean wasActiveAdmin = AppConfig.ROLE_ADMIN.equals(existing.getRole()) && isActiveStatus(existing.getStatus());
+        boolean remainsActiveAdmin = AppConfig.ROLE_ADMIN.equals(newRole) && isActiveStatus(newStatus);
+
+        if (wasActiveAdmin && !remainsActiveAdmin && userDAO.countActiveAdmins() <= 1) {
+            throw new IllegalArgumentException("Không thể làm mất quản trị viên đang hoạt động cuối cùng.");
+        }
+    }
+
+    private void ensureCustomer(User user) {
+        if (!AppConfig.ROLE_CUSTOMER.equals(user.getRole())) {
+            throw new IllegalArgumentException("Tài khoản này không phải khách hàng.");
+        }
+    }
+
+    private void ensureInternalUser(User user) {
+        if (!INTERNAL_ROLES.contains(user.getRole())) {
+            throw new IllegalArgumentException("Tài khoản này không thuộc nhóm nội bộ.");
+        }
+    }
+
+    private boolean isActiveStatus(String status) {
+        return "ACTIVE".equalsIgnoreCase(status);
     }
 
     /**

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.StringJoiner;
 
 public class UserDAO {
 
@@ -48,12 +49,60 @@ public class UserDAO {
     }
 
     /**
+     * Lấy danh sách user thuộc một nhóm role cố định, có thể lọc sâu theo role.
+     */
+    public List<User> findAllByRoleGroup(String keyword, List<String> allowedRoles, String role, String status,
+            String sort, int page, int pageSize) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT ")
+                .append(USER_COLUMNS)
+                .append(" FROM users WHERE 1 = 1");
+        List<Object> params = new ArrayList<>();
+        appendRoleGroupFilter(sql, params, allowedRoles, role);
+        appendKeywordAndStatusFilters(sql, params, keyword, status);
+        sql.append(" ORDER BY ").append(resolveOrderBy(sort)).append(" LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add(Math.max(0, (page - 1) * pageSize));
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            bindParams(statement, params);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                List<User> users = new ArrayList<>();
+                while (resultSet.next()) {
+                    users.add(mapUser(resultSet));
+                }
+                return users;
+            }
+        }
+    }
+
+    /**
      * Đếm user sau khi áp dụng bộ lọc keyword, role và status.
      */
     public int countAll(String keyword, String role, String status) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users WHERE 1 = 1");
         List<Object> params = new ArrayList<>();
         appendFilters(sql, params, keyword, role, status);
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            bindParams(statement, params);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+                return 0;
+            }
+        }
+    }
+
+    /**
+     * Đếm user thuộc một nhóm role cố định, có thể lọc sâu theo role.
+     */
+    public int countAllByRoleGroup(String keyword, List<String> allowedRoles, String role, String status)
+            throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users WHERE 1 = 1");
+        List<Object> params = new ArrayList<>();
+        appendRoleGroupFilter(sql, params, allowedRoles, role);
+        appendKeywordAndStatusFilters(sql, params, keyword, status);
 
         try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             bindParams(statement, params);
@@ -115,6 +164,21 @@ public class UserDAO {
             statement.setString(1, status);
             statement.setInt(2, userId);
             return statement.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Đếm admin ACTIVE để không vô hiệu hóa quản trị viên cuối cùng.
+     */
+    public int countActiveAdmins() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users WHERE role = 'ADMIN' AND status = 'ACTIVE'";
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+            return 0;
         }
     }
 
@@ -304,6 +368,47 @@ public class UserDAO {
         if (role != null && !role.isBlank()) {
             sql.append(" AND role = ?");
             params.add(role.trim().toUpperCase());
+        }
+
+        if (status != null && !status.isBlank()) {
+            sql.append(" AND status = ?");
+            params.add(status.trim().toUpperCase());
+        }
+    }
+
+    /**
+     * Gắn điều kiện role group để tách CUSTOMER khỏi tài khoản nội bộ.
+     */
+    private void appendRoleGroupFilter(StringBuilder sql, List<Object> params, List<String> allowedRoles, String role) {
+        if (allowedRoles == null || allowedRoles.isEmpty()) {
+            throw new IllegalArgumentException("Nhóm vai trò không hợp lệ.");
+        }
+
+        if (role != null && !role.isBlank()) {
+            sql.append(" AND role = ?");
+            params.add(role.trim().toUpperCase());
+            return;
+        }
+
+        StringJoiner placeholders = new StringJoiner(",", " AND role IN (", ")");
+        for (String allowedRole : allowedRoles) {
+            placeholders.add("?");
+            params.add(allowedRole);
+        }
+        sql.append(placeholders);
+    }
+
+    /**
+     * Gắn keyword/status dùng chung cho các truy vấn role group.
+     */
+    private void appendKeywordAndStatusFilters(StringBuilder sql, List<Object> params, String keyword, String status) {
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (LOWER(full_name) LIKE ? OR LOWER(email) LIKE ? OR phone LIKE ?)");
+            String normalizedKeyword = keyword.trim();
+            String likeKeyword = "%" + normalizedKeyword.toLowerCase() + "%";
+            params.add(likeKeyword);
+            params.add(likeKeyword);
+            params.add("%" + normalizedKeyword + "%");
         }
 
         if (status != null && !status.isBlank()) {
