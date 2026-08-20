@@ -1,4 +1,4 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <fmt:setLocale value="vi_VN" />
@@ -24,7 +24,7 @@
     <div class="adm-bar">
       <h2>Tổng quan hệ thống & Báo cáo</h2>
       <div class="who">
-        <button onclick="exportToCSV()" class="btn ghost sm">Xuất dữ liệu (CSV)</button>
+        <c:if test="${sessionScope.user.role eq 'ADMIN'}"><button onclick="exportToCSV()" class="btn ghost sm">Xuất dữ liệu (CSV)</button></c:if>
       </div>
     </div>
 
@@ -56,7 +56,7 @@
           <div class="val"><c:out value="${stats != null ? stats.totalOrders : 0}" /></div>
           <div class="delta">Đang ở mọi trạng thái</div>
         </div>
-        <c:if test="${sessionScope.user.role ne 'DELIVERY'}">
+        <c:if test="${sessionScope.user.role eq 'ADMIN'}">
           <div class="stat">
             <div class="lab">Sản phẩm</div>
             <div class="val"><c:out value="${stats != null ? stats.activeProducts : 0}" /></div>
@@ -190,7 +190,7 @@
             </div>
           </div>
 
-        <c:if test="${sessionScope.user.role ne 'DELIVERY'}">
+        <c:if test="${sessionScope.user.role eq 'ADMIN'}">
           <div class="panel">
             <div class="panel-head">
               <h3>Sản phẩm bán chạy</h3>
@@ -371,3 +371,4 @@
 </script>
 </body>
 </html>
+
