@@ -14,8 +14,8 @@ import model.entity.user.User;
 
 import java.io.IOException;
 
-@WebFilter(urlPatterns = {"/admin/*"})
-public class AdminFilter implements Filter {
+@WebFilter(urlPatterns = {"/staff/*"})
+public class StaffFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
@@ -31,12 +31,14 @@ public class AdminFilter implements Filter {
 
         User user = (User) sessionUser;
         String role = user.getRole() == null ? "" : user.getRole().trim().toUpperCase();
-        String adminPath = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length());
-        if (AppConfig.ROLE_ADMIN.equals(role)) {
+        
+        // Admin, Sale Staff, Delivery can access /staff/*
+        if (AppConfig.ROLE_ADMIN.equals(role) || AppConfig.ROLE_SALE_STAFF.equals(role) || "DELIVERY".equals(role)) {
             chain.doFilter(request, response);
             return;
         }
 
-        httpResponse.sendRedirect(httpRequest.getContextPath() + "/index.jsp");
+        // If normal customer or unknown role tries to access, block them
+        httpResponse.sendRedirect(httpRequest.getContextPath() + "/home");
     }
 }

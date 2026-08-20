@@ -45,16 +45,25 @@ public class DashboardDAO {
         return getRecentOrders(limit, null);
     }
 
-    public List<Order> getRecentOrders(int limit, Integer staffId) {
+    public List<Order> getRecentOrders(int limit, String startDate, String endDate, Integer staffId) {
         List<Order> list = new ArrayList<>();
-        String sql = "SELECT order_id, recipient_name, created_at, final_amount, status FROM orders ";
+        String sql = "SELECT order_id, recipient_name, created_at, final_amount, status FROM orders WHERE 1=1 ";
+        
+        boolean hasDateFilter = (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty());
+        if (hasDateFilter) {
+            sql += " AND created_at BETWEEN ? AND ? ";
+        }
         if (staffId != null) {
-            sql += "WHERE assigned_sale_staff_id = ? ";
+            sql += " AND assigned_sale_staff_id = ? ";
         }
         sql += "ORDER BY created_at DESC LIMIT ?";
         
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             int paramIndex = 1;
+            if (hasDateFilter) {
+                ps.setString(paramIndex++, startDate + " 00:00:00");
+                ps.setString(paramIndex++, endDate + " 23:59:59");
+            }
             if (staffId != null) {
                 ps.setInt(paramIndex++, staffId);
             }
@@ -80,12 +89,7 @@ public class DashboardDAO {
         return list;
     }
 
-    // 4. Lấy danh sách sản phẩm bán chạy nhất
-    public List<dto.BestSellingProductDTO> getBestSellingProducts(int limit) {
-        return getBestSellingProducts(limit, null);
-    }
-
-    public List<dto.BestSellingProductDTO> getBestSellingProducts(int limit, Integer staffId) {
+    public List<dto.BestSellingProductDTO> getBestSellingProducts(int limit, String startDate, String endDate, Integer staffId) {
         List<dto.BestSellingProductDTO> list = new ArrayList<>();
         String sql = "SELECT p.product_id, p.name, pi.file_path, " +
                      "SUM(oi.quantity) as total_sold, " +
@@ -98,8 +102,13 @@ public class DashboardDAO {
                      "LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_primary = 1 " +
                      "WHERE o.status = 'DELIVERED' ";
                      
+        boolean hasDateFilter = (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty());
+        if (hasDateFilter) {
+            sql += " AND o.created_at BETWEEN ? AND ? ";
+        }
+        
         if (staffId != null) {
-            sql += "AND o.assigned_sale_staff_id = ? ";
+            sql += " AND o.assigned_sale_staff_id = ? ";
         }
         
         sql += "GROUP BY p.product_id, p.name, pi.file_path " +
@@ -110,6 +119,10 @@ public class DashboardDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             int paramIndex = 1;
+            if (hasDateFilter) {
+                ps.setString(paramIndex++, startDate + " 00:00:00");
+                ps.setString(paramIndex++, endDate + " 23:59:59");
+            }
             if (staffId != null) {
                 ps.setInt(paramIndex++, staffId);
             }

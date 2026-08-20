@@ -49,8 +49,11 @@ public class RoleRedirectFilter implements Filter {
                                      
                 if (!isAllowedPath) {
                     // Nếu là Admin/Sale cố tình vào trang Customer, đá về Dashboard
-                    if (AppConfig.ROLE_ADMIN.equals(role) || AppConfig.ROLE_SALE_STAFF.equals(role)) {
+                    if (AppConfig.ROLE_ADMIN.equals(role)) {
                         httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/dashboard");
+                        return;
+                    } else if (AppConfig.ROLE_SALE_STAFF.equals(role)) {
+                        httpResponse.sendRedirect(httpRequest.getContextPath() + "/staff/dashboard");
                         return;
                     } 
                     // Nếu là Shipper, đá về trang Tasks

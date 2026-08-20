@@ -30,8 +30,10 @@ public class LoginServlet extends HttpServlet {
         if (session != null && session.getAttribute(AppConfig.SESSION_USER) instanceof User) {
             User user = (User) session.getAttribute(AppConfig.SESSION_USER);
             String role = user.getRole();
-            if (AppConfig.ROLE_ADMIN.equals(role) || AppConfig.ROLE_SALE_STAFF.equals(role)) {
+            if (AppConfig.ROLE_ADMIN.equals(role)) {
                 response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            } else if (AppConfig.ROLE_SALE_STAFF.equals(role)) {
+                response.sendRedirect(request.getContextPath() + "/staff/dashboard");
             } else if ("DELIVERY".equals(role)) {
                 response.sendRedirect(request.getContextPath() + "/staff/tasks");
             } else {
@@ -74,8 +76,10 @@ public class LoginServlet extends HttpServlet {
 
             // Redirect dựa theo Role
             String role = result.user.getRole();
-            if (AppConfig.ROLE_ADMIN.equals(role) || AppConfig.ROLE_SALE_STAFF.equals(role)) {
+            if (AppConfig.ROLE_ADMIN.equals(role)) {
                 response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            } else if (AppConfig.ROLE_SALE_STAFF.equals(role)) {
+                response.sendRedirect(request.getContextPath() + "/staff/dashboard");
             } else if ("DELIVERY".equals(role)) {
                 response.sendRedirect(request.getContextPath() + "/staff/tasks");
             } else {
