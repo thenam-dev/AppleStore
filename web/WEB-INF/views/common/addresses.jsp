@@ -1,4 +1,4 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c"   uri="jakarta.tags.core" %>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
 <!DOCTYPE html>
@@ -154,6 +154,24 @@
                         </button>
                     </div>
 
+                    <!-- Filter/Search Form -->
+                    <form action="${ctx}/addresses" method="get" style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+                        <input type="text" name="keyword" value="${keyword}" placeholder="Tìm kiếm địa chỉ, tên, SĐT..." class="input" style="flex: 1; min-width: 200px;">
+                        
+                        <select name="filter" class="input" style="width: 150px;" onchange="this.form.submit()">
+                            <option value="">Tất cả địa chỉ</option>
+                            <option value="default" ${filter == 'default' ? 'selected' : ''}>Mặc định</option>
+                            <option value="normal" ${filter == 'normal' ? 'selected' : ''}>Thường</option>
+                        </select>
+                        
+                        <select name="sort" class="input" style="width: 150px;" onchange="this.form.submit()">
+                            <option value="newest" ${sort == 'newest' ? 'selected' : ''}>Mới nhất</option>
+                            <option value="oldest" ${sort == 'oldest' ? 'selected' : ''}>Cũ nhất</option>
+                        </select>
+                        
+                        <button type="submit" class="btn ghost">Tìm</button>
+                    </form>
+
                     <!-- Alerts -->
                     <c:if test="${not empty requestScope.message}">
                         <div class="alert-msg success" style="margin-bottom: 24px;"><strong>Thành công!</strong> ${requestScope.message}</div>
@@ -181,7 +199,6 @@
                                         </div>
                                         <div class="address-detail">
                                             <c:out value="${addr.addressDetail}"/><br>
-                                            <c:out value="${addr.ward}"/>, <c:out value="${addr.district}"/>, <c:out value="${addr.province}"/>
                                             <c:if test="${addr.isDefault == 1}">
                                                 <br><span class="default-badge" style="display: inline-block; margin-top: 8px;">Mặc định</span>
                                             </c:if>
@@ -301,3 +318,5 @@
 </script>
 </body>
 </html>
+
+
