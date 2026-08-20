@@ -34,13 +34,13 @@ public class UserListServlet extends UserServletSupport {
         String sort = normalizeUserSort(request.getParameter("sort"));
         int currentPage = parsePage(request.getParameter("page"));
         int pageSize = config.AppConfig.PAGE_SIZE_ADMIN;
-        int totalUsers = userService.countUsers(keyword, role, status);
+        int totalUsers = userService.countStaffUsers(keyword, role, status);
         int totalPages = calculateTotalPages(totalUsers, pageSize);
         if (currentPage > totalPages) {
             currentPage = totalPages;
         }
 
-        List<User> users = userService.getUsers(keyword, role, status, sort, currentPage, pageSize);
+        List<User> users = userService.getStaffUsers(keyword, role, status, sort, currentPage, pageSize);
         String listQuery = buildUserListQueryString(keyword, role, status, sort);
 
         request.setAttribute("users", users);
@@ -55,6 +55,7 @@ public class UserListServlet extends UserServletSupport {
         request.setAttribute("totalUsers", totalUsers);
         request.setAttribute("listQuery", listQuery);
         request.setAttribute("listQuerySuffix", listQuery.isBlank() ? "" : "&" + listQuery);
+        request.setAttribute("currentAdminId", getCurrentAdminId(request));
         moveFlashMessagesToRequest(request);
 
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);

@@ -5,7 +5,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <c:set var="pageTitle" value="Người dùng · Quản trị HALO" />
+  <c:set var="pageTitle" value="Nhân sự · Quản trị HALO" />
   <jsp:include page="/WEB-INF/views/common/head.jsp" />
 </head>
 <body class="admin">
@@ -17,11 +17,11 @@
 
   <div class="adm-main">
     <div class="adm-bar">
-      <h2>Người dùng</h2>
+      <h2>Nhân sự</h2>
       <span style="font-size:13px;color:var(--ash)">Tổng phù hợp: ${totalUsers}</span>
       <div class="who">
-        <span><c:out value="${empty sessionScope.currentUser.fullName ? 'Quản trị' : sessionScope.currentUser.fullName}" /></span>
-        <span class="av"><c:out value="${empty sessionScope.currentUser.fullName ? 'AD' : fn:substring(sessionScope.currentUser.fullName, 0, 1)}" /></span>
+        <span><c:out value="${empty sessionScope.user.fullName ? 'Quản trị' : sessionScope.user.fullName}" /></span>
+        <span class="av"><c:out value="${empty sessionScope.user.fullName ? 'AD' : fn:substring(sessionScope.user.fullName, 0, 1)}" /></span>
       </div>
     </div>
 
@@ -30,7 +30,7 @@
 
       <div class="panel">
         <div class="panel-head">
-          <h3>Danh sách người dùng</h3>
+          <h3>Danh sách tài khoản nội bộ</h3>
           <div class="r">
             <a class="btn ghost sm" href="${appPath}/admin/users">Đặt lại</a>
           </div>
@@ -39,7 +39,7 @@
         <form class="toolbar" action="${appPath}/admin/users" method="get" name="adminUserFilterForm">
           <div class="search">
             <svg width="17" height="17"><use href="#i-search" /></svg>
-            <label class="sr-only" for="admin-users-search">Tìm người dùng</label>
+            <label class="sr-only" for="admin-users-search">Tìm nhân sự</label>
             <input id="admin-users-search" class="input" type="search" name="keyword" maxlength="100"
                    value="${fn:escapeXml(keyword)}" placeholder="Tên, email, số điện thoại">
           </div>
@@ -47,7 +47,7 @@
             <option value="">Tất cả vai trò</option>
             <c:forEach var="role" items="${roles}">
               <option value="${fn:escapeXml(role)}" ${selectedRole eq role ? 'selected' : ''}>
-                ${role eq 'CUSTOMER' ? 'Khách hàng' : role eq 'ADMIN' ? 'Quản trị viên' : role eq 'SALE_STAFF' ? 'Nhân viên bán hàng' : role eq 'DELIVERY' ? 'Nhân viên giao hàng' : role}
+                ${role eq 'ADMIN' ? 'Quản trị viên' : role eq 'SALE_STAFF' ? 'Nhân viên bán hàng' : role eq 'DELIVERY' ? 'Nhân viên giao hàng' : role}
               </option>
             </c:forEach>
           </select>
@@ -74,7 +74,7 @@
           <c:when test="${empty users}">
             <div class="empty">
               <div class="ring"><svg width="26" height="26"><use href="#i-user" /></svg></div>
-              <h3>Không tìm thấy người dùng</h3>
+              <h3>Không tìm thấy tài khoản nội bộ</h3>
               <p>Thử đổi từ khóa, vai trò hoặc trạng thái để xem lại dữ liệu.</p>
             </div>
           </c:when>
@@ -83,7 +83,7 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th>Người dùng</th>
+                    <th>Nhân sự</th>
                     <th>Liên hệ</th>
                     <th>Vai trò</th>
                     <th>Trạng thái</th>
@@ -94,7 +94,7 @@
                 </thead>
                 <tbody>
                   <c:forEach var="user" items="${users}">
-                    <c:set var="roleLabel" value="${user.role eq 'CUSTOMER' ? 'Khách hàng' : user.role eq 'ADMIN' ? 'Quản trị viên' : user.role eq 'SALE_STAFF' ? 'Nhân viên bán hàng' : user.role eq 'DELIVERY' ? 'Nhân viên giao hàng' : user.role}" />
+                    <c:set var="roleLabel" value="${user.role eq 'ADMIN' ? 'Quản trị viên' : user.role eq 'SALE_STAFF' ? 'Nhân viên bán hàng' : user.role eq 'DELIVERY' ? 'Nhân viên giao hàng' : user.role}" />
                     <c:set var="statusLabel" value="${user.status eq 'ACTIVE' ? 'Đang hoạt động' : user.status eq 'INACTIVE' ? 'Không hoạt động' : user.status eq 'LOCKED' ? 'Đã khóa' : user.status eq 'SUSPENDED' ? 'Tạm ngưng' : user.status}" />
                     <c:choose>
                       <c:when test="${user.status eq 'ACTIVE'}"><c:set var="statusClass" value="ok" /></c:when>
@@ -124,19 +124,26 @@
                           <a class="btn xs quiet" href="${appPath}/admin/users/edit?id=${user.userId}" title="Sửa">
                             <svg width="13" height="13"><use href="#i-edit" /></svg>
                           </a>
-                          <form class="inline-form" action="${appPath}/admin/users/status" method="post">
-                            <input type="hidden" name="userId" value="${user.userId}">
-                            <c:choose>
-                              <c:when test="${user.status eq 'ACTIVE'}">
-                                <input type="hidden" name="status" value="LOCKED">
-                                <button class="btn xs danger" type="submit">Khóa</button>
-                              </c:when>
-                              <c:otherwise>
-                                <input type="hidden" name="status" value="ACTIVE">
-                                <button class="btn xs" type="submit">Kích hoạt</button>
-                              </c:otherwise>
-                            </c:choose>
-                          </form>
+                          <c:choose>
+                            <c:when test="${user.userId eq currentAdminId}">
+                              <span class="tag">Tài khoản hiện tại</span>
+                            </c:when>
+                            <c:otherwise>
+                              <form class="inline-form" action="${appPath}/admin/users/status" method="post">
+                                <input type="hidden" name="userId" value="${user.userId}">
+                                <c:choose>
+                                  <c:when test="${user.status eq 'ACTIVE'}">
+                                    <input type="hidden" name="status" value="LOCKED">
+                                    <button class="btn xs danger" type="submit">Khóa</button>
+                                  </c:when>
+                                  <c:otherwise>
+                                    <input type="hidden" name="status" value="ACTIVE">
+                                    <button class="btn xs" type="submit">Kích hoạt</button>
+                                  </c:otherwise>
+                                </c:choose>
+                              </form>
+                            </c:otherwise>
+                          </c:choose>
                         </div>
                       </td>
                     </tr>
@@ -145,7 +152,7 @@
               </table>
             </div>
             <c:set var="pageUrl" value="${appPath}/admin/users" />
-            <c:set var="itemLabel" value="người dùng" />
+            <c:set var="itemLabel" value="tài khoản nội bộ" />
             <c:set var="totalItems" value="${totalUsers}" />
             <jsp:include page="/WEB-INF/views/common/pagination.jsp" />
           </c:otherwise>

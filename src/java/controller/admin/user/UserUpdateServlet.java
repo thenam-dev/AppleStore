@@ -20,7 +20,7 @@ public class UserUpdateServlet extends UserServletSupport {
 
         try {
             User user = buildUserFromRequest(request);
-            userService.updateUser(user);
+            userService.updateStaffUser(user, getCurrentAdminId(request));
             redirectToUserListWithMessage(request, response, FLASH_SUCCESS_KEY, "Cập nhật người dùng thành công.");
         } catch (SQLException | IllegalArgumentException ex) {
             forwardBackToForm(request, response, ex.getMessage());
@@ -40,6 +40,7 @@ public class UserUpdateServlet extends UserServletSupport {
         user.setEmailVerified("on".equals(request.getParameter("emailVerified")));
 
         request.setAttribute("user", user);
+        request.setAttribute("currentAdminId", getCurrentAdminId(request));
         request.setAttribute(FLASH_ERROR_KEY, message);
         setUserReferenceData(request);
         request.getRequestDispatcher(FORM_VIEW).forward(request, response);

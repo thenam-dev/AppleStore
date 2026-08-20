@@ -18,9 +18,10 @@ public class UserEditServlet extends UserServletSupport {
             throws ServletException, IOException {
         try {
             int userId = parseInt(request.getParameter("id"), "ID người dùng không hợp lệ.");
-            User user = userService.getUserById(userId);
+            User user = userService.getStaffUserById(userId);
 
             request.setAttribute("user", user);
+            request.setAttribute("currentAdminId", getCurrentAdminId(request));
             moveFlashMessagesToRequest(request);
             setUserReferenceData(request);
             request.getRequestDispatcher(FORM_VIEW).forward(request, response);
