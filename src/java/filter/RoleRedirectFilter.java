@@ -40,9 +40,9 @@ public class RoleRedirectFilter implements Filter {
             if (!AppConfig.ROLE_CUSTOMER.equals(role)) {
                 String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length());
                 
-                // Những đường dẫn không bị chặn
                 boolean isAllowedPath = path.startsWith("/admin") 
                                      || path.startsWith("/staff") 
+                                     || path.startsWith("/delivery")
                                      || path.startsWith("/logout") 
                                      || path.startsWith("/assets") 
                                      || path.startsWith("/change-password");
@@ -56,11 +56,18 @@ public class RoleRedirectFilter implements Filter {
                         httpResponse.sendRedirect(httpRequest.getContextPath() + "/staff/dashboard");
                         return;
                     } 
-                    // Nếu là Shipper, đá về trang Tasks
+                    // Nếu là Shipper, đá về trang Báo cáo năng suất
                     else if ("DELIVERY".equals(role)) {
-                        httpResponse.sendRedirect(httpRequest.getContextPath() + "/staff/tasks");
+                        httpResponse.sendRedirect(httpRequest.getContextPath() + "/delivery/dashboard");
                         return;
                     }
+                }
+            } else {
+                String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length());
+                // Customer chỉ bị chặn không cho vào /admin, /staff, /delivery
+                if (path.startsWith("/admin") || path.startsWith("/staff") || path.startsWith("/delivery")) {
+                    httpResponse.sendRedirect(httpRequest.getContextPath() + "/home");
+                    return;
                 }
             }
         }

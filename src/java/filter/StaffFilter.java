@@ -14,7 +14,7 @@ import model.entity.user.User;
 
 import java.io.IOException;
 
-@WebFilter(urlPatterns = {"/staff/*"})
+@WebFilter(urlPatterns = {"/staff/*", "/delivery/*"})
 public class StaffFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)

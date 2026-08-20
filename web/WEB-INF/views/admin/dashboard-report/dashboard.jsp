@@ -44,39 +44,45 @@
       </form>
 
       <div class="stats">
-        <div class="stat">
-          <div class="lab">Doanh thu</div>
-          <div class="val"><fmt:formatNumber value="${stats != null ? stats.totalRevenue : 0}" type="currency" currencyCode="VND" /></div>
-          <div class="delta">Đơn hàng đã giao thành công</div>
-        </div>
+        <c:if test="${sessionScope.user.role ne 'DELIVERY'}">
+          <div class="stat">
+            <div class="lab">Doanh thu</div>
+            <div class="val"><fmt:formatNumber value="${stats != null ? stats.totalRevenue : 0}" type="currency" currencyCode="VND" /></div>
+            <div class="delta">Đơn hàng đã giao thành công</div>
+          </div>
+        </c:if>
         <div class="stat">
           <div class="lab">Đơn hàng</div>
           <div class="val"><c:out value="${stats != null ? stats.totalOrders : 0}" /></div>
           <div class="delta">Đang ở mọi trạng thái</div>
         </div>
-        <div class="stat">
-          <div class="lab">Sản phẩm</div>
-          <div class="val"><c:out value="${stats != null ? stats.activeProducts : 0}" /></div>
-          <div class="delta">Sản phẩm đang kinh doanh</div>
-        </div>
-        <div class="stat">
-          <div class="lab">Người dùng</div>
-          <div class="val"><c:out value="${stats != null ? stats.totalUsers : 0}" /></div>
-          <div class="delta">Tài khoản đã đăng ký</div>
-        </div>
+        <c:if test="${sessionScope.user.role ne 'DELIVERY'}">
+          <div class="stat">
+            <div class="lab">Sản phẩm</div>
+            <div class="val"><c:out value="${stats != null ? stats.activeProducts : 0}" /></div>
+            <div class="delta">Sản phẩm đang kinh doanh</div>
+          </div>
+          <div class="stat">
+            <div class="lab">Người dùng</div>
+            <div class="val"><c:out value="${stats != null ? stats.totalUsers : 0}" /></div>
+            <div class="delta">Tài khoản đã đăng ký</div>
+          </div>
+        </c:if>
       </div>
 
       <div class="split">
-        <div class="panel">
-          <div class="panel-head">
-            <h3>Biểu đồ doanh thu theo thời gian</h3>
-          </div>
-          <div class="panel-pad">
-            <div style="height:350px">
-              <canvas id="revenueChart" style="width: 100%; height: 100%;"></canvas>
+        <c:if test="${sessionScope.user.role ne 'DELIVERY'}">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Biểu đồ doanh thu theo thời gian</h3>
+            </div>
+            <div class="panel-pad">
+              <div style="height:350px">
+                <canvas id="revenueChart" style="width: 100%; height: 100%;"></canvas>
+              </div>
             </div>
           </div>
-        </div>
+        </c:if>
         <div class="panel" style="flex: 0 0 320px;">
           <div class="panel-head">
             <h3>Tỉ lệ trạng thái</h3>
@@ -184,6 +190,7 @@
             </div>
           </div>
 
+        <c:if test="${sessionScope.user.role ne 'DELIVERY'}">
           <div class="panel">
             <div class="panel-head">
               <h3>Sản phẩm bán chạy</h3>
@@ -213,6 +220,7 @@
               </c:if>
             </div>
           </div>
+        </c:if>
         </div>
       </div>
     </div>

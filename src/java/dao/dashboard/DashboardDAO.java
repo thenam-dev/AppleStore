@@ -42,21 +42,32 @@ public class DashboardDAO {
     // 3. Lấy đơn hàng mới nhất (Đổi TOP thành LIMIT)
 
     public List<Order> getRecentOrders(int limit) {
-        return getRecentOrders(limit, null);
+        return getRecentOrders(limit, null, null, null, "ADMIN");
     }
 
-    public List<Order> getRecentOrders(int limit, String startDate, String endDate, Integer staffId) {
+    public List<Order> getRecentOrders(int limit, String startDate, String endDate, Integer staffId, String staffRole) {
         List<Order> list = new ArrayList<>();
-        String sql = "SELECT order_id, recipient_name, created_at, final_amount, status FROM orders WHERE 1=1 ";
+        String sql = "SELECT o.order_id, o.recipient_name, o.created_at, o.final_amount, o.status FROM orders o ";
+        
+        if ("DELIVERY".equals(staffRole)) {
+            sql += " JOIN deliveries d ON o.order_id = d.order_id ";
+        }
+        
+        sql += " WHERE 1=1 ";
         
         boolean hasDateFilter = (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty());
         if (hasDateFilter) {
-            sql += " AND created_at BETWEEN ? AND ? ";
+            sql += " AND o.created_at BETWEEN ? AND ? ";
         }
+        
         if (staffId != null) {
-            sql += " AND assigned_sale_staff_id = ? ";
+            if ("DELIVERY".equals(staffRole)) {
+                sql += " AND d.staff_id = ? ";
+            } else if ("SALE_STAFF".equals(staffRole)) {
+                sql += " AND o.assigned_sale_staff_id = ? ";
+            }
         }
-        sql += "ORDER BY created_at DESC LIMIT ?";
+        sql += "ORDER BY o.created_at DESC LIMIT ?";
         
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             int paramIndex = 1;
@@ -186,21 +197,31 @@ public class DashboardDAO {
         return map;
     }
 
-    public LinkedHashMap<String, Integer> getOrderStatusStats(String startDate, String endDate, Integer staffId) {
+    public LinkedHashMap<String, Integer> getOrderStatusStats(String startDate, String endDate, Integer staffId, String staffRole) {
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>();
         
-        String sql = "SELECT status, COUNT(*) as status_count FROM orders WHERE 1=1";
+        String sql = "SELECT o.status, COUNT(*) as status_count FROM orders o ";
+        
+        if ("DELIVERY".equals(staffRole)) {
+            sql += " JOIN deliveries d ON o.order_id = d.order_id ";
+        }
+        
+        sql += " WHERE 1=1 ";
                      
         boolean hasDateFilter = (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty());
         if (hasDateFilter) {
-            sql += " AND created_at BETWEEN ? AND ?";
+            sql += " AND o.created_at BETWEEN ? AND ?";
         }
         
         if (staffId != null) {
-            sql += " AND assigned_sale_staff_id = ?";
+            if ("DELIVERY".equals(staffRole)) {
+                sql += " AND d.staff_id = ?";
+            } else if ("SALE_STAFF".equals(staffRole)) {
+                sql += " AND o.assigned_sale_staff_id = ?";
+            }
         }
         
-        sql += " GROUP BY status";
+        sql += " GROUP BY o.status";
         
         try (Connection conn = DBConnection.getConnection(); 
              PreparedStatement ps = conn.prepareStatement(sql)) {
