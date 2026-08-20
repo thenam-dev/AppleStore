@@ -2,6 +2,8 @@ package model.entity.promtion;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Promotion {
 
@@ -11,10 +13,13 @@ public class Promotion {
     private BigDecimal discountMax;
     private BigDecimal discountValue;
     private BigDecimal minOrderValue;
-    private String scope; // ORDER, PRODUCT
-    private String benefitTarget; // MERCHANDISE, SHIPPING, PRODUCT, PAYMENT_METHOD
-    private Integer productId;
-    private Integer categoryId;
+    private String scope; // ORDER, PRODUCT, CATEGORY
+    private String benefitTarget; // MERCHANDISE, SHIPPING, PRODUCT
+
+    // ĐÃ THAY ĐỔI: Chuyển từ biến đơn sang List (Mảng)
+    private List<Integer> productIds = new ArrayList<>();
+    private List<Integer> categoryIds = new ArrayList<>();
+
     private Integer maxUses;
     private int usedCount;
     private boolean canStack;
@@ -29,29 +34,7 @@ public class Promotion {
     public Promotion() {
     }
 
-    public Promotion(int promoId, String code, String discountType, BigDecimal discountMax, BigDecimal discountValue, BigDecimal minOrderValue, String scope, String benefitTarget, Integer productId, Integer categoryId, Integer maxUses, int usedCount, boolean canStack, LocalDateTime validFrom, LocalDateTime validUntil, int createdBy, LocalDateTime createdAt, LocalDateTime updatedAt, boolean isDeleted, boolean isActive) {
-        this.promoId = promoId;
-        this.code = code;
-        this.discountType = discountType;
-        this.discountMax = discountMax;
-        this.discountValue = discountValue;
-        this.minOrderValue = minOrderValue;
-        this.scope = scope;
-        this.benefitTarget = benefitTarget;
-        this.productId = productId;
-        this.categoryId = categoryId;
-        this.maxUses = maxUses;
-        this.usedCount = usedCount;
-        this.canStack = canStack;
-        this.validFrom = validFrom;
-        this.validUntil = validUntil;
-        this.createdBy = createdBy;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.isDeleted = isDeleted;
-        this.isActive = isActive;
-    }
-
+    // Các hàm Get/Set cơ bản
     public int getPromoId() {
         return promoId;
     }
@@ -116,20 +99,21 @@ public class Promotion {
         this.benefitTarget = benefitTarget;
     }
 
-    public Integer getProductId() {
-        return productId;
+    // ĐÃ THAY ĐỔI: Get/Set cho Mảng ID
+    public List<Integer> getProductIds() {
+        return productIds;
     }
 
-    public void setProductId(Integer productId) {
-        this.productId = productId;
+    public void setProductIds(List<Integer> productIds) {
+        this.productIds = productIds;
     }
 
-    public Integer getCategoryId() {
-        return categoryId;
+    public List<Integer> getCategoryIds() {
+        return categoryIds;
     }
 
-    public void setCategoryId(Integer categoryId) {
-        this.categoryId = categoryId;
+    public void setCategoryIds(List<Integer> categoryIds) {
+        this.categoryIds = categoryIds;
     }
 
     public Integer getMaxUses() {
