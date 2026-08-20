@@ -1,6 +1,7 @@
 package service.catalog;
 
 import dao.catalog.CategoryDAO;
+import dao.catalog.ProductDAO;
 import model.entity.catalog.Category;
 
 import java.sql.SQLException;
@@ -22,15 +23,22 @@ public class CategoryService {
     );
 
     private final CategoryDAO categoryDAO;
+    private final ProductDAO productDAO;
 
     /** Khởi tạo service với DAO mặc định dùng trong luồng CRUD danh mục. */
     public CategoryService() {
-        this(new CategoryDAO());
+        this(new CategoryDAO(), new ProductDAO());
     }
 
     /** Cho phép truyền DAO từ ngoài vào để dễ kiểm thử hoặc thay thế nguồn dữ liệu. */
     public CategoryService(CategoryDAO categoryDAO) {
+        this(categoryDAO, new ProductDAO());
+    }
+
+    /** Cho phép truyền DAO từ ngoài vào để dễ kiểm thử hoặc thay thế nguồn dữ liệu. */
+    public CategoryService(CategoryDAO categoryDAO, ProductDAO productDAO) {
         this.categoryDAO = categoryDAO;
+        this.productDAO = productDAO;
     }
 
     /** Lấy toàn bộ danh mục, thường dùng để tính thống kê trên màn quản trị. */
@@ -110,7 +118,20 @@ public class CategoryService {
     /** Đổi trạng thái danh mục bằng cách map ACTIVE/INACTIVE sang cờ isActive. */
     public void changeCategoryStatus(int categoryId, String status) throws SQLException {
         Category category = getCategoryById(categoryId);
-        category.setIsActive("ACTIVE".equals(normalizeStatus(status)));
+        String normalizedStatus = normalizeStatus(status);
+        if (normalizedStatus == null) {
+            throw new IllegalArgumentException("Trạng thái danh mục không hợp lệ.");
+        }
+        boolean activate = "ACTIVE".equals(normalizedStatus);
+        if (!activate) {
+            int activeProductCount = productDAO.countActiveByCategory(categoryId);
+            if (activeProductCount > 0) {
+                throw new IllegalArgumentException("Không thể tắt danh mục " + category.getName()
+                        + " vì vẫn còn " + activeProductCount
+                        + " sản phẩm đang bán. Vui lòng tắt các sản phẩm trước.");
+            }
+        }
+        category.setIsActive(activate);
 
         if (!categoryDAO.update(category)) {
             throw new IllegalArgumentException("Danh mục không tồn tại.");
