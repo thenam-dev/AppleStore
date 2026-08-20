@@ -18,11 +18,7 @@
     </div>
   </div>
   
-  <div class="home-action">
-    <a class="home-link" href="${ctx}/home">
-      <svg width="17" height="17"><use href="#i-home" /></svg>Về trang chủ
-    </a>
-  </div>
+
 
   <%-- Menu của Admin --%>
   <c:if test="${isAdmin}">
