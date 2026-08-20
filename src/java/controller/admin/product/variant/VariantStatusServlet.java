@@ -22,7 +22,7 @@ public class VariantStatusServlet extends VariantServletSupport {
             int variantId = parseInt(request.getParameter("variantId"), "ID biến thể không hợp lệ.");
             productId = parseInt(request.getParameter("productId"), "ID sản phẩm không hợp lệ.");
             boolean isActive = parseRequiredVariantStatusToActive(request.getParameter("status"));
-            productVariantService.changeStatus(variantId, isActive);
+            productVariantService.changeStatus(productId, variantId, isActive);
             redirectToVariantListWithMessage(request, response, productId, FLASH_SUCCESS_KEY, "Cập nhật trạng thái biến thể thành công.");
         } catch (SQLException | IllegalArgumentException ex) {
             if (productId > 0) {

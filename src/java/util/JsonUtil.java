@@ -15,4 +15,8 @@ public class JsonUtil {
     public static Map fromJson(String json, Class<Map> clazz) throws Exception {
         return mapper.readValue(json, clazz);
     }
+
+    public static String toJson(Object value) throws Exception {
+        return mapper.writeValueAsString(value);
+    }
 }

@@ -63,7 +63,7 @@ public class VariantUpdateServlet extends VariantServletSupport {
         setManagedProduct(request, managedProduct);
         request.setAttribute("variant", variant);
         request.setAttribute(FLASH_ERROR_KEY, message);
-        setVariantReferenceData(request);
+        setVariantReferenceData(request, managedProduct);
         request.setAttribute("discountStartValue", request.getParameter("discountStart"));
         request.setAttribute("discountEndValue", request.getParameter("discountEnd"));
         request.getRequestDispatcher(FORM_VIEW).forward(request, response);
