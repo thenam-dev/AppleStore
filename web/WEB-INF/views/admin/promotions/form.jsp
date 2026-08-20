@@ -140,21 +140,14 @@
                                     <div class="help" style="margin-top: 5px;">Tick chọn các sản phẩm cụ thể muốn áp dụng mã giảm giá.</div>
                                 </div>
 
-                                <!-- Tùy chọn hệ thống -->
+                                <!-- Tùy chọn hệ thống (Đã bỏ canStack, chỉ giữ lại trạng thái kích hoạt) -->
                                 <div class="field full" style="margin-top: 5px;">
                                     <label>Tùy chọn hệ thống</label>
-                                    <div style="display: flex; align-items: center; gap: 40px; height: 48px; background: #f8f9fa; padding: 0 16px; border-radius: 6px; border: 1px solid var(--line, #eee);">
-
-                                        <div style="display:flex; align-items:center; gap:8px;">
-                                            <input id="canStack" type="checkbox" name="canStack" value="1" ${promo.canStack ? 'checked' : ''}>
-                                            <label for="canStack" style="margin:0; font-weight:500; font-size:13.5px; cursor: pointer;">Cho phép dùng chung với mã khác loại</label>
-                                        </div>
-
+                                    <div style="display: flex; align-items: center; height: 48px; background: #f8f9fa; padding: 0 16px; border-radius: 6px; border: 1px solid var(--line, #eee);">
                                         <div style="display:flex; align-items:center; gap:8px;">
                                             <input id="isActive" type="checkbox" name="isActive" value="true" ${not isEdit or promo.IsActive() ? 'checked' : ''}>
                                             <label for="isActive" style="margin:0; font-weight:500; font-size:13.5px; cursor: pointer; color: var(--titan);">Kích hoạt chạy ngay</label>
                                         </div>
-
                                     </div>
                                 </div>
 
