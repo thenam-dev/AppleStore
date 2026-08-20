@@ -213,6 +213,15 @@ public class PromotionService {
         return false;
     }
 
+    /**
+     * Hoàn lại (best-effort) used_count đã tăng nhầm cho 1 mã khi checkout phải
+     * huỷ ngang giữa chừng - ví dụ đã ghi nhận thành công mã MERCHANDISE nhưng
+     * mã SHIPPING đi kèm lại vừa hết lượt dùng.
+     */
+    public void voidPromotionUsage(Connection conn, int promoId) throws SQLException {
+        promotionDAO.decrementUsedCount(conn, promoId);
+    }
+
     public List<Promotion> getAvailableVouchersForCart() throws SQLException {
         return promotionDAO.findAvailableVouchersForCart();
     }

@@ -125,12 +125,18 @@ public class CheckoutServlet extends HttpServlet {
         form.notes = request.getParameter("notes");
         form.paymentMethod = request.getParameter("paymentMethod");
 
-        BigDecimal totalDiscount = BigDecimal.ZERO;
-        if (merchandiseDiscount != null) totalDiscount = totalDiscount.add(merchandiseDiscount);
-        if (shippingDiscount != null) totalDiscount = totalDiscount.add(shippingDiscount);
-        
-        form.appliedPromo = merchandisePromo != null ? merchandisePromo : shippingPromo; 
-        form.discountAmount = totalDiscount;
+        // Truyền ĐẦY ĐỦ từng mã đã áp dụng (không chỉ 1 mã) để CheckoutService ghi
+        // nhận used_count riêng cho cả mã MERCHANDISE lẫn mã SHIPPING khi 2 mã được
+        // stack cùng lúc - trước đây chỉ giữ 1 mã nên mã còn lại không bao giờ được
+        // trừ lượt dùng.
+        List<CheckoutService.AppliedPromo> appliedPromos = new java.util.ArrayList<>();
+        if (merchandisePromo != null && merchandiseDiscount != null) {
+            appliedPromos.add(new CheckoutService.AppliedPromo(merchandisePromo, merchandiseDiscount));
+        }
+        if (shippingPromo != null && shippingDiscount != null) {
+            appliedPromos.add(new CheckoutService.AppliedPromo(shippingPromo, shippingDiscount));
+        }
+        form.appliedPromos = appliedPromos;
 
         Set<Integer> selectedIds = CheckoutSelectionUtil.load(request);
         form.selectedCartItemIds = selectedIds;

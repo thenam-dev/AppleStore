@@ -305,6 +305,19 @@ public class PromotionDAO {
         }
     }
 
+    /**
+     * Hoàn lại used_count đã tăng nhầm khi checkout phải huỷ ngang giữa chừng
+     * (best-effort, không có transaction xuyên suốt - theo đúng pattern
+     * "rollback nghiệp vụ" của CheckoutService).
+     */
+    public void decrementUsedCount(Connection conn, int promoId) throws SQLException {
+        String sql = "UPDATE promotions SET used_count = used_count - 1 WHERE promo_id = ? AND used_count > 0";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, promoId);
+            ps.executeUpdate();
+        }
+    }
+
     public List<Promotion> findAvailableVouchersForCart() throws SQLException {
         List<Promotion> list = new ArrayList<>();
         // Bỏ điều kiện lọc cứng scope = 'ORDER' để hiển thị tất cả các mã đang hoạt động và còn hạn
