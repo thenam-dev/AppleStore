@@ -6,19 +6,12 @@ package model.entity.user;
 
 import java.sql.Timestamp;
 
-/**
- *
- * @author admin
- */
 public class UserAddress {
     private int addressId;
     private int userId;
     private String recipientName;
     private String recipientPhone;
     private String addressDetail;
-    private String province;
-    private String district;
-    private String ward;
     private int isDefault; // 1 là mặc định, 0 là bình thường
     private int isDeleted; // 1 là đã xóa, 0 là chưa xóa
     private Timestamp createdAt;
@@ -27,15 +20,12 @@ public class UserAddress {
     public UserAddress() {
     }
 
-    public UserAddress(int addressId, int userId, String recipientName, String recipientPhone, String addressDetail, String province, String district, String ward, int isDefault, int isDeleted, Timestamp createdAt, Timestamp updatedAt) {
+    public UserAddress(int addressId, int userId, String recipientName, String recipientPhone, String addressDetail, int isDefault, int isDeleted, Timestamp createdAt, Timestamp updatedAt) {
         this.addressId = addressId;
         this.userId = userId;
         this.recipientName = recipientName;
         this.recipientPhone = recipientPhone;
         this.addressDetail = addressDetail;
-        this.province = province;
-        this.district = district;
-        this.ward = ward;
         this.isDefault = isDefault;
         this.isDeleted = isDeleted;
         this.createdAt = createdAt;
@@ -82,30 +72,6 @@ public class UserAddress {
         this.addressDetail = addressDetail;
     }
 
-    public String getProvince() {
-        return province;
-    }
-
-    public void setProvince(String province) {
-        this.province = province;
-    }
-
-    public String getDistrict() {
-        return district;
-    }
-
-    public void setDistrict(String district) {
-        this.district = district;
-    }
-
-    public String getWard() {
-        return ward;
-    }
-
-    public void setWard(String ward) {
-        this.ward = ward;
-    }
-
     public int getIsDefault() {
         return isDefault;
     }
@@ -137,7 +103,4 @@ public class UserAddress {
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
     }
-
-    
-    
 }

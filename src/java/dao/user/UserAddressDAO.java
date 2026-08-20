@@ -29,9 +29,6 @@ public class UserAddressDAO {
                 address.setUserId(rs.getInt("user_id"));
                 address.setRecipientName(rs.getString("recipient_name"));
                 address.setRecipientPhone(rs.getString("recipient_phone"));
-                address.setProvince(rs.getString("province"));
-                address.setDistrict(rs.getString("district"));
-                address.setWard(rs.getString("ward"));
                 address.setAddressDetail(rs.getString("address_detail"));
                 address.setIsDefault(rs.getInt("is_default"));
                 address.setIsDeleted(rs.getInt("is_deleted"));
@@ -47,17 +44,14 @@ public class UserAddressDAO {
     
         // 2. Thêm địa chỉ mới
     public boolean addAddress(UserAddress address) {
-        String sql = "INSERT INTO user_addresses (user_id, recipient_name, recipient_phone, province, district, ward, address_detail, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO user_addresses (user_id, recipient_name, recipient_phone, address_detail, is_default) VALUES (?, ?, ?, ?, ?)";
         try (Connection connection = DBConnection.getConnection(); 
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, address.getUserId());
             ps.setString(2, address.getRecipientName());
             ps.setString(3, address.getRecipientPhone());
-            ps.setString(4, address.getProvince());
-            ps.setString(5, address.getDistrict());
-            ps.setString(6, address.getWard());
-            ps.setString(7, address.getAddressDetail());
-            ps.setInt(8, address.getIsDefault());
+            ps.setString(4, address.getAddressDetail());
+            ps.setInt(5, address.getIsDefault());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -66,17 +60,14 @@ public class UserAddressDAO {
     }
     // 3. Cập nhật địa chỉ
     public boolean updateAddress(UserAddress address) {
-        String sql = "UPDATE user_addresses SET recipient_name=?, recipient_phone=?, province=?, district=?, ward=?, address_detail=? WHERE address_id=? AND user_id=?";
+        String sql = "UPDATE user_addresses SET recipient_name=?, recipient_phone=?, address_detail=? WHERE address_id=? AND user_id=?";
         try (Connection connection = DBConnection.getConnection(); 
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, address.getRecipientName());
             ps.setString(2, address.getRecipientPhone());
-            ps.setString(3, address.getProvince());
-            ps.setString(4, address.getDistrict());
-            ps.setString(5, address.getWard());
-            ps.setString(6, address.getAddressDetail());
-            ps.setInt(7, address.getAddressId());
-            ps.setInt(8, address.getUserId());
+            ps.setString(3, address.getAddressDetail());
+            ps.setInt(4, address.getAddressId());
+            ps.setInt(5, address.getUserId());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -159,9 +150,6 @@ public class UserAddressDAO {
                     address.setUserId(rs.getInt("user_id"));
                     address.setRecipientName(rs.getString("recipient_name"));
                     address.setRecipientPhone(rs.getString("recipient_phone"));
-                    address.setProvince(rs.getString("province"));
-                    address.setDistrict(rs.getString("district"));
-                    address.setWard(rs.getString("ward"));
                     address.setAddressDetail(rs.getString("address_detail"));
                     address.setIsDefault(rs.getInt("is_default"));
                     address.setIsDeleted(rs.getInt("is_deleted"));

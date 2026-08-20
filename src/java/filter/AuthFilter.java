@@ -23,8 +23,12 @@ import java.nio.charset.StandardCharsets;
     "/order-success",
     "/profile",
     "/update-profile",
-    "/address",
-    "/change-password"
+    "/change-password",
+    "/addresses",
+    "/add-address",
+    "/update-address",
+    "/delete-address",
+    "/set-default-address"
 })
 public class AuthFilter implements Filter {
 

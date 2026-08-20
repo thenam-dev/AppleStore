@@ -27,12 +27,8 @@ import service.user.UserAddressService;
     "/set-default-address"})
 public class AddressServlet extends HttpServlet {
 
-    private UserAddressService addressService;
-
-    @Override
-    public void init() throws ServletException {
-        addressService = new UserAddressService();
-    }
+    UserAddressService addressService=new UserAddressService();
+    
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -69,10 +65,7 @@ public class AddressServlet extends HttpServlet {
 
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
-        if (user == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        
         try {
             switch (path) {
                 case "/add-address": {
