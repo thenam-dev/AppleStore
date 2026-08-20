@@ -71,4 +71,16 @@ public class StaffOrderService {
         staffOrderDAO.insertStatusHistory(orderId, "DELIVERED", shipperId, "Shipper xác nhận giao hàng thành công");
         staffOrderDAO.updateDeliveryCompleted(orderId);
     }
+    
+    public List<Order> getFilteredOrdersByRole(String role, int userId, String staffFilter, String status, String keyword, int offset, int limit) throws SQLException {
+        return staffOrderDAO.findFilteredOrdersByRole(role, userId, staffFilter, status, keyword, offset, limit);
+    }
+
+    public boolean reassignOrder(int orderId, int newStaffId) throws SQLException {
+        return staffOrderDAO.updateAssignedSaleStaff(orderId, newStaffId);
+    }
+
+    public List<Map<String, Object>> getActiveSaleStaffList() throws SQLException {
+        return staffOrderDAO.getActiveSaleStaffList();
+    }
 }

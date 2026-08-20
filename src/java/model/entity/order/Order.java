@@ -22,10 +22,27 @@ public class Order {
     private LocalDateTime createdAt;
     private List<OrderItem> items;
     private List<OrderStatusHistory> statusHistory;
-
+    private Integer assignedSaleStaffId;
+    private String assignedSaleStaffName;
     // Bổ sung thêm thông tin Shipper phụ trách đơn hàng
     private String shipperName;
     private Integer shipperId;
+
+    public Integer getAssignedSaleStaffId() {
+        return assignedSaleStaffId;
+    }
+
+    public void setAssignedSaleStaffId(Integer assignedSaleStaffId) {
+        this.assignedSaleStaffId = assignedSaleStaffId;
+    }
+
+    public String getAssignedSaleStaffName() {
+        return assignedSaleStaffName;
+    }
+
+    public void setAssignedSaleStaffName(String assignedSaleStaffName) {
+        this.assignedSaleStaffName = assignedSaleStaffName;
+    }
 
     public int getOrderId() {
         return orderId;
@@ -176,5 +193,13 @@ public class Order {
             return "";
         }
         return this.createdAt.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy", new java.util.Locale("vi", "VN")));
+    }
+
+    // Dùng cho hóa đơn xuất ở order-success.jsp - cần cả ngày và giờ, format dd/MM/yyyy HH:mm.
+    public String getFormattedCreatedAtFull() {
+        if (this.createdAt == null) {
+            return "";
+        }
+        return this.createdAt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 }

@@ -95,11 +95,15 @@
       </div>
     </c:when>
     <c:otherwise>
-      <div class="p-grid">
-        <c:forEach var="p" items="${featuredList}">
-          <c:set var="card" value="${p}" scope="request"/>
-          <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
-        </c:forEach>
+      <div class="p-grid-pager" data-page-size="4">
+        <div class="p-grid">
+          <c:forEach var="p" items="${featuredList}">
+            <c:set var="card" value="${p}" scope="request"/>
+            <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
+          </c:forEach>
+        </div>
+        <nav class="pages home-pager" aria-label="Phân trang sản phẩm nổi bật"
+             style="display:flex;justify-content:center;gap:5px;margin-top:18px"></nav>
       </div>
     </c:otherwise>
   </c:choose>
@@ -116,11 +120,15 @@
       </div>
     </c:when>
     <c:otherwise>
-      <div class="p-grid">
-        <c:forEach var="p" items="${newList}">
-          <c:set var="card" value="${p}" scope="request"/>
-          <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
-        </c:forEach>
+      <div class="p-grid-pager" data-page-size="4">
+        <div class="p-grid">
+          <c:forEach var="p" items="${newList}">
+            <c:set var="card" value="${p}" scope="request"/>
+            <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
+          </c:forEach>
+        </div>
+        <nav class="pages home-pager" aria-label="Phân trang hàng mới về"
+             style="display:flex;justify-content:center;gap:5px;margin-top:18px"></nav>
       </div>
     </c:otherwise>
   </c:choose>
@@ -137,13 +145,17 @@
       </div>
     </c:when>
     <c:otherwise>
-      <div class="p-grid">
-        <c:forEach var="p" items="${bestSellerList}" varStatus="st">
-          <c:set var="card" value="${p}" scope="request"/>
-          <c:set var="cardBadge" value="#${st.count} bán chạy" scope="request"/>
-          <c:set var="cardMeta" value="Đã bán ${p.soldQuantity} máy" scope="request"/>
-          <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
-        </c:forEach>
+      <div class="p-grid-pager" data-page-size="4">
+        <div class="p-grid">
+          <c:forEach var="p" items="${bestSellerList}" varStatus="st">
+            <c:set var="card" value="${p}" scope="request"/>
+            <c:set var="cardBadge" value="#${st.count} bán chạy" scope="request"/>
+            <c:set var="cardMeta" value="Đã bán ${p.soldQuantity} máy" scope="request"/>
+            <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
+          </c:forEach>
+        </div>
+        <nav class="pages home-pager" aria-label="Phân trang bán chạy nhất"
+             style="display:flex;justify-content:center;gap:5px;margin-top:18px"></nav>
       </div>
     </c:otherwise>
   </c:choose>
@@ -161,5 +173,78 @@
 </section>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp"/>
+
+<%-- Phân trang phía client cho các khối sản phẩm ở trang chủ (nổi bật/mới/bán
+     chạy): mỗi khối .p-grid-pager chia .p-grid con của nó thành các trang
+     data-page-size sản phẩm/trang (mặc định 4, đúng số cột của .p-grid),
+     dựng nút trang vào .home-pager, tái dùng class .pg/.pg.on/.pg.disabled
+     có sẵn (cùng giao diện với phân trang ở /products) - không cần tải lại
+     trang, không cần thêm tham số server. Chỉ 1 trang thì ẩn thanh phân trang. --%>
+<script>
+(function () {
+  function buildPager(root) {
+    var grid = root.querySelector('.p-grid');
+    var nav = root.querySelector('.home-pager');
+    if (!grid || !nav) { return; }
+
+    var cards = Array.prototype.slice.call(grid.children);
+    var pageSize = parseInt(root.getAttribute('data-page-size'), 10) || 4;
+    var totalPages = Math.ceil(cards.length / pageSize);
+    if (totalPages <= 1) { return; }
+
+    var current = 1;
+
+    function render() {
+      cards.forEach(function (card, idx) {
+        var page = Math.floor(idx / pageSize) + 1;
+        card.style.display = (page === current) ? '' : 'none';
+      });
+
+      nav.innerHTML = '';
+
+      var prev = document.createElement('a');
+      prev.href = '#';
+      prev.className = 'pg' + (current <= 1 ? ' disabled' : '');
+      prev.setAttribute('aria-label', 'Trang trước');
+      prev.textContent = '‹';
+      prev.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (current > 1) { current--; render(); }
+      });
+      nav.appendChild(prev);
+
+      for (var i = 1; i <= totalPages; i++) {
+        (function (pageNum) {
+          var btn = document.createElement('a');
+          btn.href = '#';
+          btn.className = 'pg' + (pageNum === current ? ' on' : '');
+          btn.textContent = pageNum;
+          btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            current = pageNum;
+            render();
+          });
+          nav.appendChild(btn);
+        })(i);
+      }
+
+      var next = document.createElement('a');
+      next.href = '#';
+      next.className = 'pg' + (current >= totalPages ? ' disabled' : '');
+      next.setAttribute('aria-label', 'Trang sau');
+      next.textContent = '›';
+      next.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (current < totalPages) { current++; render(); }
+      });
+      nav.appendChild(next);
+    }
+
+    render();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.p-grid-pager'), buildPager);
+})();
+</script>
 </body>
 </html>

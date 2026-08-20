@@ -63,7 +63,6 @@ public class HomeServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Gọi qua Service thay vì DAO
         List<Product> featuredList = productService.getFeaturedProducts(4);
         List<Product> newList = productService.getNewProducts(4);
         List<Product> bestSellerList = productService.getBestSellerProducts(3);
