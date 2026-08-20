@@ -6,6 +6,7 @@ import model.entity.cart.CartItem;
 import model.entity.user.User;
 import service.promotion.PromotionService;
 import service.cart.CartService;
+import util.CheckoutSelectionUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -20,6 +21,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 
 @WebServlet(name = "ApplyVoucherServlet", urlPatterns = {"/apply-voucher"})
 public class ApplyVoucherServlet extends HttpServlet {
@@ -41,7 +43,11 @@ public class ApplyVoucherServlet extends HttpServlet {
         }
 
         try {
-            List<CartItem> items = cartService.getCartItems(customerId);
+            // Chỉ tính giảm giá trên đúng các dòng khách đã tick chọn để thanh toán
+            // (rule 4), không phải toàn bộ giỏ hàng.
+            List<CartItem> allItems = cartService.getCartItems(customerId);
+            Set<Integer> selectedIds = CheckoutSelectionUtil.load(req);
+            List<CartItem> items = cartService.filterBySelection(allItems, selectedIds);
             if (items.isEmpty()) {
                 session.setAttribute("errorMsg", "Giỏ hàng của bạn đang trống.");
                 resp.sendRedirect(req.getContextPath() + "/checkout");

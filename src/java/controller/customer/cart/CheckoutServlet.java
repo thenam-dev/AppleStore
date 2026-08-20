@@ -11,25 +11,47 @@ import model.entity.cart.CartItem;
 import model.entity.user.User;
 import service.cart.CartService;
 import service.cart.CheckoutService;
+import service.user.UserAddressService;
 import model.entity.promtion.Promotion;
+import util.CheckoutSelectionUtil;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @WebServlet("/checkout")
 public class CheckoutServlet extends HttpServlet {
 
     private final CartService cartService = new CartService();
     private final CheckoutService checkoutService = new CheckoutService();
+    private final UserAddressService addressService = new UserAddressService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        preventCaching(response);
+
         int customerId = getCustomerId(request);
 
-        List<CartItem> items = cartService.getCartItems(customerId);
-        if (items.isEmpty()) {
+        List<CartItem> cartItems = cartService.getCartItems(customerId);
+        if (cartItems.isEmpty()) {
             request.getSession().setAttribute("errorMsg", "Giỏ hàng đang trống, không thể thanh toán");
+            response.sendRedirect(request.getContextPath() + "/cart");
+            return;
+        }
+
+        Set<Integer> selectedIds = resolveSelectedIds(request, cartItems);
+        if (selectedIds == null) {
+            request.getSession().setAttribute("errorMsg", "Vui lòng chọn ít nhất 1 sản phẩm để thanh toán");
+            response.sendRedirect(request.getContextPath() + "/cart");
+            return;
+        }
+
+        List<CartItem> items = cartService.filterBySelection(cartItems, selectedIds);
+        if (items.isEmpty()) {
+            request.getSession().setAttribute("errorMsg", "Sản phẩm đã chọn không còn trong giỏ hàng, vui lòng chọn lại");
             response.sendRedirect(request.getContextPath() + "/cart");
             return;
         }
@@ -76,6 +98,7 @@ public class CheckoutServlet extends HttpServlet {
 
         request.setAttribute("cartItems", items);
         request.setAttribute("cartTotal", cartTotal);
+        request.setAttribute("savedAddresses", addressService.getAddressesByUserId(customerId));
         request.getRequestDispatcher("/WEB-INF/views/customer/checkout.jsp").forward(request, response);
     }
 
@@ -102,21 +125,29 @@ public class CheckoutServlet extends HttpServlet {
         form.notes = request.getParameter("notes");
         form.paymentMethod = request.getParameter("paymentMethod");
 
-        // GOM TỔNG: Nếu CheckoutForm của bạn chưa hỗ trợ 2 mã, tạm thời gom tổng tiền giảm lại!
-        // Lưu ý quan trọng: Nếu bạn muốn lưu cả 2 mã xuống DB (bảng order_promotions), 
-        // bạn sẽ phải mở class CheckoutService.CheckoutForm ra để thêm biến chứa mã 2 vào đó nhé.
         BigDecimal totalDiscount = BigDecimal.ZERO;
         if (merchandiseDiscount != null) totalDiscount = totalDiscount.add(merchandiseDiscount);
         if (shippingDiscount != null) totalDiscount = totalDiscount.add(shippingDiscount);
         
-        // Tạm gán 1 mã ưu tiên (hoặc mã hàng hóa trước) để form không bị lỗi (Tùy thuộc code CheckoutService của bạn)
         form.appliedPromo = merchandisePromo != null ? merchandisePromo : shippingPromo; 
         form.discountAmount = totalDiscount;
+
+        Set<Integer> selectedIds = CheckoutSelectionUtil.load(request);
+        form.selectedCartItemIds = selectedIds;
         
         CheckoutService.CheckoutResult result = checkoutService.checkout(form);
 
         if (!result.success) {
-            List<CartItem> items = cartService.getCartItems(customerId);
+            List<CartItem> allItems = cartService.getCartItems(customerId);
+            List<CartItem> items = cartService.filterBySelection(allItems, selectedIds);
+            if (items.isEmpty()) {
+                items = allItems;
+            }
+            if (items.isEmpty()) {
+                session.setAttribute("errorMsg", result.message);
+                response.sendRedirect(request.getContextPath() + "/cart");
+                return;
+            }
             BigDecimal cartTotal = items.stream()
                     .map(CartItem::getLineTotal)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -125,15 +156,17 @@ public class CheckoutServlet extends HttpServlet {
             request.setAttribute("cartTotal", cartTotal);
             request.setAttribute("errorMsg", result.message);
             request.setAttribute("fieldErrors", result.fieldErrors);
+            request.setAttribute("savedAddresses", addressService.getAddressesByUserId(customerId));
             request.getRequestDispatcher("/WEB-INF/views/customer/checkout.jsp").forward(request, response);
             return;
         }
 
-        // Dọn dẹp Session giỏ hàng sau khi đặt hàng thành công
+        // Dọn dẹp Session giỏ hàng và mã giảm giá sau khi đặt hàng thành công
         session.removeAttribute("merchandisePromo");
         session.removeAttribute("merchandiseDiscount");
         session.removeAttribute("shippingPromo");
         session.removeAttribute("shippingDiscount");
+        CheckoutSelectionUtil.clear(request);
 
         if (result.qrCodeUrl != null) {
             session.setAttribute("successMsg", "Đặt hàng thành công, vui lòng quét mã để thanh toán");
@@ -151,5 +184,34 @@ public class CheckoutServlet extends HttpServlet {
             throw new IllegalStateException("Khách chưa đăng nhập - AuthFilter phải chặn trước khi tới servlet này");
         }
         return ((User) sessionUser).getUserId();
+    }
+
+    private Set<Integer> resolveSelectedIds(HttpServletRequest request, List<CartItem> cartItems) {
+        boolean fromCart = request.getParameter("fromCart") != null;
+        if (fromCart) {
+            Set<Integer> requestedIds = CheckoutSelectionUtil.parseFromRequest(request, "cartItemId");
+            if (requestedIds == null || requestedIds.isEmpty()) {
+                return null;
+            }
+            CheckoutSelectionUtil.store(request, requestedIds);
+            return requestedIds;
+        }
+
+        Set<Integer> stored = CheckoutSelectionUtil.load(request);
+        if (stored != null && !stored.isEmpty()) {
+            return stored;
+        }
+
+        Set<Integer> allIds = cartItems.stream()
+                .map(CartItem::getCartItemId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        CheckoutSelectionUtil.store(request, allIds);
+        return allIds;
+    }
+
+    private void preventCaching(HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
     }
 }

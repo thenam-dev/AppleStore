@@ -2,7 +2,7 @@
 <%@ taglib prefix="c"   uri="jakarta.tags.core" %>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
 <style>
-    /* Bổ sung một số CSS Layout riêng cho trang Profile để giống BanHoaQua */
+    /* Bổ sung một số CSS Layout riêng cho trang Profile */
     .profile-container {
         display: flex;
         flex-direction: column;

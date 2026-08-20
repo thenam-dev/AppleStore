@@ -36,6 +36,7 @@
   --display:"Archivo","Be Vietnam Pro",system-ui,sans-serif;
   --body:"Be Vietnam Pro",system-ui,-apple-system,sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --sf-header-h:96px;
 }
 
 /* ---------- 2. NỀN CHUNG ---------- */
@@ -62,7 +63,28 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
   font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--titan);
 }
 .etch span{opacity:.72}
-.etch .dot{width:3px;height:3px;border-radius:50%;background:var(--titan);opacity:.6}
+.etch .dot{width:3px;height:3px;border-radius:50%;background:var(--titan);opacity:.6;flex:none}
+
+/* Dòng khuyến mãi chạy marquee phải->trái liên tục (rule mới). .etch-track
+   chứa nội dung LẶP LẠI ĐÚNG 2 LẦN (xem header.jsp) để khi trượt hết -50%
+   (đúng 1 vòng nội dung) thì vòng lặp liền mạch, không giật. overflow:hidden
+   + min-width:0 trên .etch-marquee để item flex này chịu co lại đúng cách
+   trong hàng flex thay vì đẩy .etch-right ra ngoài màn hình. */
+.etch-marquee{flex:1;min-width:0;overflow:hidden}
+.etch-track{display:inline-flex;align-items:center;gap:14px;white-space:nowrap;
+  animation:etchMarquee 26s linear infinite}
+.etch-marquee:hover .etch-track{animation-play-state:paused}
+.etch-item{display:inline-flex;align-items:center;gap:6px;flex:none;opacity:.72}
+.etch-item svg{opacity:.85;flex:none}
+@keyframes etchMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* Cụm "Đơn hàng" + hotline đứng yên bên phải, không cuộn theo marquee (rule
+   mới) - margin-left:auto đẩy cả cụm về cuối dòng, tách khỏi phần chạy chữ. */
+.etch-right{margin-left:auto;flex:none;display:flex;align-items:center;gap:16px}
+.etch-link{display:flex;align-items:center;gap:5px;color:#fff}
+.etch-link svg{opacity:.85}
+.etch-link:hover,.etch-link.on{color:var(--titan)}
+.etch-phone{cursor:default}
 
 /* ---------- 3. NÚT ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 20px;
@@ -81,7 +103,6 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .icon-btn{width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--line);background:#fff;
   display:inline-flex;align-items:center;justify-content:center}
 .icon-btn:hover{border-color:var(--ink)}
-/* nút nằm trong form POST đổi trạng thái (rule 7) */
 .inline-form{display:inline}
 
 /* ---------- 4. NHÃN TRẠNG THÁI ---------- */
@@ -113,6 +134,43 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 /* trạng thái lỗi: thêm class err vào .field (rule 6) */
 .field.err .input,.field.err .select,.field.err .textarea{border-color:var(--danger);background:#FFFBFB}
 .err-msg{display:flex;gap:6px;font-size:12px;color:var(--danger);margin-top:6px}
+.input[readonly],.textarea[readonly]{background:#F7F8FA;color:var(--graphite)}
+
+/* lựa chọn dạng thẻ bo tròn dùng chung cho phương thức thanh toán / địa chỉ
+   giao hàng ở trang checkout - input để sr-only, trạng thái chọn cập nhật
+   ngay khi bấm nhờ CSS :has(), không cần JS hay reload trang (rule 2). */
+.pm-option{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:13px 15px;cursor:pointer;transition:border-color .15s}
+.pm-option:has(input:checked){border-color:var(--ink)}
+.pm-dot{width:16px;height:16px;border-radius:50%;border:1px solid var(--line);flex:none;transition:border .15s}
+.pm-option:has(input:checked) .pm-dot{border:5px solid var(--ink)}
+
+/* checkbox tick chọn sản phẩm trong giỏ để thanh toán 1 phần (rule 4) */
+.cart-chk{width:17px;height:17px;flex:none;accent-color:var(--ink);cursor:pointer}
+
+/* toast báo "đã thêm vào giỏ hàng" ở trang chi tiết sản phẩm - đứng yên tại
+   trang, không điều hướng sang /cart (xem product-detail.jsp). Đặt góc trên
+   bên phải, NGAY DƯỚI thanh header (rule mới) - dùng biến --sf-header-h (đã
+   có sẵn cho các panel sticky khác, xem header.jsp) để không bị header sticky
+   đè lên. Nảy vào từ bên phải (easing hơi nảy quá đà - "back" ease), rồi lúc
+   biến mất lại thu về bên phải - cùng phía với lúc vào (.toast.hide, easing
+   khác với lúc vào dù cùng hướng translateX). Dùng chung cho mọi trang có
+   toast: cart.jsp, flash.jsp, product-detail.jsp. */
+.toast-stack{position:fixed;right:20px;top:calc(var(--sf-header-h) + 20px);z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;min-width:240px;max-width:340px;padding:13px 16px;border-radius:var(--r-sm);
+  background:#fff;border:1px solid var(--line);box-shadow:var(--sh-2);font-size:13.5px;color:var(--ink);
+  opacity:0;transform:translateX(120%);transition:opacity .22s ease,transform .32s cubic-bezier(.34,1.56,.64,1)}
+.toast.show{opacity:1;transform:translateX(0)}
+.toast.hide{opacity:0;transform:translateX(120%);transition:opacity .2s ease,transform .22s cubic-bezier(.4,0,.2,1)}
+.toast.ok{border-left:3px solid var(--ok);color:#0B6B4F}
+.toast.err{border-left:3px solid var(--danger);color:#9E2B2B}
+.toast svg{flex:none}
+/* Thanh thời gian ở cạnh dưới toast - co dần theo scaleX (rẻ hơn animate
+   width, không gây reflow). transition-duration đặt inline theo từng toast
+   (JS set style.transitionDuration khớp với thời gian toast hiển thị của
+   từng trang - 2.6s hay 4s), transform-origin:left để co từ phải về trái. */
+.toast-timer{position:absolute;left:0;bottom:0;height:3px;width:100%;background:currentColor;opacity:.4;
+  transform-origin:left;transform:scaleX(1);transition:transform linear}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 18px}
 .field.full{grid-column:1/-1}
@@ -192,24 +250,56 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .shot.thumb-lg{width:64px;height:64px;aspect-ratio:auto;border-radius:var(--r-sm)}
 
 /* ---------- 9. GIAO DIỆN CỬA HÀNG ---------- */
-.sf-top{background:var(--ink);color:#fff}
-.sf-nav{display:flex;align-items:center;gap:26px;padding:14px 26px}
+
+.sf-top{background:var(--ink);color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(255,255,255,.06)}
+#headerPromo{overflow:hidden;max-height:40px;
+  transition:max-height .28s cubic-bezier(.4,0,.2,1),padding .28s cubic-bezier(.4,0,.2,1),
+    border-width .28s cubic-bezier(.4,0,.2,1),opacity .18s linear}
+#headerPromo.promo--hidden{max-height:0;padding-top:0;padding-bottom:0;border-width:0;opacity:0}
+.sf-nav{display:flex;align-items:center;gap:16px;padding:14px 26px}
 .sf-logo{display:flex;align-items:center;gap:9px}
 .sf-logo .wm{font-family:var(--display);font-weight:800;font-stretch:118%;letter-spacing:.18em;font-size:15px}
-.sf-nav .links{display:flex;gap:22px;font-size:13.5px;color:#C3C9D2}
-.sf-nav .links a.on{color:#fff}
-.sf-nav .links a:hover{color:var(--titan)}
+.sf-menu{position:relative}
+.sf-menu-btn{display:flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:var(--r-pill);
+  border:1px solid #2A313B;background:#151A21;color:#fff;font:inherit;font-size:13px;font-weight:500;
+  white-space:nowrap;cursor:pointer}
+.sf-menu-btn:hover,.sf-menu-btn.on{border-color:var(--titan);color:var(--titan)}
+.sf-menu-btn .chev{opacity:.7;transition:transform .18s ease}
+.sf-menu-btn[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.sf-menu-panel{position:absolute;top:calc(100% + 10px);left:0;min-width:190px;background:#fff;
+  border-radius:var(--r-md);box-shadow:var(--sh-2);padding:8px;display:flex;flex-direction:column;gap:2px;
+  opacity:0;visibility:hidden;transform:translateY(-6px);
+  transition:opacity .16s ease,transform .16s ease,visibility 0s linear .16s;z-index:110}
+.sf-menu-panel.open{opacity:1;visibility:visible;transform:translateY(0);transition:opacity .16s ease,transform .16s ease}
+.sf-menu-panel a{padding:9px 12px;border-radius:var(--r-sm);font-size:13.5px;color:var(--graphite);white-space:nowrap}
+.sf-menu-panel a:hover{background:var(--porcelain);color:var(--ink)}
+.sf-menu-panel a.on{color:var(--ink);font-weight:600;background:var(--porcelain)}
+.sf-chip{display:flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:var(--r-pill);
+  border:1px solid #2A313B;background:#151A21;color:#fff;font-size:13px;font-weight:500;white-space:nowrap}
+.sf-chip:hover,.sf-chip.on{border-color:var(--titan);color:var(--titan)}
+
 .sf-nav .tools{margin-left:auto;display:flex;align-items:center;gap:12px}
-.sf-search{position:relative;width:210px}
-.sf-search input{width:100%;height:36px;border-radius:var(--r-pill);border:1px solid #2A313B;background:#151A21;
+.sf-search{position:relative;flex:1 1 auto;max-width:560px}
+.sf-search input{width:100%;height:38px;border-radius:var(--r-pill);border:1px solid #2A313B;background:#151A21;
   color:#fff;padding:0 14px 0 34px;font:inherit;font-size:13px}
 .sf-search input::placeholder{color:#6C7480}
-.sf-search svg{position:absolute;left:12px;top:10px;opacity:.55}
+.sf-search svg{position:absolute;left:12px;top:11.5px;opacity:.55}
 .ic{width:36px;height:36px;border-radius:50%;border:1px solid #2A313B;display:flex;align-items:center;justify-content:center;position:relative;color:#fff}
 .ic:hover{border-color:var(--titan)}
-.ic .dot-n{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;border-radius:var(--r-pill);
+.ic .dot-n{position:absolute;top:-3px;right:-3px;min-width:13px;height:13px;border-radius:var(--r-pill);
   background:var(--titan);color:#2A2213;font-family:var(--mono);font-size:9.5px;display:flex;align-items:center;
   justify-content:center;padding:0 4px;font-weight:700}
+.ic.sf-cart{width:auto;height:38px;padding:0 14px;border-radius:var(--r-pill);background:#151A21;
+  gap:8px;font-size:13px;font-weight:500;white-space:nowrap}
+.ic.sf-cart:hover{color:var(--titan)}
+.sf-cart-icon{position:relative;display:inline-flex}
+.sf-cart-icon .dot-n{top:-7px;right:-7px}
+.sf-account{display:flex;align-items:center;gap:7px;height:38px;padding:0 12px;border-radius:var(--r-pill);
+  border:1px solid #2A313B;background:#151A21;color:#fff;font-size:13px;font-weight:600}
+.sf-account:hover{border-color:var(--titan);color:var(--titan)}
+.sf-account-name{width:22px;height:22px;border-radius:50%;flex:none;
+  background:linear-gradient(140deg,var(--titan-2),var(--titan));color:#2A2213;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11.5px}
 .crumb{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ash);padding:16px 26px 0}
 .crumb a:hover{color:var(--ink)}
 
@@ -341,8 +431,7 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 @media(max-width:860px){
   .p-grid,.strip,.sf-foot .cols,.grid-2,.grid-3{grid-template-columns:1fr}
   .sf-nav{flex-wrap:wrap;gap:12px}
-  .sf-nav .links{order:3;width:100%;overflow-x:auto}
-  .sf-search{width:150px}
+  .sf-search{order:3;flex:1 1 100%;max-width:none}
   .table-scroll{overflow-x:auto}
   .table{min-width:760px}
 }

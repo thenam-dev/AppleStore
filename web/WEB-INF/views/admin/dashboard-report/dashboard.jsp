@@ -29,13 +29,6 @@
     </div>
 
     <div class="adm-body">
-      <c:if test="${not empty sessionScope.errorMessage}">
-        <div class="alert alert-danger" style="margin-bottom:20px;padding:12px;background:#ffebee;color:#c62828;border-radius:var(--r-sm);">
-          <c:out value="${sessionScope.errorMessage}" />
-        </div>
-        <c:remove var="errorMessage" scope="session" />
-      </c:if>
-
       <form action="${appPath}/admin/dashboard" method="GET" class="toolbar" onsubmit="return validateDateRange(this);">
         <div class="search" style="border:none;box-shadow:none;background:transparent;padding:0;">
           <label for="startDate" style="margin-right:8px;font-size:13px;color:var(--ash);">Từ:</label>

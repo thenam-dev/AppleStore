@@ -157,6 +157,22 @@ public class OrderDAO {
         }
     }
 
+    /**
+     * Chuyển đơn CK sang EXPIRED khi hết hạn giữ chỗ thanh toán, chỉ thành
+     * công nếu đơn còn đang PENDING_PAYMENT (điều kiện nằm trong WHERE nên
+     * atomic) - tránh xử lý trùng khi job quét chạy chồng lượt, hoặc khách
+     * vừa thanh toán xong đúng lúc job chạy.
+     */
+    public boolean expireIfStillPending(int orderId) throws SQLException {
+        String sql = "UPDATE orders SET status = 'EXPIRED' WHERE order_id = ? AND status = 'PENDING_PAYMENT'";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
     public Optional<Order> findById(int orderId) throws SQLException {
         String sql = "SELECT * FROM orders WHERE order_id = ?";
         try (Connection connection = DBConnection.getConnection();

@@ -37,16 +37,6 @@ public class AdminFilter implements Filter {
             return;
         }
 
-        if (AppConfig.ROLE_SALE_STAFF.equals(role) && isSaleStaffAdminPath(adminPath)) {
-            chain.doFilter(request, response);
-            return;
-        }
-
         httpResponse.sendRedirect(httpRequest.getContextPath() + "/index.jsp");
-    }
-
-    private boolean isSaleStaffAdminPath(String path) {
-        return "/admin/dashboard".equals(path)
-                || path.startsWith("/admin/orders");
     }
 }

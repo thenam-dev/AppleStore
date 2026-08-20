@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import model.entity.cart.CartItem;
 import model.entity.order.Order;
 
@@ -74,6 +76,10 @@ public class CheckoutService {
         // Voucher đã áp dụng ở giỏ hàng (nếu có), truyền từ CheckoutServlet.
         public Promotion appliedPromo;
         public BigDecimal discountAmount;
+
+        // Tập cart_item_id khách đã tick chọn ở cart.jsp để thanh toán - null/rỗng
+        // nghĩa là thanh toán toàn bộ giỏ hàng (tương thích ngược).
+        public Set<Integer> selectedCartItemIds;
     }
 
     public static class CheckoutResult {
@@ -139,7 +145,12 @@ public class CheckoutService {
         }
 
         try {
-            List<CartItem> items = cartDAO.findByCustomerId(form.customerId);
+            List<CartItem> allItems = cartDAO.findByCustomerId(form.customerId);
+            List<CartItem> items = (form.selectedCartItemIds == null || form.selectedCartItemIds.isEmpty())
+                    ? allItems
+                    : allItems.stream()
+                            .filter(cartItem -> form.selectedCartItemIds.contains(cartItem.getCartItemId()))
+                            .collect(Collectors.toList());
             if (items.isEmpty()) {
                 result.success = false;
                 result.message = "Giỏ hàng đang trống";
@@ -239,8 +250,12 @@ public class CheckoutService {
                 orderDAO.insertStatusHistory(orderId, "CONFIRMED", null, "Đơn COD tự động xác nhận");
             }
 
+            // Chỉ xoá đúng những dòng đã đặt (khách có thể chỉ tick chọn 1 phần giỏ
+            // hàng) - KHÔNG xoá cả giỏ như trước, để các dòng chưa chọn vẫn còn lại.
             int cartId = items.get(0).getCartId();
-            cartDAO.clearCart(cartId);
+            for (CartItem cartItem : items) {
+                cartDAO.deleteCartItem(cartItem.getCartItemId(), cartId);
+            }
 
             result.success = true;
             result.message = "Đặt hàng thành công";

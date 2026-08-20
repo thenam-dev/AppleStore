@@ -1,4 +1,4 @@
-    package service.order;
+package service.order;
 
 import dao.review.ReviewDAO;
 import dao.order.OrderDAO;
@@ -63,21 +63,20 @@ public class OrderService {
         String dbStatus = (String) raw.get("status");
         detail.put("status", mapUiStatus(dbStatus));
         detail.put("statusLabel", mapStatusLabel(dbStatus));
-        detail.put("rawStatus", dbStatus); // <-- THÊM DÒNG NÀY ĐỂ CHECK TRẠNG THÁI GỐC
+        detail.put("rawStatus", dbStatus);
         
         detail.put("receiverName", raw.get("recipientName"));
         detail.put("phone", raw.get("recipientPhone"));
         detail.put("fullAddress", raw.get("deliveryAddress"));
         
         String payMethod = (String) raw.get("paymentMethod");
-        detail.put("paymentMethod", payMethod); // <-- THÊM DÒNG NÀY ĐỂ CHECK PHƯƠNG THỨC THANH TOÁN
+        detail.put("paymentMethod", payMethod);
         detail.put("paymentMethodLabel", "CK".equals(payMethod) ? "Chuyển khoản QR" : "Thanh toán khi nhận hàng (COD)");
         
         detail.put("subtotal", raw.get("totalAmount") != null ? raw.get("totalAmount") : 0);
         detail.put("discount", raw.get("discountAmount") != null ? raw.get("discountAmount") : 0);
         detail.put("total", raw.get("finalAmount") != null ? raw.get("finalAmount") : 0);
 
-        // Đã sửa: Thêm EXPIRED và PAYMENT_FAILED vào danh sách bị loại trừ (-1)
         Map<String, Integer> statusRank = Map.of(
             "PENDING_PAYMENT", 0,
             "CONFIRMED", 1,
@@ -103,14 +102,12 @@ public class OrderService {
             Map<String, Object> step = new HashMap<>();
             step.put("label", labels[i]);
             
-            // Đã sửa: Vì Hủy/Hết hạn rank là -1, nên currentRank >= ranks[i] tự động = false. Không cần check CANCELLED riêng nữa.
             boolean isDone = (currentRank >= ranks[i]);
             step.put("done", isDone);
             
             Object stepTime = null;
             for (Map<String, Object> h : history) {
                 String hStatus = (String) h.get("status");
-                // ĐÃ SỬA LỖI HIỆN THỜI GIAN ẢO: Bỏ đoạn code mượn thời gian của PENDING_PAYMENT
                 if (steps[i].equals(hStatus)) {
                     stepTime = h.get("changedAt");
                     break;
@@ -131,8 +128,8 @@ public class OrderService {
             case "DISPATCHED": case "SHIPPING": return "Đang giao";
             case "DELIVERED": return "Đã giao";
             case "CANCELLED": return "Đã huỷ";
-            case "EXPIRED": return "Đã hết hạn"; // Thêm nhãn
-            case "PAYMENT_FAILED": return "Thanh toán thất bại"; // Thêm nhãn
+            case "EXPIRED": return "Đã huỷ (hết hạn thanh toán)";
+            case "PAYMENT_FAILED": return "Thanh toán thất bại";
             default: return dbStatus;
         }
     }
@@ -153,20 +150,16 @@ public class OrderService {
         }
         return "CANCELLED";
     }
-
     
     public Map<String, Object> getOrderDetailWithItems(int orderId, int customerId) throws SQLException {
-        // Lấy thông tin tóm tắt và timeline từ hàm cũ
         Map<String, Object> detail = getSelectedOrderDetail(orderId, customerId);
         if (detail == null) return null;
 
-        // Lấy chi tiết từng sản phẩm trong đơn (Bạn cần đảm bảo OrderDAO có hàm findOrderItems)
         List<Map<String, Object>> items = orderDAO.findOrderItems(orderId);
         ReviewDAO reviewDAO = new ReviewDAO();
         
         for (Map<String, Object> item : items) {
             int orderItemId = (int) item.get("orderItemId");
-            // Gắn review vào item nếu đã từng đánh giá
             Review review = reviewDAO.getReviewByItemAndCustomer(orderItemId, customerId);
             item.put("review", review);
         }

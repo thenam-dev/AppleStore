@@ -48,6 +48,14 @@
     </a>
   </c:if>
 
+  <%-- Menu của Sale Staff --%>
+  <c:if test="${isSaleStaff}">
+    <div class="grp">Tổng quan</div>
+    <a class="${activeItem eq 'dashboard' ? 'on' : ''}" href="${ctx}/staff/dashboard">
+      <svg width="17" height="17"><use href="#i-chart" /></svg>Báo cáo cá nhân
+    </a>
+  </c:if>
+
   <%-- Menu của Admin VÀ Sale Staff --%>
   <c:if test="${isAdmin or isSaleStaff}">
     <div class="grp">Kinh doanh</div>

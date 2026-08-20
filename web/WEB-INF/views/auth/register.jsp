@@ -30,14 +30,14 @@
                     <div class="grid-2">
                         <div class="field ${not empty errors.fullName ? 'err' : ''}">
                             <label>Họ và tên <span class="req">*</span></label>
-                            <input class="input" type="text" name="fullName" maxlength="100" value="<c:out value='${form.fullName}'/>">
+                            <input class="input" type="text" name="fullName" maxlength="100" value="<c:out value='${form.fullName}'/>" required>
                             <c:if test="${not empty errors.fullName}">
                                 <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.fullName}"/></div>
                                 </c:if>
                         </div>
                         <div class="field ${not empty errors.phone ? 'err' : ''}">
                             <label>Số điện thoại <span class="req">*</span></label>
-                            <input class="input" type="tel" name="phone" maxlength="10" value="<c:out value='${form.phone}'/>">
+                            <input class="input" type="tel" name="phone" maxlength="10" value="<c:out value='${form.phone}'/>" required>
                             <c:if test="${not empty errors.phone}">
                                 <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.phone}"/></div>
                                 </c:if>
@@ -46,7 +46,7 @@
 
                     <div class="field ${not empty errors.email ? 'err' : ''}">
                         <label>Email <span class="req">*</span></label>
-                        <input class="input" type="email" name="email" maxlength="100" value="<c:out value='${form.email}'/>">
+                        <input class="input" type="email" name="email" maxlength="100" value="<c:out value='${form.email}'/>" required>
                         <c:if test="${not empty errors.email}">
                             <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.email}"/></div>
                             </c:if>
@@ -55,7 +55,7 @@
                     <div class="grid-2">
                         <div class="field ${not empty errors.password ? 'err' : ''}">
                             <label>Mật khẩu <span class="req">*</span></label>
-                            <input class="input" type="password" name="password">
+                            <input class="input" type="password" name="password" required>
                             <c:choose>
                                 <c:when test="${not empty errors.password}">
                                     <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.password}"/></div>
@@ -65,7 +65,7 @@
                         </div>
                         <div class="field ${not empty errors.confirmPassword ? 'err' : ''}">
                             <label>Nhập lại mật khẩu <span class="req">*</span></label>
-                            <input class="input" type="password" name="confirmPassword">
+                            <input class="input" type="password" name="confirmPassword" required>
                             <c:if test="${not empty errors.confirmPassword}">
                                 <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.confirmPassword}"/></div>
                                 </c:if>
@@ -81,6 +81,17 @@
                     </div>
 
                     <button type="submit" class="btn titan block">Tạo tài khoản</button>
+
+                    <div style="display:flex; align-items:center; margin:24px 0 16px;">
+                        <div style="flex-grow:1; height:1px; background:#e0e0e0;"></div>
+                        <span style="padding:0 12px; color:#888; font-size:12px; font-weight:600;">HOẶC</span>
+                        <div style="flex-grow:1; height:1px; background:#e0e0e0;"></div>
+                    </div>
+
+                    <a href="${ctx}/auth/google-login" class="btn block" style="background:#fff; color:#495057; border:1px solid #ced4da; display:flex; align-items:center; justify-content:center; gap:10px; font-weight:500;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo" width="18" height="18">
+                        Đăng ký nhanh bằng Google
+                    </a>
                 </form>
                 <p style="text-align:center;font-size:13px;color:var(--ash);margin:16px 0 0">
                     Đã có tài khoản? <a href="${ctx}/login" style="color:var(--ink);border-bottom:1px solid var(--line)">Đăng nhập</a>
