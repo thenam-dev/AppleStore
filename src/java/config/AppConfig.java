@@ -20,6 +20,15 @@ public class AppConfig {
     public static final int PAGE_SIZE_ADMIN = 20;
     public static final int PAGE_SIZE_PRODUCTS = 12;
 
+    // Product image uploads are kept outside the source tree so runtime files
+    // do not get mixed with static assets committed to the repository.
+    public static final String UPLOAD_DIR = "uploads";
+    public static final String PRODUCT_UPLOAD_DIR = "products";
+    public static final String PERSISTENT_UPLOAD_DIR =
+            System.getProperty("user.home") + java.io.File.separator + "applestore_uploads";
+    public static final long MAX_UPLOAD_SIZE_BYTES = 5L * 1024 * 1024;
+    public static final String[] ALLOWED_IMAGE_EXTS = {"jpg", "jpeg", "png", "webp"};
+
     // Google OAuth2 Constants
     public static final String GOOGLE_CLIENT_ID = "684587825406-uc8fb2uv7rmn8nih7is39ss2dhqgj2os.apps.googleusercontent.com";
     public static final String GOOGLE_CLIENT_SECRET = "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";
