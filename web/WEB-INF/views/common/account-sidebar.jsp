@@ -183,9 +183,9 @@
             </c:choose>
         </div>
         <div class="sidebar-user-info">
-            <h3>${sessionScope.user.fullName != null ? sessionScope.user.fullName : 'Khách'}</h3>
-            <p>${sessionScope.user.email}</p>
-            <span class="sidebar-role-badge">${sessionScope.user.role}</span>
+            <h3><c:out value="${sessionScope.user.fullName != null ? sessionScope.user.fullName : 'Khách'}" /></h3>
+            <p><c:out value="${sessionScope.user.email}" /></p>
+            <span class="sidebar-role-badge"><c:out value="${sessionScope.user.role}" /></span>
         </div>
     </div>
     

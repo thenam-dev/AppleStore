@@ -57,24 +57,20 @@
                         <div class="form-grid">
                             <div class="form-group full">
                                 <label>Họ và tên <span style="color: #d32f2f;">*</span></label>
-                                <input class="input" type="text" name="fullName" value="${sessionScope.user.fullName}" required>
+                                <input class="input" type="text" name="fullName" value="<c:out value='${sessionScope.user.fullName}' />" required>
                             </div>
 
                             <div class="form-group full">
                                 <label>Email (Chỉ đọc)</label>
-                                <input class="input" type="email" name="email" value="${sessionScope.user.email}" readonly>
+                                <input class="input" type="email" name="email" value="<c:out value='${sessionScope.user.email}' />" readonly>
                                 <small style="display: block; margin-top: 6px; color: var(--txt-3); font-size: 12px;">Email không thể thay đổi do liên kết với tài khoản đăng nhập.</small>
                             </div>
 
                             <div class="form-group full">
                                 <label>Số điện thoại</label>
-                                <input class="input" type="tel" name="phone" value="${sessionScope.user.phone}">
+                                <input class="input" type="tel" name="phone" value="<c:out value='${sessionScope.user.phone}' />">
                             </div>
 
-                            <div class="form-group full">
-                                <label>Ảnh đại diện (URL)</label>
-                                <input class="input" type="text" name="avatarUrl" value="${sessionScope.user.avatarUrl}" placeholder="https://...">
-                            </div>
                         </div>
 
                         <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end;">

@@ -31,10 +31,6 @@ public class ChangePasswordServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (!isLoggedIn(request)) {
-            redirectToLogin(request, response);
-            return;
-        }
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 

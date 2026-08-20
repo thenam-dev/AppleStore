@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c"   uri="jakarta.tags.core" %>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
 <!DOCTYPE html>
@@ -214,9 +214,6 @@
                                                data-address-id="${addr.addressId}"
                                                data-recipient-name="<c:out value='${addr.recipientName}'/>"
                                                data-recipient-phone="<c:out value='${addr.recipientPhone}'/>"
-                                               data-province="<c:out value='${addr.province}'/>"
-                                               data-district="<c:out value='${addr.district}'/>"
-                                               data-ward="<c:out value='${addr.ward}'/>"
                                                data-address-detail="<c:out value='${addr.addressDetail}'/>">Cập nhật</a>
                                             <c:if test="${addr.isDefault == 0}">
                                                 <form action="${ctx}/delete-address" method="post" style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn xóa địa chỉ này?');">
@@ -305,18 +302,15 @@
     document.querySelectorAll('.update-address-link').forEach(function (link) {
         link.addEventListener('click', function () {
             openModal(
-                link.dataset.addressId,
-                link.dataset.recipientName,
-                link.dataset.recipientPhone,
-                link.dataset.province,
-                link.dataset.district,
-                link.dataset.ward,
-                link.dataset.addressDetail
+                  link.dataset.addressId,
+                  link.dataset.recipientName,
+                  link.dataset.recipientPhone,
+                  link.dataset.addressDetail
             );
         });
     });
 </script>
 </body>
+
+
 </html>
-
-

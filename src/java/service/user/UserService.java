@@ -490,12 +490,24 @@ public class UserService {
         return Math.min(pageSize, MAX_PAGE_SIZE);
     }
 
-    public boolean updateProfile(User user) {
+    public String updateProfile(User user) {
         try {
-            return userDAO.updateProfile(user);
+            // Kiểm tra trùng lặp Số điện thoại (Nghiệp vụ)
+            if (user.getPhone() != null && !user.getPhone().trim().isEmpty()) {
+                if (userDAO.existsByPhoneForOtherUser(user.getPhone(), user.getUserId())) {
+                    return "Số điện thoại này đã được đăng ký bởi một tài khoản khác!";
+                }
+            }
+            
+            // Xử lý làm sạch (Sanitize) dữ liệu
+            user.setFullName(user.getFullName().trim());
+            user.setPhone(user.getPhone() == null ? null : user.getPhone().trim());
+
+            boolean isSuccess = userDAO.updateProfile(user);
+            return isSuccess ? "SUCCESS" : "Đã xảy ra lỗi khi cập nhật vào cơ sở dữ liệu.";
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+            return "Lỗi hệ thống. Vui lòng thử lại sau.";
         }
     }
 }

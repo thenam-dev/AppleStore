@@ -17,10 +17,18 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 @WebFilter(urlPatterns = {
-        "/cart",
-        "/checkout",
-        "/payment",
-        "/order-success"
+    "/cart",
+    "/checkout",
+    "/payment",
+    "/order-success",
+    "/profile",
+    "/update-profile",
+    "/change-password",
+    "/addresses",
+    "/add-address",
+    "/update-address",
+    "/delete-address",
+    "/set-default-address"
 })
 public class AuthFilter implements Filter {
 
