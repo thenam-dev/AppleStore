@@ -170,9 +170,19 @@ public class ProductVariantDAO {
         }
     }
     
-    /** Lấy tồn kho hiện tại của biến thể đang active để validate giỏ hàng/checkout. */
+    /**
+     * Lấy tồn kho hiện tại của biến thể đang active để validate giỏ hàng/checkout.
+     * Join thêm bảng products và bắt buộc status = 'ACTIVE' để chặn thanh toán
+     * khi admin đã tạm khóa/ngừng kinh doanh sản phẩm (INACTIVE/DISCONTINUED),
+     * kể cả khi variant vẫn còn is_active = 1.
+     */
     public Optional<Integer> findStockQuantity(int variantId) throws SQLException {
-        String sql = "SELECT stock_quantity FROM product_variants WHERE variant_id = ? AND is_active = 1";
+        String sql = """
+                SELECT pv.stock_quantity
+                FROM product_variants pv
+                JOIN products p ON p.product_id = pv.product_id
+                WHERE pv.variant_id = ? AND pv.is_active = 1 AND p.status = 'ACTIVE'
+                """;
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -194,12 +204,18 @@ public class ProductVariantDAO {
      * kiểm tra giá trị trả về để rollback nghiệp vụ (hoàn lại các bước trước
      * đó) vì không còn transaction tự động.
      */
-    /** Trừ tồn kho một cách an toàn, chỉ thành công khi biến thể còn đủ hàng. */
+    /**
+     * Trừ tồn kho một cách an toàn, chỉ thành công khi biến thể còn đủ hàng.
+     * Join thêm bảng products và bắt buộc p.status = 'ACTIVE' để chặn trừ kho
+     * (và do đó chặn đặt hàng) khi sản phẩm đã bị admin tạm khóa/ngừng kinh
+     * doanh, đồng bộ với điều kiện ở findStockQuantity.
+     */
     public boolean decreaseStockIfAvailable(int variantId, int quantity) throws SQLException {
         String sql = """
-                UPDATE product_variants
-                SET stock_quantity = stock_quantity - ?
-                WHERE variant_id = ? AND is_active = 1 AND stock_quantity >= ?
+                UPDATE product_variants pv
+                JOIN products p ON p.product_id = pv.product_id
+                SET pv.stock_quantity = pv.stock_quantity - ?
+                WHERE pv.variant_id = ? AND pv.is_active = 1 AND p.status = 'ACTIVE' AND pv.stock_quantity >= ?
                 """;
 
         try (Connection connection = DBConnection.getConnection();
