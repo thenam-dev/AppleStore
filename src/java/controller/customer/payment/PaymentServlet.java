@@ -27,6 +27,12 @@ public class PaymentServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Không cache trang thanh toán (bfcache) - đơn/giỏ hàng có thể đã đổi trạng
+        // thái ở server, không để trình duyệt hiện lại bản cũ khi bấm Back (rule 5).
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
+
         Integer customerId = getCustomerId(request);
         if (customerId == null) {
             response.sendRedirect(request.getContextPath() + "/login");
@@ -53,8 +59,18 @@ public class PaymentServlet extends HttpServlet {
                 return;
             }
 
+            // pageResult.expired = true: đơn đã tự huỷ vì hết hạn giữ chỗ - vẫn render
+            // ngay trên /payment (KHÔNG redirect sang order-success) để hiện đúng
+            // thông báo "đã huỷ", xem PaymentService.getPaymentPageData().
+            // Quy đổi LocalDateTime -> epoch millis ngay ở Java, tránh JSP/JS phải tự
+            // parse chuỗi ISO của LocalDateTime.toString() (không cần thiết và dễ lệch).
+            Long expiresAtMillis = pageResult.expiresAt == null ? null
+                    : pageResult.expiresAt.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+
             request.setAttribute("order", pageResult.order);
             request.setAttribute("qrCodeUrl", pageResult.qrCodeUrl);
+            request.setAttribute("expiresAtMillis", expiresAtMillis);
+            request.setAttribute("expired", pageResult.expired);
             request.getRequestDispatcher("/WEB-INF/views/customer/payment.jsp").forward(request, response);
         } catch (SQLException e) {
             request.getSession().setAttribute("errorMsg", "Lỗi khi tải thông tin thanh toán.");
@@ -83,14 +99,18 @@ public class PaymentServlet extends HttpServlet {
             HttpSession session = request.getSession();
             if (result.success) {
                 session.setAttribute("successMsg", result.message);
+                response.sendRedirect(request.getContextPath() + "/order-success?orderId=" + orderId);
             } else {
+                // Trước đây luôn redirect sang order-success dù thất bại (vd. đơn vừa
+                // hết hạn đúng lúc khách bấm xác nhận) - sai vì trang đó chỉ dành cho
+                // đơn thành công. Quay lại /payment để hiện đúng trạng thái đã huỷ.
                 session.setAttribute("errorMsg", result.message);
+                response.sendRedirect(request.getContextPath() + "/payment?orderId=" + orderId);
             }
         } catch (SQLException e) {
             request.getSession().setAttribute("errorMsg", "Lỗi khi xác nhận thanh toán.");
+            response.sendRedirect(request.getContextPath() + "/payment?orderId=" + orderId);
         }
-
-        response.sendRedirect(request.getContextPath() + "/order-success?orderId=" + orderId);
     }
 
     private Integer parseOrderId(HttpServletRequest request) {

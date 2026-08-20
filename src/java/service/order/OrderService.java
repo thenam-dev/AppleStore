@@ -82,7 +82,8 @@ public class OrderService {
             "DISPATCHED", 3,
             "SHIPPING", 3,
             "DELIVERED", 4,
-            "CANCELLED", -1
+            "CANCELLED", -1,
+            "EXPIRED", -1
         );
 
         int currentRank = statusRank.getOrDefault(dbStatus, 0);
@@ -140,6 +141,7 @@ public class OrderService {
             case "DISPATCHED": case "SHIPPING": return "Đang giao";
             case "DELIVERED": return "Đã giao";
             case "CANCELLED": return "Đã huỷ";
+            case "EXPIRED": return "Đã huỷ (hết hạn thanh toán)";
             default: return dbStatus;
         }
     }

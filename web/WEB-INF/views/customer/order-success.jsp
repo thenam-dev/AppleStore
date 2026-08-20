@@ -89,7 +89,7 @@
         </div>
       </div>
 
-      <div class="panel" style="position:sticky;top:16px">
+      <div class="panel" style="position:sticky;top:calc(var(--sf-header-h) + 16px)">
         <div class="panel-head"><h3>Tóm tắt đơn hàng</h3></div>
         <div class="panel-pad">
           <div class="sum-row"><span>Tạm tính</span><span><fmt:formatNumber value="${order.totalAmount}" type="number" maxFractionDigits="0"/> ₫</span></div>

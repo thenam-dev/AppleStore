@@ -175,19 +175,32 @@
                                 <c:forEach var="addr" items="${requestScope.addressList}">
                                     <div class="address-card">
                                         <div class="address-header">
-                                            <h3 class="address-name">${addr.recipientName}</h3>
+                                            <h3 class="address-name"><c:out value="${addr.recipientName}"/></h3>
                                             <span style="color: var(--line);">|</span>
-                                            <span class="address-phone">${addr.recipientPhone}</span>
+                                            <span class="address-phone"><c:out value="${addr.recipientPhone}"/></span>
                                         </div>
                                         <div class="address-detail">
-                                            ${addr.addressDetail}
+                                            <c:out value="${addr.addressDetail}"/><br>
+                                            <c:out value="${addr.ward}"/>, <c:out value="${addr.district}"/>, <c:out value="${addr.province}"/>
                                             <c:if test="${addr.isDefault == 1}">
                                                 <br><span class="default-badge" style="display: inline-block; margin-top: 8px;">Mặc định</span>
                                             </c:if>
                                         </div>
                                         <div class="address-actions">
-                                            <!-- Bổ sung hàm JS lấy nguyên dạng chuỗi thông qua dấu nháy kép -->
-                                            <a class="action-link" onclick='openModal(${addr.addressId}, "${addr.recipientName}", "${addr.recipientPhone}", "${addr.addressDetail}")'>Cập nhật</a>
+                                            <%-- Dùng data-* (đã escape qua c:out) + JS đọc lại thay vì nhồi thẳng vào
+                                                 chuỗi JS trong onclick='...' như bản trước - vì HTML-escape (&quot;...)
+                                                 KHÔNG chặn được injection ở đây: trình duyệt giải mã HTML entity trước
+                                                 rồi mới đưa chuỗi cho JS parser, nên "&quot;" lại quay về thành "
+                                                 đúng lúc JS đọc onclick, khiến khách vẫn thoát được ra khỏi chuỗi nếu
+                                                 recipientName/địa chỉ chứa dấu ngoặc kép. --%>
+                                            <a class="action-link update-address-link"
+                                               data-address-id="${addr.addressId}"
+                                               data-recipient-name="<c:out value='${addr.recipientName}'/>"
+                                               data-recipient-phone="<c:out value='${addr.recipientPhone}'/>"
+                                               data-province="<c:out value='${addr.province}'/>"
+                                               data-district="<c:out value='${addr.district}'/>"
+                                               data-ward="<c:out value='${addr.ward}'/>"
+                                               data-address-detail="<c:out value='${addr.addressDetail}'/>">Cập nhật</a>
                                             <c:if test="${addr.isDefault == 0}">
                                                 <form action="${ctx}/delete-address" method="post" style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn xóa địa chỉ này?');">
                                                     <input type="hidden" name="addressId" value="${addr.addressId}">
@@ -267,6 +280,24 @@
     function closeModal() {
         modal.close();
     }
+
+    // Uỷ quyền sự kiện click cho các nút "Cập nhật" - đọc dữ liệu qua dataset
+    // (đã được c:out escape đúng chuẩn HTML attribute ở JSP) thay vì nhồi chuỗi
+    // trực tiếp vào onclick='...' như trước, tránh việc khách thoát khỏi chuỗi
+    // JS nếu tên/địa chỉ chứa dấu ngoặc kép.
+    document.querySelectorAll('.update-address-link').forEach(function (link) {
+        link.addEventListener('click', function () {
+            openModal(
+                link.dataset.addressId,
+                link.dataset.recipientName,
+                link.dataset.recipientPhone,
+                link.dataset.province,
+                link.dataset.district,
+                link.dataset.ward,
+                link.dataset.addressDetail
+            );
+        });
+    });
 </script>
 </body>
 </html>
