@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
  *
  * @author admin
  */
-@WebServlet(name = "AdminDashboardServlet", urlPatterns = {"/admin/dashboard"})
+@WebServlet(name = "AdminDashboardServlet", urlPatterns = {"/admin/dashboard", "/staff/dashboard"})
 public class AdminDashboardServlet extends HttpServlet {
 
     @Override
@@ -25,19 +25,16 @@ public class AdminDashboardServlet extends HttpServlet {
         
         model.entity.user.User user = (model.entity.user.User) request.getSession().getAttribute(config.AppConfig.SESSION_USER);
         
-        // Mặc định staffId = null. Khi truyền null xuống DAO, hệ thống sẽ lấy TẤT CẢ dữ liệu (Dành cho ADMIN)
-        Integer staffId = null;
-        
-        if (user != null && config.AppConfig.ROLE_SALE_STAFF.equals(user.getRole())) {
-            staffId = user.getUserId();
-        }
+        // Giao việc quyết định xem user này có bị giới hạn dữ liệu (scoping) hay không cho tầng Service xử lý
+        Integer staffId = service.extractStaffId(user);
 
-        // Lấy dữ liệu tổng quan
-        dto.DashboardStatsDTO stats = service.getDashboardStats(staffId);
-
-        // Lấy dữ liệu báo cáo (Revenue Chart)
         String startDate = request.getParameter("startDate");
         String endDate = request.getParameter("endDate");
+
+        // Lấy dữ liệu tổng quan
+        dto.DashboardStatsDTO stats = service.getDashboardStats(startDate, endDate, staffId);
+
+        // Lấy dữ liệu báo cáo (Revenue Chart)
         java.util.LinkedHashMap<String, Double> revenueMap = service.getRevenueByDate(startDate, endDate, staffId);
         
         StringBuilder labels = new StringBuilder("[");
@@ -68,8 +65,8 @@ public class AdminDashboardServlet extends HttpServlet {
 
         // Bắn sang JSP
         request.setAttribute("stats", stats);
-        request.setAttribute("recentOrders", service.getRecentOrders(4, staffId));
-        request.setAttribute("bestSellingProducts", service.getBestSellingProducts(10, staffId)); // Tăng lên 10 để xuất báo cáo
+        request.setAttribute("recentOrders", service.getRecentOrders(4, startDate, endDate, staffId));
+        request.setAttribute("bestSellingProducts", service.getBestSellingProducts(10, startDate, endDate, staffId)); // Tăng lên 10 để xuất báo cáo
         request.setAttribute("chartLabels", labels.toString());
         request.setAttribute("chartData", data.toString());
         request.setAttribute("orderStatusStatsJson", statusJson.toString());

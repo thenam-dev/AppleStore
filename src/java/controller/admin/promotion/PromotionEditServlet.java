@@ -5,6 +5,9 @@ import model.entity.catalog.Category;
 import model.entity.catalog.Product;
 import service.promotion.PromotionService;
 
+import service.catalog.CategoryService;
+import service.catalog.ProductService;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,19 +16,28 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet(name = "PromotionEditServlet", urlPatterns = {"/admin/promotions/edit"})
 public class PromotionEditServlet extends HttpServlet {
 
     private final PromotionService promotionService = new PromotionService();
+    
+    // Khởi tạo tầng Service thay vì DAO
+    private final CategoryService categoryService = new CategoryService();
+    private final ProductService productService = new ProductService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            List<Category> categories = new ArrayList<>(); 
-            List<Product> products = new ArrayList<>();    
+            // 1. LẤY DỮ LIỆU DANH MỤC VÀ SẢN PHẨM TỪ SERVICE
+            // Chỉ lấy danh mục đang ACTIVE
+            List<Category> categories = categoryService.getActiveCategories();
+            
+            // Gọi hàm getProducts với page=1, pageSize=1000 để lấy mảng sản phẩm ACTIVE cho dropdown
+            List<Product> products = productService.getProducts(null, null, "ACTIVE", "name_asc", 1, 1000);
+            
+            // Đẩy dữ liệu ra giao diện (JSP)
             req.setAttribute("categories", categories);
             req.setAttribute("products", products);
 
@@ -47,7 +59,7 @@ public class PromotionEditServlet extends HttpServlet {
                         req.setAttribute("validUntilStr", p.getValidUntil().format(formatter));
                     }
                 } else {
-                    req.setAttribute("errorMessage", "[BE] Không tìm thấy mã khuyến mãi yêu cầu.");
+                    req.setAttribute("errorMessage", "Không tìm thấy mã khuyến mãi yêu cầu.");
                 }
             }
             
@@ -57,11 +69,11 @@ public class PromotionEditServlet extends HttpServlet {
             req.getRequestDispatcher("/WEB-INF/views/admin/promotions/form.jsp").forward(req, resp);
 
         } catch (NumberFormatException numEx) {
-            req.setAttribute("errorMessage", "[BE] Định dạng ID không hợp lệ.");
+            req.setAttribute("errorMessage", "Định dạng ID không hợp lệ.");
             req.getRequestDispatcher("/WEB-INF/views/admin/promotions/form.jsp").forward(req, resp);
         } catch (SQLException sqlEx) {
             getServletContext().log("Lỗi DB tại PromotionEditServlet", sqlEx);
-            req.setAttribute("errorMessage", "[BE] Lỗi kết nối DB: " + sqlEx.getMessage());
+            req.setAttribute("errorMessage", "Lỗi kết nối DB: " + sqlEx.getMessage());
             req.getRequestDispatcher("/WEB-INF/views/admin/promotions/form.jsp").forward(req, resp);
         }
     }

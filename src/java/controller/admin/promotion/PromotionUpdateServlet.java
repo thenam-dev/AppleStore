@@ -1,7 +1,11 @@
 package controller.admin.promotion;
 
 import model.entity.promtion.Promotion;
+import model.entity.catalog.Category;
+import model.entity.catalog.Product;
 import service.promotion.PromotionService;
+import service.catalog.CategoryService;
+import service.catalog.ProductService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -14,12 +18,16 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 import model.entity.user.User;
 
 @WebServlet(name = "PromotionUpdateServlet", urlPatterns = {"/admin/promotions/update"})
 public class PromotionUpdateServlet extends HttpServlet {
 
     private final PromotionService promotionService = new PromotionService();
+    private final CategoryService categoryService = new CategoryService();
+    private final ProductService productService = new ProductService();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -40,19 +48,37 @@ public class PromotionUpdateServlet extends HttpServlet {
             p.setMinOrderValue(parseBigDecimal(req.getParameter("minOrderValue")));
             p.setMaxUses(parseIntegerNullable(req.getParameter("maxUses")));
 
-            String scope = p.getScope();
-            String categoryIdStr = req.getParameter("categoryId");
-            String productIdStr = req.getParameter("productId");
+            // Hứng mảng giá trị (nhiều ID từ checkbox)
+            String[] categoryIdsStr = req.getParameterValues("categoryIds");
+            String[] productIdsStr = req.getParameterValues("productIds");
 
+            List<Integer> catIds = new ArrayList<>();
+            if (categoryIdsStr != null) {
+                for (String s : categoryIdsStr) {
+                    Integer id = parseIntegerNullable(s);
+                    if (id != null) catIds.add(id);
+                }
+            }
+
+            List<Integer> prodIds = new ArrayList<>();
+            if (productIdsStr != null) {
+                for (String s : productIdsStr) {
+                    Integer id = parseIntegerNullable(s);
+                    if (id != null) prodIds.add(id);
+                }
+            }
+
+            // Gán danh sách vào model dựa theo Scope
+            String scope = p.getScope();
             if ("CATEGORY".equals(scope)) {
-                p.setCategoryId(parseIntegerNullable(categoryIdStr));
-                p.setProductId(null);
+                p.setCategoryIds(catIds);
+                p.setProductIds(new ArrayList<>());
             } else if ("PRODUCT".equals(scope)) {
-                p.setProductId(parseIntegerNullable(productIdStr));
-                p.setCategoryId(null);
+                p.setProductIds(prodIds);
+                p.setCategoryIds(new ArrayList<>());
             } else {
-                p.setCategoryId(null);
-                p.setProductId(null);
+                p.setCategoryIds(new ArrayList<>());
+                p.setProductIds(new ArrayList<>());
             }
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
@@ -62,8 +88,7 @@ public class PromotionUpdateServlet extends HttpServlet {
             p.setValidFrom(validFromStr != null && !validFromStr.isBlank() ? LocalDateTime.parse(validFromStr, formatter) : null);
             p.setValidUntil(validUntilStr != null && !validUntilStr.isBlank() ? LocalDateTime.parse(validUntilStr, formatter) : null);
 
-            // Xóa canStack theo yêu cầu
-            p.setCanStack(false);
+            p.setCanStack(req.getParameter("canStack") != null);
             p.setIsActive(req.getParameter("isActive") != null);
 
             if (p.getPromoId() > 0) {
@@ -79,12 +104,12 @@ public class PromotionUpdateServlet extends HttpServlet {
         } catch (IllegalArgumentException illEx) {
             forwardErrorToForm(req, resp, p, illEx.getMessage());
         } catch (DateTimeParseException dateEx) {
-            forwardErrorToForm(req, resp, p, "[BE] Định dạng ngày tháng không hợp lệ.");
+            forwardErrorToForm(req, resp, p, "Định dạng ngày tháng không hợp lệ.");
         } catch (SQLException sqlEx) {
             getServletContext().log("Lỗi DB tại PromotionUpdateServlet", sqlEx);
-            forwardErrorToForm(req, resp, p, "[BE] Lỗi DB: " + sqlEx.getMessage());
+            forwardErrorToForm(req, resp, p, "Lỗi DB: " + sqlEx.getMessage());
         } catch (Exception ex) {
-            forwardErrorToForm(req, resp, p, "[BE] Lỗi hệ thống: " + ex.getMessage());
+            forwardErrorToForm(req, resp, p, "Lỗi hệ thống: " + ex.getMessage());
         }
     }
 
@@ -100,10 +125,17 @@ public class PromotionUpdateServlet extends HttpServlet {
             req.setAttribute("validUntilStr", p.getValidUntil().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
         }
 
-        req.setAttribute("categories", new java.util.ArrayList<>()); // Thay bằng load thật nếu cần
-        req.setAttribute("products", new java.util.ArrayList<>());
+        // ĐÃ SỬA: Load lại đầy đủ danh sách Danh mục và Sản phẩm để giao diện không bị trống khi có lỗi
+        try {
+            List<Category> categories = categoryService.getActiveCategories();
+            List<Product> products = productService.getProducts(null, null, "ACTIVE", "name_asc", 1, 1000);
+            req.setAttribute("categories", categories);
+            req.setAttribute("products", products);
+        } catch (Exception e) {
+            req.setAttribute("categories", new ArrayList<>());
+            req.setAttribute("products", new ArrayList<>());
+        }
 
-        // Trả về trang FORM riêng
         req.getRequestDispatcher("/WEB-INF/views/admin/promotions/form.jsp").forward(req, resp);
     }
 

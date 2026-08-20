@@ -17,6 +17,10 @@
   Giá/khuyến mãi/tồn kho thuộc về ProductVariant chứ không thuộc Product, nên phần giá +
   nút "Thêm vào giỏ" đổi theo variant đang chọn — xử lý bằng JS ở cuối trang dựa trên
   mảng variant JSON, KHÔNG có business logic nào khác ngoài việc match đúng variant.
+  Nút "Thêm vào giỏ hàng" submit qua fetch() (kèm header X-Requested-With) thay vì
+  submit thường - CartServlet nhận diện header này thì trả JSON thay vì PRG, nhờ vậy
+  đứng yên tại trang, chỉ hiện toast (góc trên bên phải) + cập nhật badge giỏ hàng
+  trên header, không điều hướng sang /cart (xem CartServlet.doPost).
 --%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c"   uri="jakarta.tags.core" %>
@@ -453,6 +457,116 @@
                         })();
                     </script>
                 </c:if>
+
+                <script>
+                    (function () {
+                        // "Thêm vào giỏ hàng" gửi qua fetch() (kèm header X-Requested-With) để
+                        // CartServlet trả JSON {success,message,cartItemCount} thay vì PRG -
+                        // đứng yên tại trang, chỉ hiện toast + cập nhật badge giỏ hàng trên
+                        // header, KHÔNG điều hướng sang /cart (xem CartServlet.doPost).
+                        var form = document.getElementById('add-to-cart-form');
+                        if (!form) { return; }
+                        var submitBtn = document.getElementById('add-to-cart-btn');
+                        var pending = false;
+
+                        // Nảy vào từ phải, thu về phải lúc biến mất, có thanh thời gian
+                        // (.toast-timer) co dần theo DURATION (xem style.css .toast/.toast-timer).
+                        function showToast(message, variant) {
+                            var stack = document.getElementById('toast-stack');
+                            if (!stack) {
+                                stack = document.createElement('div');
+                                stack.id = 'toast-stack';
+                                stack.className = 'toast-stack';
+                                document.body.appendChild(stack);
+                            }
+                            var DURATION = 2600;
+                            var ENTER_MS = 320; // khớp thời gian transition transform lúc .toast.show (style.css)
+                            var toast = document.createElement('div');
+                            toast.className = 'toast ' + (variant === 'err' ? 'err' : 'ok');
+                            toast.innerHTML = '<svg width="16" height="16"><use href="#' + (variant === 'err' ? 'i-alert' : 'i-check') + '"/></svg>' +
+                                '<span></span><i class="toast-timer"></i>';
+                            toast.querySelector('span').textContent = message;
+                            stack.appendChild(toast);
+                            var timer = toast.querySelector('.toast-timer');
+                            timer.style.transitionDuration = Math.max(DURATION - ENTER_MS, 0) + 'ms';
+                            requestAnimationFrame(function () { toast.classList.add('show'); });
+                            // Chỉ bắt đầu co thanh thời gian SAU KHI toast nảy vào xong hẳn
+                            // (ENTER_MS) - kích cùng lúc với lúc chèn vào DOM (chung 1 rAF
+                            // với .show) khiến trình duyệt gộp 2 thay đổi transform lại,
+                            // thanh co gần như tức thì (nhìn như biến mất luôn, không co dần).
+                            setTimeout(function () { timer.style.transform = 'scaleX(0)'; }, ENTER_MS);
+                            setTimeout(function () {
+                                toast.classList.remove('show');
+                                toast.classList.add('hide');
+                                setTimeout(function () { toast.remove(); }, 220);
+                            }, DURATION);
+                        }
+
+                        function updateHeaderBadge(count) {
+                            var link = document.querySelector('.ic[href$="/cart"]');
+                            if (!link) { return; }
+                            var badge = link.querySelector('.dot-n');
+                            if (typeof count !== 'number' || count <= 0) {
+                                if (badge) { badge.remove(); }
+                                return;
+                            }
+                            if (!badge) {
+                                badge = document.createElement('span');
+                                badge.className = 'dot-n';
+                                // Ghim vào .sf-cart-icon (bọc riêng cái icon) nếu có, để badge
+                                // bám đúng góc icon - không phải link.appendChild() thẳng vào
+                                // .ic (giờ là cả viên thuốc "Giỏ hàng" + icon, xem header.jsp).
+                                (link.querySelector('.sf-cart-icon') || link).appendChild(badge);
+                            }
+                            badge.textContent = count;
+                        }
+
+                        form.addEventListener('submit', function (e) {
+                            e.preventDefault();
+                            if (pending) { return; }
+                            pending = true;
+                            if (submitBtn) { submitBtn.disabled = true; }
+
+                            var variantInput = document.getElementById('selected-variant-id');
+                            var quantityInput = document.getElementById('detail-quantity-input');
+                            var payload = {
+                                action: 'add',
+                                variantId: variantInput ? variantInput.value : '',
+                                quantity: quantityInput ? quantityInput.value : '1'
+                            };
+
+                            fetch('${ctx}/cart', {
+                                method: 'POST',
+                                body: new URLSearchParams(payload),
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                                credentials: 'same-origin'
+                            }).then(function (res) {
+                                var contentType = res.headers.get('content-type') || '';
+                                if (contentType.indexOf('application/json') === -1) {
+                                    if (res.redirected && res.url.indexOf('/login') !== -1) {
+                                        window.location.href = res.url;
+                                        return null;
+                                    }
+                                    throw new Error('unexpected response ' + res.status);
+                                }
+                                return res.json();
+                            }).then(function (data) {
+                                if (!data) { return; }
+                                if (!data.success) {
+                                    showToast(data.message || 'Không thể thêm vào giỏ hàng', 'err');
+                                    return;
+                                }
+                                showToast(data.message || 'Đã thêm vào giỏ hàng', 'ok');
+                                updateHeaderBadge(data.cartItemCount);
+                            }).catch(function () {
+                                showToast('Không thể kết nối máy chủ, vui lòng thử lại', 'err');
+                            }).finally(function () {
+                                pending = false;
+                                if (submitBtn) { submitBtn.disabled = false; }
+                            });
+                        });
+                    })();
+                </script>
             </c:otherwise>
         </c:choose>
     </body>

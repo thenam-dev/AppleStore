@@ -11,6 +11,8 @@ import model.entity.cart.CartItem;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 /**
  * Business rule + validation cho giỏ hàng (rule 2). Service chỉ gọi DAO,
  * không tự mở Connection hay viết SQL - mỗi hàm DAO tự quản Connection riêng
@@ -127,5 +129,32 @@ public class CartService {
         } catch (SQLException e) {
             throw new RuntimeException("Không lấy được giỏ hàng: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Tổng số lượng sản phẩm trong giỏ - dùng để hiển thị badge trên header
+     * (rule: header hiển thị requestScope.cartItemCount ở mọi trang, không
+     * riêng gì trang /cart).
+     */
+    public int getCartItemCount(int customerId) {
+        try {
+            return cartDAO.countCartItems(customerId);
+        } catch (SQLException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Lọc giỏ hàng theo tập cartItemId đã được khách tick chọn ở cart.jsp để
+     * thanh toán (rule 4 - cho phép chọn 1 phần giỏ hàng). selectedIds rỗng
+     * hoặc null coi như "chọn tất cả" (giữ hành vi cũ để tương thích ngược).
+     */
+    public List<CartItem> filterBySelection(List<CartItem> items, Set<Integer> selectedIds) {
+        if (selectedIds == null || selectedIds.isEmpty()) {
+            return items;
+        }
+        return items.stream()
+                .filter(item -> selectedIds.contains(item.getCartItemId()))
+                .collect(Collectors.toList());
     }
 }

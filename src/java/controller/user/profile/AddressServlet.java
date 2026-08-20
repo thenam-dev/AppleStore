@@ -103,14 +103,16 @@ public class AddressServlet extends HttpServlet {
         try {
             switch (path) {
                 case "/add-address": {
+                    String rName = request.getParameter("recipientName");
+                    String rPhone = request.getParameter("recipientPhone");
+                    String aDetail = request.getParameter("addressDetail");
+
                     UserAddress newAddress = new UserAddress();
                     newAddress.setUserId(user.getUserId());
-                    newAddress.setRecipientName(request.getParameter("recipientName"));
-                    newAddress.setRecipientPhone(request.getParameter("recipientPhone"));
-                    newAddress.setProvince(request.getParameter("province"));
-                    newAddress.setDistrict(request.getParameter("district"));
-                    newAddress.setWard(request.getParameter("ward"));
-                    newAddress.setAddressDetail(request.getParameter("addressDetail"));
+                    newAddress.setRecipientName(rName);
+                    newAddress.setRecipientPhone(rPhone);
+                    // Không lưu province, district, ward theo yêu cầu
+                    newAddress.setAddressDetail(aDetail);
 
                     if (addressService.addAddress(newAddress)) {
                         request.getSession().setAttribute("message", "Thêm địa chỉ thành công!");
@@ -120,15 +122,17 @@ public class AddressServlet extends HttpServlet {
                     break;
                 }
                 case "/update-address": {
+                    String rName = request.getParameter("recipientName");
+                    String rPhone = request.getParameter("recipientPhone");
+                    String aDetail = request.getParameter("addressDetail");
+
                     UserAddress updatedAddress = new UserAddress();
                     updatedAddress.setAddressId(Integer.parseInt(request.getParameter("addressId")));
                     updatedAddress.setUserId(user.getUserId());
-                    updatedAddress.setRecipientName(request.getParameter("recipientName"));
-                    updatedAddress.setRecipientPhone(request.getParameter("recipientPhone"));
-                    updatedAddress.setProvince(request.getParameter("province"));
-                    updatedAddress.setDistrict(request.getParameter("district"));
-                    updatedAddress.setWard(request.getParameter("ward"));
-                    updatedAddress.setAddressDetail(request.getParameter("addressDetail"));
+                    updatedAddress.setRecipientName(rName);
+                    updatedAddress.setRecipientPhone(rPhone);
+                    // Không lưu province, district, ward theo yêu cầu
+                    updatedAddress.setAddressDetail(aDetail);
 
                     if (addressService.updateAddress(updatedAddress)) {
                         request.getSession().setAttribute("message", "Cập nhật địa chỉ thành công!");
