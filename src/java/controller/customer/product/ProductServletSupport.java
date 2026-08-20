@@ -14,7 +14,7 @@ import java.util.List;
  */
 public abstract class ProductServletSupport extends HttpServlet {
 
-    protected static final int DEFAULT_PAGE_SIZE = 12;
+    protected static final int DEFAULT_PAGE_SIZE = 8;
     protected static final int LOW_STOCK_THRESHOLD = 5;
 
     private static final List<String> ALLOWED_SORTS =
