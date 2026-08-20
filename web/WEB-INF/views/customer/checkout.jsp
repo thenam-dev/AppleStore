@@ -5,12 +5,7 @@
   vẫn còn nguyên nên trang này dùng ${param.xxx} để đổ lại dữ liệu đã nhập.
   Form field bắt buộc đúng tên: recipientName, recipientPhone, deliveryAddress,
   deliveryTimeSlot, notes, paymentMethod (CK | COD).
-  Mã giảm giá: sessionScope.appliedPromo (Promotion), sessionScope.discountAmount (BigDecimal),
-  set bởi ApplyVoucherServlet (/apply-voucher) và xoá bởi RemoveVoucherServlet (/remove-voucher).
-  Bấm "+ Nhập địa chỉ khác" thì xoá trắng 3 ô Người nhận hàng (không giữ lại dữ liệu địa chỉ
-  mặc định đã điền sẵn trước đó) rồi validate không cho rỗng/toàn khoảng trắng ngay trên trình
-  duyệt trước khi submit (form có novalidate, JS tự vẽ khung .err-msg đỏ) - server
-  (CheckoutService) vẫn validate lại độc lập, JS chỉ để phản hồi nhanh hơn.
+  Mã giảm giá quản lý qua session.
 --%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%@ taglib prefix="c"   uri="jakarta.tags.core" %>
@@ -44,23 +39,14 @@
             <div class="split">
                 <div style="display:flex;flex-direction:column;gap:18px">
 
-                    <%-- Chỉ hiện option địa chỉ MẶC ĐỊNH (không liệt kê hết sổ địa chỉ) + option
-                         "Nhập địa chỉ khác". Đổi địa chỉ mặc định thì vào "Quản lý sổ địa chỉ". --%>
                     <c:set var="defaultAddress" value=""/>
                     <c:forEach var="addr" items="${savedAddresses}">
                         <c:if test="${addr.isDefault == 1}"><c:set var="defaultAddress" value="${addr}"/></c:if>
                     </c:forEach>
-                    <%-- otherSelected: quyết định radio nào đang được chọn. showRecipientForm:
-                         quyết định panel "Người nhận hàng" có hiện hay không - vẫn phải ép hiện
-                         khi submit lỗi ngay trên các trường này (vd. địa chỉ mặc định có SĐT sai
-                         định dạng) để khách còn thấy đường sửa, dù đang chọn địa chỉ mặc định. --%>
+
                     <c:set var="otherSelected" value="${param.addressChoice eq 'other' or (empty param.addressChoice and empty defaultAddress)}"/>
                     <c:set var="showRecipientForm" value="${otherSelected or not empty fieldErrors.recipientName or not empty fieldErrors.recipientPhone or not empty fieldErrors.deliveryAddress}"/>
 
-                    <%-- novalidate: nhường toàn bộ việc báo lỗi rỗng cho JS validate ở cuối
-                         trang (khung .err-msg đỏ đồng bộ với lỗi server trả về), tránh vừa
-                         hiện bubble validate mặc định của trình duyệt vừa hiện khung lỗi tự
-                         viết cho 2 kiểu rỗng khác nhau (rỗng hẳn vs. chỉ toàn khoảng trắng). --%>
                     <form id="checkout-form" method="post" action="${ctx}/checkout" novalidate>
                         <div class="panel"><div class="panel-head">
                                 <h3>Địa chỉ giao hàng</h3>
@@ -90,39 +76,40 @@
                                            ${otherSelected ? 'checked' : ''}>
                                     <span class="pm-dot"></span>
                                     <b style="font-size:13.5px">+ Nhập địa chỉ khác</b>
-
+                                </label>
                             </div>
-                            <div class="panel" id="recipientFormPanel" style="margin-top:18px${showRecipientForm ? '' : ';display:none'}">
-                                <div class="panel-head"><h3>Người nhận hàng</h3></div><div class="panel-pad">
-                                    <div class="grid-2">
-                                        <div class="field ${not empty fieldErrors.recipientName ? 'err' : ''}">
-                                            <label>Tên người nhận <span class="req">*</span></label>
-                                            <input class="input" type="text" name="recipientName" id="recipientNameInput" maxlength="100" required value="<c:out value='${param.recipientName}'/>">
-                                            <c:if test="${not empty fieldErrors.recipientName}">
-                                                <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${fieldErrors.recipientName}"/></div>
-                                                </c:if>
-                                        </div>
-                                        <div class="field ${not empty fieldErrors.recipientPhone ? 'err' : ''}">
-                                            <label>Số điện thoại <span class="req">*</span></label>
-                                            <input class="input" type="tel" name="recipientPhone" id="recipientPhoneInput" maxlength="15" required value="<c:out value='${param.recipientPhone}'/>">
-                                            <c:if test="${not empty fieldErrors.recipientPhone}">
-                                                <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${fieldErrors.recipientPhone}"/></div>
-                                                </c:if>
-                                        </div>
-                                    </div>
-                                    <div class="field ${not empty fieldErrors.deliveryAddress ? 'err' : ''}" style="margin-bottom:0">
-                                        <label>Địa chỉ giao hàng <span class="req">*</span></label>
-                                        <textarea class="textarea" name="deliveryAddress" id="deliveryAddressInput" maxlength="500" required><c:out value="${param.deliveryAddress}"/></textarea>
-                                        <c:choose>
-                                            <c:when test="${not empty fieldErrors.deliveryAddress}">
-                                                <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${fieldErrors.deliveryAddress}"/></div>
-                                                </c:when>
-                                                <c:otherwise><div class="help">Ghi rõ số nhà, đường, phường/quận để shipper tìm đúng</div></c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                    </label>
-                                </div></div></div>
+                        </div>
 
+                        <div class="panel" id="recipientFormPanel" style="margin-top:18px${showRecipientForm ? '' : ';display:none'}">
+                            <div class="panel-head"><h3>Người nhận hàng</h3></div><div class="panel-pad">
+                                <div class="grid-2">
+                                    <div class="field ${not empty fieldErrors.recipientName ? 'err' : ''}">
+                                        <label>Tên người nhận <span class="req">*</span></label>
+                                        <input class="input" type="text" name="recipientName" id="recipientNameInput" maxlength="100" value="<c:out value='${param.recipientName}'/>">
+                                        <c:if test="${not empty fieldErrors.recipientName}">
+                                            <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${fieldErrors.recipientName}"/></div>
+                                        </c:if>
+                                    </div>
+                                    <div class="field ${not empty fieldErrors.recipientPhone ? 'err' : ''}">
+                                        <label>Số điện thoại <span class="req">*</span></label>
+                                        <input class="input" type="tel" name="recipientPhone" id="recipientPhoneInput" maxlength="15" value="<c:out value='${param.recipientPhone}'/>">
+                                        <c:if test="${not empty fieldErrors.recipientPhone}">
+                                            <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${fieldErrors.recipientPhone}"/></div>
+                                        </c:if>
+                                    </div>
+                                </div>
+                                <div class="field ${not empty fieldErrors.deliveryAddress ? 'err' : ''}" style="margin-bottom:0">
+                                    <label>Địa chỉ giao hàng <span class="req">*</span></label>
+                                    <textarea class="textarea" name="deliveryAddress" id="deliveryAddressInput" maxlength="500"><c:out value="${param.deliveryAddress}"/></textarea>
+                                    <c:choose>
+                                        <c:when test="${not empty fieldErrors.deliveryAddress}">
+                                            <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${fieldErrors.deliveryAddress}"/></div>
+                                        </c:when>
+                                        <c:otherwise><div class="help">Ghi rõ số nhà, đường, phường/quận để shipper tìm đúng</div></c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="panel" style="margin-top:18px"><div class="panel-head"><h3>Giao hàng</h3></div><div class="panel-pad">
                                 <div class="grid-2">
@@ -139,19 +126,19 @@
 
                         <div class="panel" style="margin-top:18px"><div class="panel-head"><h3>Phương thức thanh toán</h3></div>
                             <div class="panel-pad" style="display:flex;flex-direction:column;gap:10px">
-                                <label class="pm-option">
+                                <label class="pm-option" style="display:flex;gap:12px;align-items:center;border:1px solid ${paymentMethod eq 'CK' ? 'var(--ink)' : 'var(--line)'};border-radius:var(--r-sm);padding:13px 15px">
                                     <input type="radio" name="paymentMethod" value="CK" class="sr-only" ${paymentMethod eq 'CK' ? 'checked' : ''}>
                                     <span class="pm-dot"></span>
                                     <span style="flex:1"><b style="font-size:13.5px">Chuyển khoản qua SePay</b><br><span style="font-size:12.5px;color:var(--ash)">Quét mã QR ở bước tiếp theo</span></span>
                                 </label>
-                                <label class="pm-option">
+                                <label class="pm-option" style="display:flex;gap:12px;align-items:center;border:1px solid ${paymentMethod eq 'COD' ? 'var(--ink)' : 'var(--line)'};border-radius:var(--r-sm);padding:13px 15px">
                                     <input type="radio" name="paymentMethod" value="COD" class="sr-only" ${paymentMethod eq 'COD' ? 'checked' : ''}>
                                     <span class="pm-dot"></span>
                                     <b style="font-size:13.5px">Thanh toán khi nhận hàng (COD)</b>
                                 </label>
                                 <c:if test="${not empty fieldErrors.paymentMethod}">
                                     <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${fieldErrors.paymentMethod}"/></div>
-                                    </c:if>
+                                </c:if>
                             </div>
                         </div>
                     </form>
@@ -167,29 +154,53 @@
                             </div>
                         </c:forEach>
 
+                        <!-- Form nhập mã giảm giá -->
                         <form action="${ctx}/apply-voucher" method="post" style="display:flex;gap:8px;margin:14px 0 6px">
                             <input class="input" type="text" name="voucherCode"
-                                   value="${not empty sessionScope.appliedPromo ? sessionScope.appliedPromo.code : ''}"
+                                   value="${not empty sessionScope.merchandisePromo ? sessionScope.merchandisePromo.code : (not empty sessionScope.shippingPromo ? sessionScope.shippingPromo.code : '')}"
                                    placeholder="Nhập mã khuyến mãi…" style="height:38px">
                             <button class="btn quiet sm" type="submit">Áp dụng</button>
                         </form>
                         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px">
                             <a href="${ctx}/vouchers" style="color:var(--graphite);border-bottom:1px solid var(--line)">Chọn mã có sẵn</a>
-                            <c:if test="${not empty sessionScope.appliedPromo}">
-                                <a href="${ctx}/remove-voucher" style="color:var(--danger)">Gỡ bỏ mã</a>
-                            </c:if>
                         </div>
 
                         <div class="sum-row"><span>Tạm tính</span><span><fmt:formatNumber value="${cartTotal}" type="number" maxFractionDigits="0"/> ₫</span></div>
-                        <c:if test="${not empty sessionScope.appliedPromo}">
+
+                        <!-- 1. HIỂN THỊ MÃ GIẢM GIÁ HÀNG HÓA -->
+                        <c:if test="${not empty sessionScope.merchandisePromo}">
                             <div class="sum-row" style="color:var(--ok)">
-                                <span>Giảm giá (<c:out value="${sessionScope.appliedPromo.code}"/>)</span>
-                                <span>− <fmt:formatNumber value="${sessionScope.discountAmount}" type="number" maxFractionDigits="0"/> ₫</span>
+                                <span style="display:flex;justify-content:space-between;width:100%">
+                                    <span>Giảm hàng (<c:out value="${sessionScope.merchandisePromo.code}"/>) 
+                                        <a href="${ctx}/remove-voucher?type=merchandise" style="color:var(--danger);font-size:11px;margin-left:6px">[Gỡ]</a>
+                                    </span>
+                                    <span>− <fmt:formatNumber value="${sessionScope.merchandiseDiscount}" type="number" maxFractionDigits="0"/> ₫</span>
+                                </span>
                             </div>
                         </c:if>
 
-                        <c:set var="finalCheckoutTotal" value="${cartTotal - (not empty sessionScope.discountAmount ? sessionScope.discountAmount : 0)}"/>
-                        <div class="sum-row total"><span>Tổng cộng</span><span><fmt:formatNumber value="${finalCheckoutTotal < 0 ? 0 : finalCheckoutTotal}" type="number" maxFractionDigits="0"/> ₫</span></div>
+                        <!-- 2. HIỂN THỊ MÃ FREESHIP -->
+                        <c:if test="${not empty sessionScope.shippingPromo}">
+                            <div class="sum-row" style="color:var(--ok)">
+                                <span style="display:flex;justify-content:space-between;width:100%">
+                                    <span>Freeship (<c:out value="${sessionScope.shippingPromo.code}"/>) 
+                                        <a href="${ctx}/remove-voucher?type=shipping" style="color:var(--danger);font-size:11px;margin-left:6px">[Gỡ]</a>
+                                    </span>
+                                    <span>− <fmt:formatNumber value="${sessionScope.shippingDiscount}" type="number" maxFractionDigits="0"/> ₫</span>
+                                </span>
+                            </div>
+                        </c:if>
+
+                        <!-- TÍNH TOÁN TỔNG TIỀN CUỐI CÙNG -->
+                        <c:set var="totalMerchDiscount" value="${not empty sessionScope.merchandiseDiscount ? sessionScope.merchandiseDiscount : 0}"/>
+                        <c:set var="totalShipDiscount" value="${not empty sessionScope.shippingDiscount ? sessionScope.shippingDiscount : 0}"/>
+                        <c:set var="combinedDiscount" value="${totalMerchDiscount + totalShipDiscount}"/>
+                        <c:set var="finalCheckoutTotal" value="${cartTotal - combinedDiscount}"/>
+
+                        <div class="sum-row total">
+                            <span>Tổng cộng</span>
+                            <span><fmt:formatNumber value="${finalCheckoutTotal < 0 ? 0 : finalCheckoutTotal}" type="number" maxFractionDigits="0"/> ₫</span>
+                        </div>
 
                         <button type="submit" form="checkout-form" id="placeOrderBtn" class="btn titan block" style="margin-top:16px">Đặt hàng</button>
                         <a class="btn ghost block" style="margin-top:10px" href="${ctx}/cart">Quay lại giỏ hàng</a>
@@ -206,28 +217,11 @@
                 var addressInput = document.getElementById('deliveryAddressInput');
                 var formPanel = document.getElementById('recipientFormPanel');
 
-                // LƯU Ý: không khoá readonly các ô này khi chọn địa chỉ có sẵn - chỉ điền sẵn
-                // dữ liệu để tiện, khách vẫn sửa được nếu địa chỉ đã lưu trong sổ bị thiếu/sai
-                // (vd. số điện thoại cũ không còn đúng định dạng khiến submit bị chặn mà
-                // không có cách nào sửa nếu ô bị khoá cứng).
-                //
-                // toggleVisibility=false ở lần gọi đầu (load trang) để không đè lên trạng
-                // thái hiện/ẩn panel mà server đã tính sẵn (JSP ép hiện panel khi submit lỗi
-                // ngay trên các trường này, dù đang chọn địa chỉ mặc định) - chỉ bật/tắt panel
-                // theo lựa chọn MỚI của khách từ lần bấm radio trở đi.
                 function applySelection(radio, toggleVisibility) {
                     if (toggleVisibility && formPanel) {
                         formPanel.style.display = radio.value === 'other' ? '' : 'none';
                     }
                     if (radio.value === 'other') {
-                        // Khách CHỦ ĐỘNG bấm "+ Nhập địa chỉ khác" ngay trong phiên này
-                        // (toggleVisibility=true) - xoá trắng 3 ô, tránh còn sót dữ liệu
-                        // của địa chỉ mặc định vừa điền sẵn trước đó (bug cũ: bấm "Nhập
-                        // địa chỉ khác" nhưng form vẫn hiện tên/SĐT/địa chỉ mặc định).
-                        // KHÔNG xoá ở lần gọi đầu khi tải trang (toggleVisibility=false)
-                        // vì lúc đó có thể đang hiện lại dữ liệu khách vừa nhập bị lỗi
-                        // validate (submit thất bại, forward lại kèm ${param.xxx}) - xoá
-                        // đi sẽ mất luôn dữ liệu khách vừa gõ.
                         if (toggleVisibility) {
                             if (nameInput) { nameInput.value = ''; }
                             if (phoneInput) { phoneInput.value = ''; }
@@ -237,18 +231,10 @@
                         return;
                     }
                     var label = radio.closest('.addr-option');
-                    if (!label) {
-                        return;
-                    }
-                    if (nameInput) {
-                        nameInput.value = label.dataset.name || '';
-                    }
-                    if (phoneInput) {
-                        phoneInput.value = label.dataset.phone || '';
-                    }
-                    if (addressInput) {
-                        addressInput.value = label.dataset.address || '';
-                    }
+                    if (!label) { return; }
+                    if (nameInput) { nameInput.value = label.dataset.name || ''; }
+                    if (phoneInput) { phoneInput.value = label.dataset.phone || ''; }
+                    if (addressInput) { addressInput.value = label.dataset.address || ''; }
                 }
 
                 radios.forEach(function (radio) {
@@ -265,15 +251,6 @@
         </script>
 
         <script>
-            // Validate không để trống 3 trường bắt buộc của "Người nhận hàng" ngay
-            // trên trình duyệt trước khi submit. HTML required (đã thêm ở input/textarea)
-            // chặn được rỗng hẳn, nhưng không chặn được chuỗi toàn khoảng trắng (server
-            // .trim() rồi mới coi là rỗng, xem CheckoutService) nên vẫn cần JS ở đây.
-            // Bỏ qua nếu panel đang ẩn (khách dùng địa chỉ mặc định có sẵn, dữ liệu đã
-            // hợp lệ từ sổ địa chỉ - server vẫn tự validate lại dù client bỏ qua).
-            // stopImmediatePropagation() khi có lỗi để script chặn-bấm-đúp bên dưới
-            // (đăng ký submit trên cùng #checkout-form) không chạy - nếu không, nút
-            // "Đặt hàng" sẽ bị disable vĩnh viễn dù request chưa từng được gửi đi.
             (function () {
                 var form = document.getElementById('checkout-form');
                 var formPanel = document.getElementById('recipientFormPanel');
@@ -318,7 +295,6 @@
                     if (help) { help.style.display = ''; }
                 }
 
-                // Gõ lại thì gỡ lỗi ngay, không cần đợi submit lại mới biết đã sửa đúng.
                 REQUIRED_FIELDS.forEach(function (f) {
                     var input = document.getElementById(f.id);
                     if (!input) { return; }
@@ -352,16 +328,10 @@
         </script>
 
         <script>
-            // Chặn bấm đúp/gửi lại nút "Đặt hàng" - server hiện chưa có cơ chế chống
-            // trùng submit (idempotency key), bấm đúp nhanh có thể tạo 2 đơn giống hệt
-            // nhau. Chỉ disable trong sự kiện submit (không preventDefault) nên request
-            // đầu tiên vẫn đi bình thường, chỉ chặn các lần bấm/Enter tiếp theo.
             (function () {
                 var form = document.getElementById('checkout-form');
                 var btn = document.getElementById('placeOrderBtn');
-                if (!form || !btn) {
-                    return;
-                }
+                if (!form || !btn) { return; }
                 form.addEventListener('submit', function () {
                     btn.disabled = true;
                     btn.textContent = 'Đang xử lý…';
