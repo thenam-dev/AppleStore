@@ -73,9 +73,15 @@ public class AddressServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
-        // Lấy danh sách địa chỉ và truyền vào JSP
-        List<UserAddress> addressList = addressService.getAddressesByUserId(user.getUserId());
+        String keyword = request.getParameter("keyword");
+        String filter = request.getParameter("filter");
+        String sort = request.getParameter("sort");
+
+        List<UserAddress> addressList = addressService.getFilteredAddresses(user.getUserId(), keyword, filter, sort);
         request.setAttribute("addressList", addressList);
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("filter", filter);
+        request.setAttribute("sort", sort);
 
         request.getRequestDispatcher("/WEB-INF/views/common/addresses.jsp").forward(request, response);
     }

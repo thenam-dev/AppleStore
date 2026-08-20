@@ -193,13 +193,17 @@
         <a href="${ctx}/profile" class="${activeMenu == 'profile' ? 'active' : ''}">Hồ sơ cá nhân</a>
         <c:if test="${sessionScope.user.role == 'CUSTOMER'}">
             <a href="${ctx}/addresses" class="${activeMenu == 'addresses' ? 'active' : ''}">Sổ địa chỉ</a>
+<<<<<<< HEAD
             <a href="${ctx}/account/orders" class="${activeMenu == 'orders' ? 'active' : ''}">Đơn hàng của tôi</a>
             <a href="${ctx}/wishlist" class="${activeMenu == 'wishlist' ? 'active' : ''}">Yêu thích</a>
+=======
+            <a href="${ctx}/orders" class="${activeMenu == 'orders' ? 'active' : ''}">Đơn hàng của tôi</a>
+>>>>>>> origin/main
         </c:if>
         <c:if test="${sessionScope.user.role != 'CUSTOMER'}">
             <a href="${ctx}/dashboard" class="${activeMenu == 'dashboard' ? 'active' : ''}">Quản trị hệ thống</a>
         </c:if>
         <a href="${ctx}/change-password" class="${activeMenu == 'change-password' ? 'active' : ''}">Đổi mật khẩu</a>
-        <a href="${ctx}/logout" class="danger">Đăng xuất</a>
     </nav>
 </aside>
+

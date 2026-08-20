@@ -152,6 +152,37 @@ public class OrderDAO {
         }
     }
 
+    public Integer findBestSaleStaffId() throws SQLException {
+        String sql = """
+            SELECT u.user_id, COUNT(o.order_id) AS active_tasks
+            FROM users u
+            LEFT JOIN orders o ON u.user_id = o.assigned_sale_staff_id 
+                AND o.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'PREPARING', 'DISPATCHED')
+            WHERE u.role = 'SALE_STAFF' AND u.status = 'ACTIVE'
+            GROUP BY u.user_id
+            ORDER BY active_tasks ASC, RAND()
+            LIMIT 1
+        """;
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("user_id");
+            }
+        }
+        return null;
+    }
+
+    public void assignSaleStaff(int orderId, int staffId) throws SQLException {
+        String sql = "UPDATE orders SET assigned_sale_staff_id = ? WHERE order_id = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, staffId);
+            ps.setInt(2, orderId);
+            ps.executeUpdate();
+        }
+    }
+
     public boolean updateStatus(int orderId, String newStatus) throws SQLException {
         String sql = "UPDATE orders SET status = ? WHERE order_id = ?";
         try (Connection connection = DBConnection.getConnection();

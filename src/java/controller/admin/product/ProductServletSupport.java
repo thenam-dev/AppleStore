@@ -1,6 +1,7 @@
 package controller.admin.product;
 
 import config.AppConfig;
+import model.entity.catalog.Category;
 import model.entity.catalog.Product;
 import service.catalog.CategoryService;
 import service.catalog.ProductService;
@@ -13,12 +14,14 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class ProductServletSupport extends HttpServlet {
     protected static final String LIST_VIEW = "/WEB-INF/views/admin/products/list.jsp";
     protected static final String FORM_VIEW = "/WEB-INF/views/admin/products/form.jsp";
     protected static final String PRODUCT_LIST_PATH = "/admin/products";
+    protected static final String PRODUCT_IMAGE_PATH = "/admin/products/images";
     protected static final String FLASH_SUCCESS_KEY = "successMsg";
     protected static final String FLASH_ERROR_KEY = "errorMsg";
 
@@ -28,6 +31,25 @@ public abstract class ProductServletSupport extends HttpServlet {
     /** Đưa dữ liệu tham chiếu cho form/list sản phẩm lên request: danh mục, trạng thái, tình trạng, mã thị trường, sort. */
     protected void setProductReferenceData(HttpServletRequest request) throws java.sql.SQLException {
         request.setAttribute("categories", categoryService.getActiveCategories());
+        request.setAttribute("productStatusOptions", productService.getAllowedStatuses());
+        request.setAttribute("productConditionOptions", productService.getAllowedConditions());
+        request.setAttribute("productImportTypeOptions", productService.getAllowedImportTypes());
+        request.setAttribute("sortOptions", buildSortOptions());
+    }
+
+    /** Đưa dữ liệu tham chiếu cho form sản phẩm, kèm danh mục hiện tại nếu nó đang tạm ẩn. */
+    protected void setProductReferenceData(HttpServletRequest request, Product product) throws java.sql.SQLException {
+        List<Category> categories = new ArrayList<>(categoryService.getActiveCategories());
+        if (product != null && product.getProductId() > 0 && product.getCategoryId() > 0) {
+            Category currentCategory = categoryService.getCategoryById(product.getCategoryId());
+            if (!currentCategory.getIsActive()) {
+                categories.add(currentCategory);
+                request.setAttribute("currentCategoryInactive", true);
+                request.setAttribute("currentCategoryName", currentCategory.getName());
+            }
+        }
+
+        request.setAttribute("categories", categories);
         request.setAttribute("productStatusOptions", productService.getAllowedStatuses());
         request.setAttribute("productConditionOptions", productService.getAllowedConditions());
         request.setAttribute("productImportTypeOptions", productService.getAllowedImportTypes());
@@ -162,6 +184,13 @@ public abstract class ProductServletSupport extends HttpServlet {
                                                     String flashKey, String message) throws IOException {
         setFlashMessage(request, flashKey, message);
         redirectToProductList(request, response);
+    }
+
+    /** Lưu flash message rồi mở màn quản lý ảnh của sản phẩm theo pattern PRG. */
+    protected void redirectToProductImagesWithMessage(HttpServletRequest request, HttpServletResponse response,
+                                                      int productId, String flashKey, String message) throws IOException {
+        setFlashMessage(request, flashKey, message);
+        response.sendRedirect(request.getContextPath() + PRODUCT_IMAGE_PATH + "?productId=" + productId);
     }
 
     /** Parse số nguyên dương, trả về mặc định nếu giá trị không hợp lệ. */

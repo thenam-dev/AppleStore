@@ -123,4 +123,56 @@ public class UserAddressDAO {
         }
         return false;
     }
+
+    public List<UserAddress> getFilteredAddresses(int userId, String keyword, String filter, String sort) {
+        List<UserAddress> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM user_addresses WHERE user_id = ? AND is_deleted = 0");
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (recipient_name LIKE ? OR recipient_phone LIKE ? OR address_detail LIKE ?)");
+        }
+        if ("default".equals(filter)) {
+            sql.append(" AND is_default = 1");
+        } else if ("normal".equals(filter)) {
+            sql.append(" AND is_default = 0");
+        }
+        if ("oldest".equals(sort)) {
+            sql.append(" ORDER BY created_at ASC");
+        } else if ("newest".equals(sort)) {
+            sql.append(" ORDER BY created_at DESC");
+        } else {
+            sql.append(" ORDER BY is_default DESC, created_at DESC");
+        }
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            ps.setInt(paramIndex++, userId);
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String kw = "%" + keyword.trim() + "%";
+                ps.setString(paramIndex++, kw);
+                ps.setString(paramIndex++, kw);
+                ps.setString(paramIndex++, kw);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    UserAddress address = new UserAddress();
+                    address.setAddressId(rs.getInt("address_id"));
+                    address.setUserId(rs.getInt("user_id"));
+                    address.setRecipientName(rs.getString("recipient_name"));
+                    address.setRecipientPhone(rs.getString("recipient_phone"));
+                    address.setProvince(rs.getString("province"));
+                    address.setDistrict(rs.getString("district"));
+                    address.setWard(rs.getString("ward"));
+                    address.setAddressDetail(rs.getString("address_detail"));
+                    address.setIsDefault(rs.getInt("is_default"));
+                    address.setIsDeleted(rs.getInt("is_deleted"));
+                    address.setCreatedAt(rs.getTimestamp("created_at"));
+                    address.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    list.add(address);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }

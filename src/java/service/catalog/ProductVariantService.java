@@ -1,15 +1,18 @@
 package service.catalog;
 
 import config.AppConfig;
+import dao.catalog.CategoryDAO;
 import dao.catalog.ProductDAO;
 import dao.catalog.ProductVariantDAO;
+import model.entity.catalog.Category;
+import model.entity.catalog.Product;
 import model.entity.catalog.ProductVariant;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
+import java.util.Objects;
 
 public class ProductVariantService {
     private static final int DEFAULT_PAGE = 1;
@@ -18,8 +21,6 @@ public class ProductVariantService {
     private static final int MAX_SKU_LENGTH = 50;
     private static final int MAX_LABEL_LENGTH = 150;
     private static final int MAX_COLOR_NAME_LENGTH = 50;
-    private static final int MAX_COLOR_HEX_LENGTH = 7;
-    private static final int MAX_CHIP_OPTION_LENGTH = 50;
     private static final List<String> ALLOWED_STATUSES = List.of("ACTIVE", "INACTIVE");
     private static final List<String> ALLOWED_CONNECTIVITIES = List.of("WIFI", "WIFI_CELLULAR");
     private static final List<String> ALLOWED_SORTS = List.of(
@@ -34,20 +35,27 @@ public class ProductVariantService {
             "stock_asc",
             "stock_desc"
     );
-    private static final Pattern COLOR_HEX_PATTERN = Pattern.compile("^#[0-9A-F]{6}$");
 
     private final ProductVariantDAO productVariantDAO;
     private final ProductDAO productDAO;
+    private final CategoryDAO categoryDAO;
+    private final ProductVariantAttributeService attributeService = new ProductVariantAttributeService();
 
     /** Khởi tạo service biến thể với DAO mặc định. */
     public ProductVariantService() {
-        this(new ProductVariantDAO(), new ProductDAO());
+        this(new ProductVariantDAO(), new ProductDAO(), new CategoryDAO());
     }
 
     /** Cho phép inject DAO để dễ kiểm thử hoặc thay thế nguồn dữ liệu. */
     public ProductVariantService(ProductVariantDAO productVariantDAO, ProductDAO productDAO) {
+        this(productVariantDAO, productDAO, new CategoryDAO());
+    }
+
+    /** Cho phép inject DAO để dễ kiểm thử hoặc thay thế nguồn dữ liệu. */
+    public ProductVariantService(ProductVariantDAO productVariantDAO, ProductDAO productDAO, CategoryDAO categoryDAO) {
         this.productVariantDAO = productVariantDAO;
         this.productDAO = productDAO;
+        this.categoryDAO = categoryDAO;
     }
 
     /** Lấy danh sách biến thể của một sản phẩm theo filter, sort và phân trang. */
@@ -100,6 +108,13 @@ public class ProductVariantService {
     /** Cập nhật biến thể sau khi validate ID, product cha và chống trùng SKU với biến thể khác. */
     public void updateVariant(ProductVariant variant) throws SQLException {
         validateVariantId(variant.getVariantId());
+        normalizeProductId(variant.getProductId());
+
+        ProductVariant existingVariant = getVariantById(variant.getVariantId());
+        if (existingVariant.getProductId() != variant.getProductId()) {
+            throw new IllegalArgumentException("Không thể chuyển biến thể sang sản phẩm khác.");
+        }
+
         normalizeVariant(variant);
         validateVariant(variant);
         validateProductExists(variant.getProductId());
@@ -112,11 +127,28 @@ public class ProductVariantService {
         }
     }
 
-    /** Đổi trạng thái active/inactive của một biến thể. */
-    public void changeStatus(int variantId, boolean isActive) throws SQLException {
+    /**
+     * Đổi trạng thái active/inactive của một biến thể thuộc đúng product cha.
+     * Khi bật variant, product cha cũng phải đang ACTIVE.
+     */
+    public void changeStatus(int productId, int variantId, boolean isActive) throws SQLException {
+        normalizeProductId(productId);
         validateVariantId(variantId);
-        if (!productVariantDAO.updateStatus(variantId, isActive)) {
-            throw new IllegalArgumentException("Biến thể không tồn tại.");
+
+        ProductVariant variant = productVariantDAO.findById(variantId)
+                .orElseThrow(() -> new IllegalArgumentException("Biến thể không tồn tại."));
+        if (variant.getProductId() != productId) {
+            throw new IllegalArgumentException("Biến thể không thuộc sản phẩm này.");
+        }
+
+        if (isActive) {
+            Product product = productDAO.findById(productId)
+                    .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại."));
+            validateProductAndCategoryCanSellVariant(product);
+        }
+
+        if (!productVariantDAO.updateStatus(productId, variantId, isActive)) {
+            throw new IllegalArgumentException("Biến thể không thuộc sản phẩm này hoặc không tồn tại.");
         }
     }
 
@@ -144,13 +176,12 @@ public class ProductVariantService {
         variant.setSku(normalizeRequiredSku(variant.getSku()));
         variant.setVariantLabel(trimRequired(variant.getVariantLabel()));
         variant.setColorName(normalizeOptional(variant.getColorName()));
-        variant.setColorHex(normalizeOptionalUpper(variant.getColorHex()));
+        variant.setCaseSizeMm(variant.getCaseSizeMm());
         variant.setConnectivity(normalizeOptionalUpper(variant.getConnectivity()));
-        variant.setChipOption(normalizeOptional(variant.getChipOption()));
     }
 
     /** Kiểm tra toàn bộ ràng buộc nghiệp vụ của biến thể sản phẩm. */
-    private void validateVariant(ProductVariant variant) {
+    private void validateVariant(ProductVariant variant) throws SQLException {
         if (variant.getProductId() <= 0) {
             throw new IllegalArgumentException("Sản phẩm không hợp lệ.");
         }
@@ -163,10 +194,8 @@ public class ProductVariantService {
         if (variant.getColorName() != null && variant.getColorName().length() > MAX_COLOR_NAME_LENGTH) {
             throw new IllegalArgumentException("Tên màu không được vượt quá 50 ký tự.");
         }
-        if (variant.getColorHex() != null) {
-            if (variant.getColorHex().length() > MAX_COLOR_HEX_LENGTH || !COLOR_HEX_PATTERN.matcher(variant.getColorHex()).matches()) {
-                throw new IllegalArgumentException("Mã màu phải theo định dạng #RRGGBB.");
-            }
+        if (variant.getCaseSizeMm() != null && variant.getCaseSizeMm() <= 0) {
+            throw new IllegalArgumentException("Kích thước vỏ phải lớn hơn 0.");
         }
         if (variant.getStorageCapacityGb() != null && variant.getStorageCapacityGb() < 0) {
             throw new IllegalArgumentException("Dung lượng lưu trữ phải lớn hơn hoặc bằng 0.");
@@ -177,12 +206,13 @@ public class ProductVariantService {
         if (variant.getConnectivity() != null && !ALLOWED_CONNECTIVITIES.contains(variant.getConnectivity())) {
             throw new IllegalArgumentException("Kết nối không hợp lệ.");
         }
-        if (variant.getChipOption() != null && variant.getChipOption().length() > MAX_CHIP_OPTION_LENGTH) {
-            throw new IllegalArgumentException("Tùy chọn chip không được vượt quá 50 ký tự.");
+        Product product = productDAO.findById(variant.getProductId())
+                .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại."));
+        if (variant.isActive()) {
+            validateProductAndCategoryCanSellVariant(product);
         }
-        if (variant.getScreenSizeInch() != null && variant.getScreenSizeInch().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Kích thước màn hình phải lớn hơn 0.");
-        }
+        validateConfiguredAttributes(variant, product);
+        validateUniqueCombination(variant, product);
         if (variant.getPrice() == null || variant.getPrice().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Giá phải lớn hơn hoặc bằng 0.");
         }
@@ -211,10 +241,80 @@ public class ProductVariantService {
         }
     }
 
+    /** Bắt buộc các dimension đã cấu hình cho nhóm sản phẩm phải được nhập đầy đủ. */
+    private void validateConfiguredAttributes(ProductVariant variant, Product product) {
+        for (ProductVariantAttributeService.Definition definition : attributeService.getDefinitions(product)) {
+            switch (definition.getKey()) {
+                case "color" -> requireText(variant.getColorName(), "Màu sắc là bắt buộc.");
+                case "storage" -> requireInteger(variant.getStorageCapacityGb(), "Dung lượng là bắt buộc.");
+                case "ram" -> requireInteger(variant.getRamGb(), "RAM là bắt buộc.");
+                case "connectivity" -> requireText(variant.getConnectivity(), "Kết nối là bắt buộc.");
+                case "caseSize" -> requireInteger(variant.getCaseSizeMm(), "Kích thước vỏ là bắt buộc.");
+                default -> { }
+            }
+        }
+    }
+
+    /** Không cho phép hai SKU khác nhau đại diện cho cùng một tổ hợp selector. */
+    private void validateUniqueCombination(ProductVariant candidate, Product product) throws SQLException {
+        int total = productVariantDAO.countByProduct(candidate.getProductId(), null, null);
+        if (total <= 0) {
+            return;
+        }
+        List<ProductVariant> existingVariants = productVariantDAO.findByProduct(
+                candidate.getProductId(), null, null, "newest", 1, total);
+        List<ProductVariantAttributeService.Definition> definitions = attributeService.getDefinitions(product);
+        for (ProductVariant existing : existingVariants) {
+            if (existing.getVariantId() == candidate.getVariantId()) {
+                continue;
+            }
+            boolean same = definitions.stream().allMatch(definition ->
+                    Objects.equals(attributeValue(existing, definition.getKey()),
+                            attributeValue(candidate, definition.getKey())));
+            if (same) {
+                throw new IllegalArgumentException("Tổ hợp thuộc tính này đã có variant khác.");
+            }
+        }
+    }
+
+    private Object attributeValue(ProductVariant variant, String key) {
+        return switch (key) {
+            case "color" -> normalizeOptional(variant.getColorName());
+            case "storage" -> variant.getStorageCapacityGb();
+            case "ram" -> variant.getRamGb();
+            case "connectivity" -> normalizeOptionalUpper(variant.getConnectivity());
+            case "caseSize" -> variant.getCaseSizeMm();
+            default -> null;
+        };
+    }
+
+    private void requireText(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    private void requireInteger(Integer value, String message) {
+        if (value == null) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
     /** Đảm bảo product cha tồn tại trước khi tạo hoặc cập nhật biến thể. */
     private void validateProductExists(int productId) throws SQLException {
         if (productDAO.findById(productId).isEmpty()) {
             throw new IllegalArgumentException("Sản phẩm không tồn tại.");
+        }
+    }
+
+    private void validateProductAndCategoryCanSellVariant(Product product) throws SQLException {
+        if (!"ACTIVE".equalsIgnoreCase(product.getStatus())) {
+            throw new IllegalArgumentException("Không thể bật biến thể khi sản phẩm chưa ở trạng thái đang bán.");
+        }
+        Category category = categoryDAO.findById(product.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Danh mục không tồn tại."));
+        if (!category.getIsActive()) {
+            throw new IllegalArgumentException("Không thể bật biến thể khi danh mục đang tạm ẩn.");
         }
     }
 

@@ -388,6 +388,7 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .option-chip:hover{border-color:var(--ink)}
 .option-chip.active{border-color:var(--ink);color:var(--ink);font-weight:600;background:#F7F8FA}
 .option-chip[disabled]{opacity:.4;pointer-events:none}
+.option-chip.fixed,.option-chip.fixed[disabled]{opacity:1;cursor:default;background:#F7F8FA;color:var(--ink);border-color:var(--line)}
 
 /* ---------- 10. GIAO DIỆN QUẢN TRỊ ---------- */
 .adm{display:grid;grid-template-columns:230px 1fr;min-height:100vh}

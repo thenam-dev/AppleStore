@@ -39,4 +39,7 @@ public class UserAddressService {
     public boolean deleteAddress(int addressId, int userId) {
         return addressDAO.deleteAddress(addressId, userId);
     }
+    public List<UserAddress> getFilteredAddresses(int userId, String keyword, String filter, String sort) {
+        return addressDAO.getFilteredAddresses(userId, keyword, filter, sort);
+    }
 }

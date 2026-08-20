@@ -27,6 +27,7 @@
         <a class="btn ghost sm" href="${appPath}/admin/products">Hủy</a>
         <c:if test="${isEdit}">
           <a class="btn ghost sm" href="${appPath}/admin/products/variants?productId=${product.productId}">Biến thể</a>
+          <a class="btn ghost sm" href="${appPath}/admin/products/images?productId=${product.productId}">Ảnh</a>
         </c:if>
         <button class="btn sm" type="submit" form="productForm">${isEdit ? 'Lưu thay đổi' : 'Tạo sản phẩm'}</button>
       </div>
@@ -34,6 +35,11 @@
 
     <div class="adm-body">
       <jsp:include page="/WEB-INF/views/common/flash.jsp" />
+      <c:if test="${currentCategoryInactive}">
+        <div class="note-box" style="margin-bottom:16px">
+          <div>Danh mục hiện tại <b><c:out value="${currentCategoryName}" /></b> đang tạm ẩn. Sản phẩm vẫn giữ danh mục này, nhưng không thể chuyển sang Đang bán cho đến khi danh mục được bật lại.</div>
+        </div>
+      </c:if>
 
       <form id="productForm" class="panel" action="${appPath}/admin/products/update" method="post">
         <c:if test="${isEdit}">
@@ -53,6 +59,7 @@
                 <c:forEach var="category" items="${categories}">
                   <option value="${category.categoryId}" ${product.categoryId eq category.categoryId ? 'selected' : ''}>
                     <c:out value="${category.name}" />
+                    <c:if test="${not category.isActive}"> (đang tạm ẩn)</c:if>
                   </option>
                 </c:forEach>
               </select>
@@ -122,6 +129,7 @@
           </div>
         </div>
       </form>
+
     </div>
   </div>
 </div>

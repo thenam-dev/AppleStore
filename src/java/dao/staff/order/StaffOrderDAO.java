@@ -192,6 +192,16 @@ public class StaffOrderDAO {
         return null;
     }
 
+    public void assignSaleStaff(int orderId, int staffId) throws SQLException {
+        String sql = "UPDATE orders SET assigned_sale_staff_id = ? WHERE order_id = ? AND (assigned_sale_staff_id IS NULL OR assigned_sale_staff_id = 0)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, staffId);
+            ps.setInt(2, orderId);
+            ps.executeUpdate();
+        }
+    }
+
     public void assignDelivery(int orderId, int shipperId) throws SQLException {
         String sql = "INSERT INTO deliveries (order_id, staff_id, status) VALUES (?, ?, 'ASSIGNED') " +
                      "ON DUPLICATE KEY UPDATE staff_id = ?, status = 'ASSIGNED'";

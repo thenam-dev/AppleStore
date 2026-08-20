@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
  *
  * @author admin
  */
-@WebServlet(name = "AdminDashboardServlet", urlPatterns = {"/admin/dashboard", "/staff/dashboard"})
+@WebServlet(name = "AdminDashboardServlet", urlPatterns = {"/admin/dashboard", "/staff/dashboard", "/delivery/dashboard"})
 public class AdminDashboardServlet extends HttpServlet {
 
     @Override
@@ -24,18 +24,15 @@ public class AdminDashboardServlet extends HttpServlet {
         service.dashboard.DashboardService service = new service.dashboard.DashboardService();
         
         model.entity.user.User user = (model.entity.user.User) request.getSession().getAttribute(config.AppConfig.SESSION_USER);
-        
-        // Giao việc quyết định xem user này có bị giới hạn dữ liệu (scoping) hay không cho tầng Service xử lý
-        Integer staffId = service.extractStaffId(user);
 
         String startDate = request.getParameter("startDate");
         String endDate = request.getParameter("endDate");
 
         // Lấy dữ liệu tổng quan
-        dto.DashboardStatsDTO stats = service.getDashboardStats(startDate, endDate, staffId);
+        dto.DashboardStatsDTO stats = service.getDashboardStats(startDate, endDate, user);
 
         // Lấy dữ liệu báo cáo (Revenue Chart)
-        java.util.LinkedHashMap<String, Double> revenueMap = service.getRevenueByDate(startDate, endDate, staffId);
+        java.util.LinkedHashMap<String, Double> revenueMap = service.getRevenueByDate(startDate, endDate, user);
         
         StringBuilder labels = new StringBuilder("[");
         StringBuilder data = new StringBuilder("[");
@@ -53,7 +50,7 @@ public class AdminDashboardServlet extends HttpServlet {
         data.append("]");
 
         // Lấy dữ liệu thống kê trạng thái đơn hàng (Doughnut Chart)
-        java.util.LinkedHashMap<String, Integer> statusStats = service.getOrderStatusStats(startDate, endDate, staffId);
+        java.util.LinkedHashMap<String, Integer> statusStats = service.getOrderStatusStats(startDate, endDate, user);
         StringBuilder statusJson = new StringBuilder("[");
         for (java.util.Map.Entry<String, Integer> entry : statusStats.entrySet()) {
             statusJson.append("{\"status\":\"").append(entry.getKey()).append("\", \"count\":").append(entry.getValue()).append("},");
@@ -65,8 +62,8 @@ public class AdminDashboardServlet extends HttpServlet {
 
         // Bắn sang JSP
         request.setAttribute("stats", stats);
-        request.setAttribute("recentOrders", service.getRecentOrders(4, startDate, endDate, staffId));
-        request.setAttribute("bestSellingProducts", service.getBestSellingProducts(10, startDate, endDate, staffId)); // Tăng lên 10 để xuất báo cáo
+        request.setAttribute("recentOrders", service.getRecentOrders(4, startDate, endDate, user));
+        request.setAttribute("bestSellingProducts", service.getBestSellingProducts(10, startDate, endDate, user)); // Tăng lên 10 để xuất báo cáo
         request.setAttribute("chartLabels", labels.toString());
         request.setAttribute("chartData", data.toString());
         request.setAttribute("orderStatusStatsJson", statusJson.toString());

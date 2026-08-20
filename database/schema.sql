@@ -170,6 +170,7 @@ CREATE TABLE product_specifications (
     spec_name     VARCHAR(100) NOT NULL,
     spec_value    VARCHAR(300) NOT NULL,
     display_order INT NOT NULL DEFAULT 0,
+    UNIQUE KEY UX_product_specifications_name (product_id, spec_group, spec_name),
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE INDEX IX_product_specifications_product_id ON product_specifications (product_id, display_order);
@@ -181,12 +182,11 @@ CREATE TABLE product_variants (
     sku                   VARCHAR(50) NOT NULL UNIQUE,
     variant_label         VARCHAR(150) NOT NULL,
     color_name            VARCHAR(50) NULL,
-    color_hex             VARCHAR(7) NULL,
+    case_size_mm          INT NULL CHECK (case_size_mm IS NULL OR case_size_mm > 0),
     storage_capacity_gb   INT NULL CHECK (storage_capacity_gb IS NULL OR storage_capacity_gb >= 0),
     ram_gb                INT NULL CHECK (ram_gb IS NULL OR ram_gb >= 0),
-    connectivity          VARCHAR(20) NULL CHECK (connectivity IS NULL OR connectivity IN ('WIFI','WIFI_CELLULAR')),
-    chip_option           VARCHAR(50) NULL,
-    screen_size_inch      DECIMAL(4,1) NULL CHECK (screen_size_inch IS NULL OR screen_size_inch > 0),
+    connectivity          VARCHAR(20) NULL
+                          CHECK (connectivity IS NULL OR connectivity IN ('WIFI','WIFI_CELLULAR')),
     price                 DECIMAL(12,2) NOT NULL CHECK (price >= 0),
     stock_quantity        INT NOT NULL DEFAULT 0 CHECK (stock_quantity >= 0),
     weight_kg             DECIMAL(6,3) NOT NULL DEFAULT 0.200 CHECK (weight_kg > 0.000),

@@ -24,6 +24,11 @@ public class StaffOrderService {
         // 1. Cập nhật trạng thái bảng orders
         staffOrderDAO.updateStatus(orderId, newStatus);
         
+        // Gán order cho nhân viên thao tác (nếu chưa có ai nhận)
+        if (staffId != null) {
+            staffOrderDAO.assignSaleStaff(orderId, staffId);
+        }
+        
         // 2. Ghi nhận lịch sử dòng thời gian (order_status_history)
         String logNote = (note != null && !note.isBlank()) ? note : "Nhân viên cập nhật trạng thái";
         staffOrderDAO.insertStatusHistory(orderId, newStatus, staffId, logNote);

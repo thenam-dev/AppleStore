@@ -27,9 +27,10 @@ public class ProductUpdateServlet extends ProductServletSupport {
                 return;
             }
 
-            productService.createProduct(product);
-            redirectToProductListWithMessage(request, response, FLASH_SUCCESS_KEY, "Tạo sản phẩm thành công.");
-        } catch (SQLException | IllegalArgumentException ex) {
+            int productId = productService.createProduct(product);
+            redirectToProductImagesWithMessage(request, response, productId, FLASH_SUCCESS_KEY,
+                    "Tạo sản phẩm thành công. Bạn có thể thêm ảnh ngay bây giờ.");
+        } catch (SQLException | IllegalArgumentException | IOException ex) {
             forwardBackToForm(request, response, ex.getMessage());
         }
     }
@@ -54,7 +55,7 @@ public class ProductUpdateServlet extends ProductServletSupport {
         request.setAttribute("product", product);
         request.setAttribute(FLASH_ERROR_KEY, message);
         try {
-            setProductReferenceData(request);
+            setProductReferenceData(request, product);
         } catch (SQLException ex) {
             setProductReferenceDataFallback(request);
         }

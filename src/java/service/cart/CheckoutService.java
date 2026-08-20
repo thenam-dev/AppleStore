@@ -73,13 +73,27 @@ public class CheckoutService {
         public String notes;
         public String paymentMethod; // "CK" hoặc "COD"
 
-        // Voucher đã áp dụng ở giỏ hàng (nếu có), truyền từ CheckoutServlet.
-        public Promotion appliedPromo;
-        public BigDecimal discountAmount;
+        // Các mã khuyến mãi đã áp dụng ở giỏ hàng, truyền từ CheckoutServlet.
+        // Hệ thống cho stack tối đa 1 mã MERCHANDISE + 1 mã SHIPPING cùng lúc
+        // (xem ApplyVoucherServlet) nên đây PHẢI là danh sách, không phải 1
+        // Promotion duy nhất - nếu chỉ giữ 1 mã thì mã còn lại sẽ không được
+        // ghi nhận used_count, dùng lại được vô hạn lần.
+        public List<AppliedPromo> appliedPromos = new ArrayList<>();
 
         // Tập cart_item_id khách đã tick chọn ở cart.jsp để thanh toán - null/rỗng
         // nghĩa là thanh toán toàn bộ giỏ hàng (tương thích ngược).
         public Set<Integer> selectedCartItemIds;
+    }
+
+    /** 1 mã khuyến mãi đã áp dụng kèm số tiền được giảm tương ứng của riêng nó. */
+    public static class AppliedPromo {
+        public final Promotion promo;
+        public final BigDecimal discountAmount;
+
+        public AppliedPromo(Promotion promo, BigDecimal discountAmount) {
+            this.promo = promo;
+            this.discountAmount = discountAmount;
+        }
     }
 
     public static class CheckoutResult {
@@ -176,7 +190,9 @@ public class CheckoutService {
             }
 
             BigDecimal deliveryFee = BigDecimal.ZERO;
-            BigDecimal discountAmount = (form.discountAmount != null) ? form.discountAmount : BigDecimal.ZERO;
+            BigDecimal discountAmount = form.appliedPromos.stream()
+                    .map(applied -> applied.discountAmount != null ? applied.discountAmount : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             BigDecimal finalAmount = totalAmount.add(deliveryFee).subtract(discountAmount);
 
             Order order = new Order();
@@ -224,23 +240,32 @@ public class CheckoutService {
                         "ORDER_RESERVE", -cartItem.getQuantity(), stockAfter);
             }
 
-            // Ghi nhận việc dùng voucher (order_promotions + tăng used_count). Tự mở
-            // Connection riêng vì kiến trúc hiện tại không dùng Global Transaction.
-            // Ghi nhận việc dùng voucher (order_promotions + tăng used_count). Tự mở
-            // Connection riêng vì kiến trúc hiện tại không dùng Global Transaction.
-            if (form.appliedPromo != null && form.discountAmount != null) {
+            // Ghi nhận việc dùng voucher (order_promotions + tăng used_count) cho TỪNG
+            // mã đã áp dụng (có thể vừa MERCHANDISE vừa SHIPPING cùng lúc - xem
+            // ApplyVoucherServlet). Tự mở Connection riêng vì kiến trúc hiện tại
+            // không dùng Global Transaction.
+            if (!form.appliedPromos.isEmpty()) {
                 PromotionService promotionService = new PromotionService();
                 try (Connection conn = DBConnection.getConnection()) {
-                    // Bắt kết quả trả về từ hàm recordPromotionUsage
-                    boolean isPromoApplied = promotionService.recordPromotionUsage(conn, orderId, form.customerId, form.appliedPromo, form.discountAmount);
-                    
-                    // Nếu false tức là DB từ chối tăng used_count vì đã chạm ngưỡng max_uses
-                    if (!isPromoApplied) {
-                        // Rollback nghiệp vụ: Hoàn lại tồn kho đã trừ và xóa đơn hàng
-                        compensate(orderId, decreasedStock);
-                        result.success = false;
-                        result.message = "Rất tiếc, mã khuyến mãi '" + form.appliedPromo.getCode() + "' vừa hết lượt sử dụng trong lúc bạn đang thanh toán. Vui lòng bỏ mã hoặc chọn mã khác.";
-                        return result;
+                    List<AppliedPromo> recorded = new ArrayList<>();
+                    for (AppliedPromo applied : form.appliedPromos) {
+                        // Bắt kết quả trả về từ hàm recordPromotionUsage
+                        boolean isPromoApplied = promotionService.recordPromotionUsage(conn, orderId, form.customerId, applied.promo, applied.discountAmount);
+
+                        // Nếu false tức là DB từ chối tăng used_count vì đã chạm ngưỡng max_uses
+                        if (!isPromoApplied) {
+                            // Rollback nghiệp vụ: hoàn lại used_count của (các) mã đã ghi nhận
+                            // thành công trước đó trong cùng lần checkout này, rồi hoàn tồn
+                            // kho và xóa đơn hàng.
+                            for (AppliedPromo done : recorded) {
+                                promotionService.voidPromotionUsage(conn, done.promo.getPromoId());
+                            }
+                            compensate(orderId, decreasedStock);
+                            result.success = false;
+                            result.message = "Rất tiếc, mã khuyến mãi '" + applied.promo.getCode() + "' vừa hết lượt sử dụng trong lúc bạn đang thanh toán. Vui lòng bỏ mã hoặc chọn mã khác.";
+                            return result;
+                        }
+                        recorded.add(applied);
                     }
                 } catch (SQLException e) {
                     // Best-effort lưu voucher, nếu lỗi SQL thông thường thì log lại

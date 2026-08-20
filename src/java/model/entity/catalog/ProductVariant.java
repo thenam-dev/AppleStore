@@ -14,12 +14,10 @@ public class ProductVariant implements Serializable {
     private String sku;
     private String variantLabel;
     private String colorName;
-    private String colorHex;
+    private Integer caseSizeMm;
     private Integer storageCapacityGb;
     private Integer ramGb;
     private String connectivity;
-    private String chipOption;
-    private BigDecimal screenSizeInch;
     private BigDecimal price;
     private int stockQuantity;
     private BigDecimal weightKg;
@@ -86,12 +84,12 @@ public class ProductVariant implements Serializable {
         this.colorName = colorName;
     }
 
-    public String getColorHex() {
-        return colorHex;
+    public Integer getCaseSizeMm() {
+        return caseSizeMm;
     }
 
-    public void setColorHex(String colorHex) {
-        this.colorHex = colorHex;
+    public void setCaseSizeMm(Integer caseSizeMm) {
+        this.caseSizeMm = caseSizeMm;
     }
 
     public Integer getStorageCapacityGb() {
@@ -116,22 +114,6 @@ public class ProductVariant implements Serializable {
 
     public void setConnectivity(String connectivity) {
         this.connectivity = connectivity;
-    }
-
-    public String getChipOption() {
-        return chipOption;
-    }
-
-    public void setChipOption(String chipOption) {
-        this.chipOption = chipOption;
-    }
-
-    public BigDecimal getScreenSizeInch() {
-        return screenSizeInch;
-    }
-
-    public void setScreenSizeInch(BigDecimal screenSizeInch) {
-        this.screenSizeInch = screenSizeInch;
     }
 
     public BigDecimal getPrice() {

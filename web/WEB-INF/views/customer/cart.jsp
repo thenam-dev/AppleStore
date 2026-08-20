@@ -81,7 +81,7 @@
                 <div class="shot thumb-lg">
                   <c:choose>
                     <c:when test="${not empty item.imageUrl}">
-                      <img src="${ctx}${item.imageUrl}" alt="<c:out value='${item.productName}'/>">
+                      <img src="${ctx}/${item.imageUrl}" alt="<c:out value='${item.productName}'/>">
                     </c:when>
                     <c:otherwise><svg style="color:#5B6472"><use href="#d-acc"/></svg></c:otherwise>
                   </c:choose>

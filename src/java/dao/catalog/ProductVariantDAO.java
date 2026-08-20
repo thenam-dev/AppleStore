@@ -17,8 +17,8 @@ import java.util.Optional;
 public class ProductVariantDAO {
     private static final String VARIANT_COLUMNS = """
             pv.variant_id, pv.product_id, p.name AS product_name, p.status AS product_status,
-            pv.sku, pv.variant_label, pv.color_name, pv.color_hex, pv.storage_capacity_gb,
-            pv.ram_gb, pv.connectivity, pv.chip_option, pv.screen_size_inch, pv.price,
+            pv.sku, pv.variant_label, pv.color_name, pv.case_size_mm, pv.storage_capacity_gb,
+            pv.ram_gb, pv.connectivity, pv.price,
             pv.stock_quantity, pv.weight_kg, pv.discount_price, pv.discount_start,
             pv.discount_end, pv.is_active, pv.created_at, pv.updated_at
             """;
@@ -73,6 +73,21 @@ public class ProductVariantDAO {
         }
     }
 
+    public int countActiveByProduct(int productId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM product_variants WHERE product_id = ? AND is_active = 1";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, productId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+                return 0;
+            }
+        }
+    }
+
     /** Tìm biến thể theo ID, trả về Optional.empty nếu k   hông có bản ghi. */
     public Optional<ProductVariant> findById(int variantId) throws SQLException {
         String sql = "SELECT " + VARIANT_COLUMNS + ' ' + VARIANT_FROM + " AND pv.variant_id = ?";
@@ -93,10 +108,10 @@ public class ProductVariantDAO {
     public int insert(ProductVariant variant) throws SQLException {
         String sql = """
                 INSERT INTO product_variants (
-                    product_id, sku, variant_label, color_name, color_hex, storage_capacity_gb,
-                    ram_gb, connectivity, chip_option, screen_size_inch, price, stock_quantity,
+                    product_id, sku, variant_label, color_name, case_size_mm, storage_capacity_gb,
+                    ram_gb, connectivity, price, stock_quantity,
                     weight_kg, discount_price, discount_start, discount_end, is_active
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         try (Connection connection = DBConnection.getConnection();
@@ -116,29 +131,30 @@ public class ProductVariantDAO {
     public boolean update(ProductVariant variant) throws SQLException {
         String sql = """
                 UPDATE product_variants
-                SET product_id = ?, sku = ?, variant_label = ?, color_name = ?, color_hex = ?,
-                    storage_capacity_gb = ?, ram_gb = ?, connectivity = ?, chip_option = ?,
-                    screen_size_inch = ?, price = ?, stock_quantity = ?, weight_kg = ?,
+                SET sku = ?, variant_label = ?, color_name = ?, case_size_mm = ?,
+                    storage_capacity_gb = ?, ram_gb = ?, connectivity = ?, price = ?, stock_quantity = ?, weight_kg = ?,
                     discount_price = ?, discount_start = ?, discount_end = ?, is_active = ?
-                WHERE variant_id = ?
+                WHERE variant_id = ? AND product_id = ?
                 """;
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            setMutationParams(statement, variant);
-            statement.setInt(18, variant.getVariantId());
+            setVariantFields(statement, variant, 1);
+            statement.setInt(15, variant.getVariantId());
+            statement.setInt(16, variant.getProductId());
             return statement.executeUpdate() > 0;
         }
     }
 
-    /** Cập nhật riêng trạng thái hoạt động của biến thể. */
-    public boolean updateStatus(int variantId, boolean isActive) throws SQLException {
-        String sql = "UPDATE product_variants SET is_active = ? WHERE variant_id = ?";
+    /** Cập nhật trạng thái, đồng thời khóa theo product cha để tránh update nhầm ownership. */
+    public boolean updateStatus(int productId, int variantId, boolean isActive) throws SQLException {
+        String sql = "UPDATE product_variants SET is_active = ? WHERE variant_id = ? AND product_id = ?";
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setBoolean(1, isActive);
             statement.setInt(2, variantId);
+            statement.setInt(3, productId);
             return statement.executeUpdate() > 0;
         }
     }
@@ -170,9 +186,19 @@ public class ProductVariantDAO {
         }
     }
     
-    /** Lấy tồn kho hiện tại của biến thể đang active để validate giỏ hàng/checkout. */
+    /**
+     * Lấy tồn kho hiện tại của biến thể đang active để validate giỏ hàng/checkout.
+     * Join thêm bảng products và bắt buộc status = 'ACTIVE' để chặn thanh toán
+     * khi admin đã tạm khóa/ngừng kinh doanh sản phẩm (INACTIVE/DISCONTINUED),
+     * kể cả khi variant vẫn còn is_active = 1.
+     */
     public Optional<Integer> findStockQuantity(int variantId) throws SQLException {
-        String sql = "SELECT stock_quantity FROM product_variants WHERE variant_id = ? AND is_active = 1";
+        String sql = """
+                SELECT pv.stock_quantity
+                FROM product_variants pv
+                JOIN products p ON p.product_id = pv.product_id
+                WHERE pv.variant_id = ? AND pv.is_active = 1 AND p.status = 'ACTIVE'
+                """;
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -194,12 +220,18 @@ public class ProductVariantDAO {
      * kiểm tra giá trị trả về để rollback nghiệp vụ (hoàn lại các bước trước
      * đó) vì không còn transaction tự động.
      */
-    /** Trừ tồn kho một cách an toàn, chỉ thành công khi biến thể còn đủ hàng. */
+    /**
+     * Trừ tồn kho một cách an toàn, chỉ thành công khi biến thể còn đủ hàng.
+     * Join thêm bảng products và bắt buộc p.status = 'ACTIVE' để chặn trừ kho
+     * (và do đó chặn đặt hàng) khi sản phẩm đã bị admin tạm khóa/ngừng kinh
+     * doanh, đồng bộ với điều kiện ở findStockQuantity.
+     */
     public boolean decreaseStockIfAvailable(int variantId, int quantity) throws SQLException {
         String sql = """
-                UPDATE product_variants
-                SET stock_quantity = stock_quantity - ?
-                WHERE variant_id = ? AND is_active = 1 AND stock_quantity >= ?
+                UPDATE product_variants pv
+                JOIN products p ON p.product_id = pv.product_id
+                SET pv.stock_quantity = pv.stock_quantity - ?
+                WHERE pv.variant_id = ? AND pv.is_active = 1 AND p.status = 'ACTIVE' AND pv.stock_quantity >= ?
                 """;
 
         try (Connection connection = DBConnection.getConnection();
@@ -235,11 +267,9 @@ public class ProductVariantDAO {
                         LOWER(pv.sku) LIKE ?
                         OR LOWER(pv.variant_label) LIKE ?
                         OR LOWER(COALESCE(pv.color_name, '')) LIKE ?
-                        OR LOWER(COALESCE(pv.chip_option, '')) LIKE ?
                     )
                     """);
             String likeKeyword = "%" + keyword.trim().toLowerCase() + "%";
-            params.add(likeKeyword);
             params.add(likeKeyword);
             params.add(likeKeyword);
             params.add(likeKeyword);
@@ -286,22 +316,27 @@ public class ProductVariantDAO {
     /** Bind dữ liệu biến thể vào PreparedStatement dùng chung cho insert/update. */
     private void setMutationParams(PreparedStatement statement, ProductVariant variant) throws SQLException {
         statement.setInt(1, variant.getProductId());
-        statement.setString(2, variant.getSku());
-        statement.setString(3, variant.getVariantLabel());
-        setNullableString(statement, 4, variant.getColorName());
-        setNullableString(statement, 5, variant.getColorHex());
-        setNullableInteger(statement, 6, variant.getStorageCapacityGb());
-        setNullableInteger(statement, 7, variant.getRamGb());
-        setNullableString(statement, 8, variant.getConnectivity());
-        setNullableString(statement, 9, variant.getChipOption());
-        setNullableBigDecimal(statement, 10, variant.getScreenSizeInch());
-        statement.setBigDecimal(11, variant.getPrice());
-        statement.setInt(12, variant.getStockQuantity());
-        statement.setBigDecimal(13, variant.getWeightKg());
-        setNullableBigDecimal(statement, 14, variant.getDiscountPrice());
-        setNullableLocalDateTime(statement, 15, variant.getDiscountStart());
-        setNullableLocalDateTime(statement, 16, variant.getDiscountEnd());
-        statement.setBoolean(17, variant.isActive());
+        setVariantFields(statement, variant, 2);
+    }
+
+    /** Bind các field được phép thay đổi, không bao gồm product_id. */
+    private void setVariantFields(PreparedStatement statement, ProductVariant variant, int startIndex)
+            throws SQLException {
+        int index = startIndex;
+        statement.setString(index++, variant.getSku());
+        statement.setString(index++, variant.getVariantLabel());
+        setNullableString(statement, index++, variant.getColorName());
+        setNullableInteger(statement, index++, variant.getCaseSizeMm());
+        setNullableInteger(statement, index++, variant.getStorageCapacityGb());
+        setNullableInteger(statement, index++, variant.getRamGb());
+        setNullableString(statement, index++, variant.getConnectivity());
+        statement.setBigDecimal(index++, variant.getPrice());
+        statement.setInt(index++, variant.getStockQuantity());
+        statement.setBigDecimal(index++, variant.getWeightKg());
+        setNullableBigDecimal(statement, index++, variant.getDiscountPrice());
+        setNullableLocalDateTime(statement, index++, variant.getDiscountStart());
+        setNullableLocalDateTime(statement, index++, variant.getDiscountEnd());
+        statement.setBoolean(index, variant.isActive());
     }
 
     /** Map một dòng ResultSet thành entity ProductVariant. */
@@ -314,16 +349,14 @@ public class ProductVariantDAO {
         variant.setSku(resultSet.getString("sku"));
         variant.setVariantLabel(resultSet.getString("variant_label"));
         variant.setColorName(resultSet.getString("color_name"));
-        variant.setColorHex(resultSet.getString("color_hex"));
-
+        int caseSizeMm = resultSet.getInt("case_size_mm");
+        variant.setCaseSizeMm(resultSet.wasNull() ? null : caseSizeMm);
         int storageCapacityGb = resultSet.getInt("storage_capacity_gb");
         variant.setStorageCapacityGb(resultSet.wasNull() ? null : storageCapacityGb);
         int ramGb = resultSet.getInt("ram_gb");
         variant.setRamGb(resultSet.wasNull() ? null : ramGb);
 
         variant.setConnectivity(resultSet.getString("connectivity"));
-        variant.setChipOption(resultSet.getString("chip_option"));
-        variant.setScreenSizeInch(resultSet.getBigDecimal("screen_size_inch"));
         variant.setPrice(resultSet.getBigDecimal("price"));
         variant.setStockQuantity(resultSet.getInt("stock_quantity"));
         variant.setWeightKg(resultSet.getBigDecimal("weight_kg"));

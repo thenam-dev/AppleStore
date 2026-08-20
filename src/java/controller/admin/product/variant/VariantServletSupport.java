@@ -4,6 +4,7 @@ import model.entity.catalog.Product;
 import model.entity.catalog.ProductVariant;
 import service.catalog.ProductService;
 import service.catalog.ProductVariantService;
+import service.catalog.ProductVariantAttributeService;
 
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,12 +32,19 @@ public abstract class VariantServletSupport extends HttpServlet {
 
     protected final ProductVariantService productVariantService = new ProductVariantService();
     protected final ProductService productService = new ProductService();
+    protected final ProductVariantAttributeService productVariantAttributeService = new ProductVariantAttributeService();
 
     /** Đưa trạng thái, kết nối và tùy chọn sort của biến thể lên request cho JSP. */
     protected void setVariantReferenceData(HttpServletRequest request) {
         request.setAttribute("variantStatusOptions", productVariantService.getAllowedStatuses());
         request.setAttribute("variantConnectivityOptions", productVariantService.getAllowedConnectivities());
         request.setAttribute("sortOptions", buildSortOptions());
+    }
+
+    /** Gắn các thuộc tính variant được phép của đúng sản phẩm đang quản lý. */
+    protected void setVariantReferenceData(HttpServletRequest request, Product product) {
+        setVariantReferenceData(request);
+        request.setAttribute("variantAttributeDefinitions", productVariantAttributeService.getDefinitions(product));
     }
 
     /** Tạo biến thể mặc định cho form thêm mới của một sản phẩm. */
@@ -56,12 +64,10 @@ public abstract class VariantServletSupport extends HttpServlet {
         variant.setSku(request.getParameter("sku"));
         variant.setVariantLabel(request.getParameter("variantLabel"));
         variant.setColorName(request.getParameter("colorName"));
-        variant.setColorHex(request.getParameter("colorHex"));
+        variant.setCaseSizeMm(parseNullableInteger(request.getParameter("caseSizeMm"), "Kích thước vỏ không hợp lệ."));
         variant.setStorageCapacityGb(parseNullableInteger(request.getParameter("storageCapacityGb"), "Dung lượng lưu trữ không hợp lệ."));
         variant.setRamGb(parseNullableInteger(request.getParameter("ramGb"), "RAM không hợp lệ."));
         variant.setConnectivity(request.getParameter("connectivity"));
-        variant.setChipOption(request.getParameter("chipOption"));
-        variant.setScreenSizeInch(parseNullableBigDecimal(request.getParameter("screenSizeInch"), "Kích thước màn hình không hợp lệ."));
         variant.setPrice(parseRequiredBigDecimal(request.getParameter("price"), "Giá không hợp lệ."));
         variant.setStockQuantity(parseInt(request.getParameter("stockQuantity"), "Số lượng tồn kho không hợp lệ."));
         variant.setWeightKg(parseRequiredBigDecimal(request.getParameter("weightKg"), "Khối lượng không hợp lệ."));
@@ -80,12 +86,10 @@ public abstract class VariantServletSupport extends HttpServlet {
         variant.setSku(request.getParameter("sku"));
         variant.setVariantLabel(request.getParameter("variantLabel"));
         variant.setColorName(request.getParameter("colorName"));
-        variant.setColorHex(request.getParameter("colorHex"));
+        variant.setCaseSizeMm(parseNullableIntegerOrNull(request.getParameter("caseSizeMm")));
         variant.setStorageCapacityGb(parseNullableIntegerOrNull(request.getParameter("storageCapacityGb")));
         variant.setRamGb(parseNullableIntegerOrNull(request.getParameter("ramGb")));
         variant.setConnectivity(request.getParameter("connectivity"));
-        variant.setChipOption(request.getParameter("chipOption"));
-        variant.setScreenSizeInch(parseNullableBigDecimalOrNull(request.getParameter("screenSizeInch")));
         variant.setPrice(parseNullableBigDecimalOrNull(request.getParameter("price")));
         variant.setStockQuantity(parseIntOrDefault(request.getParameter("stockQuantity"), 0));
         variant.setWeightKg(parseNullableBigDecimalOrNull(request.getParameter("weightKg")));
