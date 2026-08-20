@@ -27,9 +27,9 @@ public abstract class UserServletSupport extends HttpServlet {
 
     protected final UserService userService = new UserService();
 
-    /** Đưa danh sách role, status và sort option lên request cho JSP user. */
+    /** Đưa danh sách role nội bộ, status và sort option lên request cho JSP user. */
     protected void setUserReferenceData(HttpServletRequest request) {
-        request.setAttribute("roles", userService.getAllowedRoles());
+        request.setAttribute("roles", userService.getAllowedInternalRoles());
         request.setAttribute("statuses", userService.getAllowedStatuses());
         request.setAttribute("sortOptions", buildSortOptions());
     }
@@ -45,6 +45,16 @@ public abstract class UserServletSupport extends HttpServlet {
         user.setStatus(request.getParameter("status"));
         user.setEmailVerified("on".equals(request.getParameter("emailVerified")));
         return user;
+    }
+
+    /** Lấy admin hiện tại để chặn tự khóa/tự hạ quyền ở service. */
+    protected int getCurrentAdminId(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        Object sessionUser = session == null ? null : session.getAttribute(config.AppConfig.SESSION_USER);
+        if (sessionUser instanceof User) {
+            return ((User) sessionUser).getUserId();
+        }
+        throw new IllegalArgumentException("Phiên đăng nhập không hợp lệ.");
     }
 
     /** Parse số nguyên bắt buộc và ném lỗi nghiệp vụ nếu dữ liệu không hợp lệ. */

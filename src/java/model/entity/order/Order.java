@@ -194,4 +194,12 @@ public class Order {
         }
         return this.createdAt.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy", new java.util.Locale("vi", "VN")));
     }
+
+    // Dùng cho hóa đơn xuất ở order-success.jsp - cần cả ngày và giờ, format dd/MM/yyyy HH:mm.
+    public String getFormattedCreatedAtFull() {
+        if (this.createdAt == null) {
+            return "";
+        }
+        return this.createdAt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
 }

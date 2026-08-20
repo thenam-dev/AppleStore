@@ -39,10 +39,15 @@
       <svg width="17" height="17"><use href="#i-grid" /></svg>Danh mục
     </a>
     
-    <div class="grp">Quản trị hệ thống</div>
-    <a class="${activeItem eq 'users' ? 'on' : ''}" href="${ctx}/admin/users">
-      <svg width="17" height="17"><use href="#i-user" /></svg>Người dùng
+    <div class="grp">Khách hàng &amp; nhân sự</div>
+    <a class="${activeItem eq 'customers' ? 'on' : ''}" href="${ctx}/admin/customers">
+      <svg width="17" height="17"><use href="#i-user" /></svg>Khách hàng
     </a>
+    <a class="${activeItem eq 'users' ? 'on' : ''}" href="${ctx}/admin/users">
+      <svg width="17" height="17"><use href="#i-user" /></svg>Nhân sự
+    </a>
+
+    <div class="grp">Quản trị hệ thống</div>
     <a class="${activeItem eq 'promotions' ? 'on' : ''}" href="${ctx}/admin/promotions">
       <svg width="17" height="17"><use href="#i-tag" /></svg>Khuyến mãi
     </a>
