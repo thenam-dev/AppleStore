@@ -4,7 +4,12 @@ import dao.catalog.ProductDAO;
 import dao.catalog.ProductVariantDAO;
 import dao.review.ReviewDAO;
 import model.entity.catalog.Product;
+import model.entity.catalog.ProductImage;
+import model.entity.catalog.ProductSpecification;
 import model.entity.catalog.ProductVariant;
+import service.catalog.ProductImageService;
+import service.catalog.ProductSpecificationService;
+import service.catalog.ProductVariantAttributeService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -19,7 +24,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import model.entity.review.Review;
+import util.JsonUtil;
 
 /**
  * Trang chi tiết sản phẩm cho khách hàng (guest).
@@ -44,7 +52,10 @@ public class ProductDetailServlet extends ProductServletSupport {
     private static final int RELATED_LIMIT = 4;
 
     private final ProductDAO productDAO = new ProductDAO();
+    private final ProductImageService productImageService = new ProductImageService();
+    private final ProductSpecificationService productSpecificationService = new ProductSpecificationService();
     private final ProductVariantDAO productVariantDAO = new ProductVariantDAO();
+    private final ProductVariantAttributeService productVariantAttributeService = new ProductVariantAttributeService();
     private final ReviewDAO reviewDAO = new ReviewDAO(); // Thêm ReviewDAO
 
     @Override
@@ -76,9 +87,11 @@ public class ProductDetailServlet extends ProductServletSupport {
         }
         Product product = productOpt.get();
 
+        List<ProductImage> productImages = productImageService.getImagesByProductId(productId);
         List<ProductVariant> variants = loadActiveVariants(productId);
-        List<String> variantColors = distinctColors(variants);
-        List<Integer> variantStorages = distinctStorages(variants);
+        List<ProductSpecification> productSpecifications = productSpecificationService.getSpecifications(productId);
+        List<ProductVariantAttributeService.Definition> variantAttributeDefinitions =
+                productVariantAttributeService.getDefinitions(product);
         ProductVariant defaultVariant = pickDefaultVariant(variants);
         List<Product> relatedProducts = findRelatedProducts(product);
 
@@ -86,15 +99,52 @@ public class ProductDetailServlet extends ProductServletSupport {
         List<Review> reviews = reviewDAO.getReviewsByProductId(productId);
         
         request.setAttribute("product", product);
+        request.setAttribute("productImages", productImages);
         request.setAttribute("variants", variants);
-        request.setAttribute("variantColors", variantColors);
-        request.setAttribute("variantStorages", variantStorages);
+        request.setAttribute("productSpecifications", productSpecifications);
+        request.setAttribute("variantAttributeDefinitions", variantAttributeDefinitions);
+        request.setAttribute("variantJson", buildVariantJson(variants));
+        request.setAttribute("variantAttributeJson", buildAttributeJson(variantAttributeDefinitions));
         request.setAttribute("defaultVariant", defaultVariant);
         request.setAttribute("relatedProducts", relatedProducts);
         request.setAttribute("reviews", reviews); // Truyền reviews ra JSP
         request.setAttribute("lowStockThreshold", LOW_STOCK_THRESHOLD);
 
         request.getRequestDispatcher("/WEB-INF/views/guest/product-detail.jsp").forward(request, response);
+    }
+
+    private String buildVariantJson(List<ProductVariant> variants) throws ServletException {
+        List<Map<String, Object>> values = new ArrayList<>();
+        for (ProductVariant variant : variants) {
+            Map<String, Object> value = new LinkedHashMap<>();
+            value.put("id", variant.getVariantId());
+            value.put("color", variant.getColorName());
+            value.put("storage", variant.getStorageCapacityGb());
+            value.put("ram", variant.getRamGb());
+            value.put("connectivity", variant.getConnectivity());
+            value.put("caseSize", variant.getCaseSizeMm());
+            value.put("price", variant.getPrice());
+            value.put("discountPrice", variant.getDiscountPrice());
+            value.put("discountStart", variant.getDiscountStart() == null ? null : variant.getDiscountStart().toString());
+            value.put("discountEnd", variant.getDiscountEnd() == null ? null : variant.getDiscountEnd().toString());
+            value.put("stock", variant.getStockQuantity());
+            value.put("active", variant.isActive());
+            values.add(value);
+        }
+        try {
+            return JsonUtil.toJson(values).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026");
+        } catch (Exception ex) {
+            throw new ServletException("Không thể chuẩn bị dữ liệu phiên bản.", ex);
+        }
+    }
+
+    private String buildAttributeJson(List<ProductVariantAttributeService.Definition> definitions)
+            throws ServletException {
+        try {
+            return JsonUtil.toJson(definitions);
+        } catch (Exception ex) {
+            throw new ServletException("Không thể chuẩn bị cấu hình phiên bản.", ex);
+        }
     }
 
     private void showProductDetailFallback(HttpServletRequest request, HttpServletResponse response,

@@ -164,6 +164,8 @@
                       <td>
                         <div class="row-actions">
                           <a class="btn xs quiet" href="${appPath}/admin/products/variants?productId=${product.productId}">Biến thể</a>
+                          <a class="btn xs quiet" href="${appPath}/admin/products/specifications?productId=${product.productId}">Thông số</a>
+                          <a class="btn xs quiet" href="${appPath}/admin/products/images?productId=${product.productId}">Ảnh</a>
                           <a class="btn xs quiet" href="${appPath}/admin/products/edit?id=${product.productId}" title="Sửa">
                             <svg width="13" height="13"><use href="#i-edit" /></svg>
                           </a>

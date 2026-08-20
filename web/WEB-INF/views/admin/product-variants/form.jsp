@@ -64,41 +64,47 @@
               <label for="variantLabel">Nhãn biến thể <span class="req">*</span></label>
               <input id="variantLabel" class="input" type="text" name="variantLabel" maxlength="150" value="${fn:escapeXml(variant.variantLabel)}" required>
             </div>
-            <div class="field">
-              <label for="colorName">Tên màu</label>
-              <input id="colorName" class="input" type="text" name="colorName" maxlength="50" value="${fn:escapeXml(variant.colorName)}">
-            </div>
-            <div class="field">
-              <label for="colorHex">Mã màu hex</label>
-              <input id="colorHex" class="input" type="text" name="colorHex" maxlength="7" placeholder="#1D1D1F" value="${fn:escapeXml(variant.colorHex)}">
-            </div>
-            <div class="field">
-              <label for="storageCapacityGb">Dung lượng (GB)</label>
-              <input id="storageCapacityGb" class="input" type="number" name="storageCapacityGb" min="0" value="${variant.storageCapacityGb}">
-            </div>
-            <div class="field">
-              <label for="ramGb">RAM (GB)</label>
-              <input id="ramGb" class="input" type="number" name="ramGb" min="0" value="${variant.ramGb}">
-            </div>
-            <div class="field">
-              <label for="connectivity">Kết nối</label>
-              <select id="connectivity" class="select" name="connectivity">
-                <option value="">Chọn kết nối</option>
-                <c:forEach var="connectivity" items="${variantConnectivityOptions}">
-                  <option value="${fn:escapeXml(connectivity)}" ${variant.connectivity eq connectivity ? 'selected' : ''}>
-                    ${connectivity eq 'WIFI_CELLULAR' ? 'WiFi + di động' : connectivity eq 'WIFI' ? 'WiFi' : connectivity}
-                  </option>
-                </c:forEach>
-              </select>
-            </div>
-            <div class="field">
-              <label for="chipOption">Tùy chọn chip</label>
-              <input id="chipOption" class="input" type="text" name="chipOption" maxlength="50" value="${fn:escapeXml(variant.chipOption)}">
-            </div>
-            <div class="field">
-              <label for="screenSizeInch">Kích thước màn hình (inch)</label>
-              <input id="screenSizeInch" class="input" type="number" step="0.1" min="0.1" name="screenSizeInch" value="${variant.screenSizeInch}">
-            </div>
+            <c:forEach var="definition" items="${variantAttributeDefinitions}">
+              <c:choose>
+                <c:when test="${definition.key eq 'color'}">
+                  <div class="field">
+                    <label for="colorName">Màu sắc <span class="req">*</span></label>
+                    <input id="colorName" class="input" type="text" name="colorName" maxlength="50" value="${fn:escapeXml(variant.colorName)}" required>
+                  </div>
+                </c:when>
+                <c:when test="${definition.key eq 'storage'}">
+                  <div class="field">
+                    <label for="storageCapacityGb">Dung lượng (GB) <span class="req">*</span></label>
+                    <input id="storageCapacityGb" class="input" type="number" name="storageCapacityGb" min="0" value="${variant.storageCapacityGb}" required>
+                  </div>
+                </c:when>
+                <c:when test="${definition.key eq 'ram'}">
+                  <div class="field">
+                    <label for="ramGb">RAM (GB) <span class="req">*</span></label>
+                    <input id="ramGb" class="input" type="number" name="ramGb" min="0" value="${variant.ramGb}" required>
+                  </div>
+                </c:when>
+                <c:when test="${definition.key eq 'connectivity'}">
+                  <div class="field">
+                    <label for="connectivity">Kết nối <span class="req">*</span></label>
+                    <select id="connectivity" class="select" name="connectivity" required>
+                      <option value="">Chọn kết nối</option>
+                      <c:forEach var="connectivity" items="${variantConnectivityOptions}">
+                        <option value="${fn:escapeXml(connectivity)}" ${variant.connectivity eq connectivity ? 'selected' : ''}>
+                          ${connectivity eq 'WIFI_CELLULAR' ? 'WiFi + di động' : connectivity eq 'WIFI' ? 'WiFi' : connectivity}
+                        </option>
+                      </c:forEach>
+                    </select>
+                  </div>
+                </c:when>
+                <c:when test="${definition.key eq 'caseSize'}">
+                  <div class="field">
+                    <label for="caseSizeMm">Kích thước vỏ (mm) <span class="req">*</span></label>
+                    <input id="caseSizeMm" class="input" type="number" name="caseSizeMm" min="1" value="${variant.caseSizeMm}" required>
+                  </div>
+                </c:when>
+              </c:choose>
+            </c:forEach>
             <div class="field">
               <label for="price">Giá bán <span class="req">*</span></label>
               <input id="price" class="input" type="number" step="0.01" min="0" name="price" value="${variant.price}" required>

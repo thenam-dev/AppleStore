@@ -33,7 +33,7 @@ public class VariantEditServlet extends VariantServletSupport {
 
             setManagedProduct(request, managedProduct);
             request.setAttribute("variant", variant);
-            setVariantReferenceData(request);
+            setVariantReferenceData(request, managedProduct);
             setVariantFormDateFields(request, variant);
             moveFlashMessagesToRequest(request);
             request.getRequestDispatcher(FORM_VIEW).forward(request, response);

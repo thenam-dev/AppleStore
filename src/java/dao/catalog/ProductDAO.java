@@ -75,6 +75,21 @@ public class ProductDAO {
         }
     }
 
+    public int countActiveByCategory(int categoryId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM products WHERE category_id = ? AND status = 'ACTIVE'";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, categoryId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+                return 0;
+            }
+        }
+    }
+
     public Optional<Product> findById(int productId) throws SQLException {
         String sql = "SELECT " + PRODUCT_COLUMNS + " " + PRODUCT_FROM + " AND p.product_id = ?";
         try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {

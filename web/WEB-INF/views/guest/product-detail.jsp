@@ -6,13 +6,13 @@
                         importType,originCountry,warrantyMonths,warrantyProvider,categoryId,
                         categoryName,rating,soldQuantity,primaryImageUrl}
     variants        : List<ProductVariant> mọi variant ACTIVE của sản phẩm
-                       {variantId,variantLabel,sku,colorName,storageCapacityGb,ramGb,chipOption,
+                       {variantId,variantLabel,sku,colorName,storageCapacityGb,ramGb,
                         connectivity,price,discountPrice,discountStart,discountEnd,stockQuantity,active}
-    variantColors   : List<String> màu duy nhất theo đúng thứ tự xuất hiện
-    variantStorages : List<Integer> dung lượng (GB) duy nhất theo đúng thứ tự xuất hiện
+    variantAttributeDefinitions : các chiều selector do nhóm sản phẩm cấu hình
     defaultVariant  : ProductVariant được chọn sẵn khi vào trang (null nếu không có variant nào)
     relatedProducts : List<Product> gợi ý cùng danh mục
     lowStockThreshold : int
+    productSpecifications : List<ProductSpecification> thông số dynamic theo nhóm/tên/giá trị
     errorMsg        : String (khi product null)
   Giá/khuyến mãi/tồn kho thuộc về ProductVariant chứ không thuộc Product, nên phần giá +
   nút "Thêm vào giỏ" đổi theo variant đang chọn — xử lý bằng JS ở cuối trang dựa trên
@@ -37,7 +37,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=2">
+        <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=3">
     </head>
     <body>
 
@@ -74,13 +74,47 @@
 
                 <div style="padding:14px 26px 30px;display:grid;grid-template-columns:1fr 1fr;gap:34px">
 
-                    <div class="shot dark" style="aspect-ratio:4/3">
-                        <c:choose>
-                            <c:when test="${not empty product.primaryImageUrl}">
-                                <img src="${ctx}/${product.primaryImageUrl}" alt="<c:out value='${product.name}'/>">
-                            </c:when>
-                            <c:otherwise><svg style="color:var(--titan);width:34%"><use href="#${pIcon}"/></svg></c:otherwise>
-                        </c:choose>
+                    <div>
+                        <div class="shot dark" style="aspect-ratio:4/3">
+                            <c:choose>
+                                <c:when test="${not empty productImages}">
+                                    <c:set var="firstProductImage" value="${productImages[0]}" />
+                                    <c:choose>
+                                        <c:when test="${fn:startsWith(firstProductImage.filePath, '/')}">
+                                            <img data-gallery-main src="${ctx}${firstProductImage.filePath}" alt="<c:out value='${product.name}'/>" />
+                                        </c:when>
+                                        <c:otherwise>
+                                            <img data-gallery-main src="${ctx}/${firstProductImage.filePath}" alt="<c:out value='${product.name}'/>" />
+                                        </c:otherwise>
+                                    </c:choose>
+                                </c:when>
+                                <c:when test="${not empty product.primaryImageUrl}">
+                                    <img data-gallery-main src="${ctx}/${product.primaryImageUrl}" alt="<c:out value='${product.name}'/>" />
+                                </c:when>
+                                <c:otherwise><svg style="color:var(--titan);width:34%"><use href="#${pIcon}"/></svg></c:otherwise>
+                            </c:choose>
+                        </div>
+
+                        <c:if test="${not empty productImages}">
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px" aria-label="Ảnh sản phẩm">
+                                <c:forEach var="image" items="${productImages}" varStatus="status">
+                                    <c:choose>
+                                        <c:when test="${fn:startsWith(image.filePath, '/')}">
+                                            <c:set var="imageUrl" value="${ctx}${image.filePath}" />
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:set var="imageUrl" value="${ctx}/${image.filePath}" />
+                                        </c:otherwise>
+                                    </c:choose>
+                                    <button type="button" data-gallery-thumb data-image-src="${imageUrl}"
+                                            data-image-alt="<c:out value='${product.name}'/>"
+                                            class="${status.first ? 'active' : ''}"
+                                            style="width:64px;height:64px;padding:3px;border:1px solid var(--line);background:#fff;cursor:pointer">
+                                        <img src="${imageUrl}" alt="" style="display:block;width:100%;height:100%;object-fit:contain" />
+                                    </button>
+                                </c:forEach>
+                            </div>
+                        </c:if>
                     </div>
 
                     <div>
@@ -123,39 +157,7 @@
                             <input type="hidden" name="action" value="add">
                             <input type="hidden" name="variantId" id="selected-variant-id" value="${defaultVariant.variantId}">
 
-                            <c:if test="${not empty variantColors}">
-                                <div style="margin-bottom:18px">
-                                    <div class="selector-head" style="display:flex;justify-content:space-between;margin-bottom:9px">
-                                        <span class="t-eyebrow" style="margin:0">Màu sắc</span>
-                                        <small style="font-size:12px;color:var(--ash)">Đã chọn: <span id="detail-color-selected"></span></small>
-                                    </div>
-                                    <div style="display:flex;gap:9px;flex-wrap:wrap" id="color-option-group">
-                                        <c:forEach var="color" items="${variantColors}">
-                                            <button class="option-chip ${color eq defaultVariant.colorName ? 'active' : ''}" type="button"
-                                                    data-variant-color="<c:out value='${color}'/>" aria-pressed="${color eq defaultVariant.colorName}">
-                                                <c:out value="${color}"/>
-                                            </button>
-                                        </c:forEach>
-                                    </div>
-                                </div>
-                            </c:if>
-
-                            <c:if test="${not empty variantStorages}">
-                                <div style="margin-bottom:22px">
-                                    <div class="selector-head" style="display:flex;justify-content:space-between;margin-bottom:9px">
-                                        <span class="t-eyebrow" style="margin:0">Dung lượng</span>
-                                        <small style="font-size:12px;color:var(--ash)">Đã chọn: <span id="detail-storage-selected"></span></small>
-                                    </div>
-                                    <div style="display:flex;gap:9px;flex-wrap:wrap" id="storage-option-group">
-                                        <c:forEach var="storage" items="${variantStorages}">
-                                            <button class="option-chip ${storage eq defaultVariant.storageCapacityGb ? 'active' : ''}" type="button"
-                                                    data-variant-storage="${storage}" aria-pressed="${storage eq defaultVariant.storageCapacityGb}">
-                                                ${storage}GB
-                                            </button>
-                                        </c:forEach>
-                                    </div>
-                                </div>
-                            </c:if>
+                            <div id="variant-selector-groups" style="margin-bottom:22px"></div>
 
                             <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
                                 <div class="qty" data-quantity-control>
@@ -194,6 +196,24 @@
                                         <dt>Xuất xứ</dt><dd><c:out value="${product.importType}"/><c:if test="${not empty product.originCountry}"> – <c:out value="${product.originCountry}"/></c:if></dd>
                                     </c:if>
                                 </dl>
+                                <c:if test="${not empty productSpecifications}">
+                                    <c:set var="currentSpecGroup" value="" />
+                                    <c:forEach var="specification" items="${productSpecifications}">
+                                        <c:if test="${currentSpecGroup ne specification.specGroup}">
+                                            <c:if test="${not empty currentSpecGroup}">
+                                                </dl>
+                                            </c:if>
+                                            <h4 style="margin:18px 0 8px;font-size:12px;text-transform:uppercase;color:var(--ash);letter-spacing:.08em">
+                                                <c:out value="${specification.specGroup}" />
+                                            </h4>
+                                            <dl class="kv">
+                                            <c:set var="currentSpecGroup" value="${specification.specGroup}" />
+                                        </c:if>
+                                        <dt><c:out value="${specification.specName}" /></dt>
+                                        <dd><c:out value="${specification.specValue}" /></dd>
+                                    </c:forEach>
+                                    </dl>
+                                </c:if>
                                 <c:if test="${not empty variants}">
                                     <table class="table" style="margin-top:14px">
                                         <thead><tr><th>Phiên bản</th><th>Thông số</th><th>Giá</th><th>Kho</th></tr></thead>
@@ -202,9 +222,10 @@
                                                 <tr>
                                                     <td><b><c:out value="${not empty v.variantLabel ? v.variantLabel : v.sku}"/></b></td>
                                                     <td style="color:var(--ash)">
+                                                        <c:if test="${not empty v.colorName}"><c:out value="${v.colorName}"/> </c:if>
+                                                        <c:if test="${v.caseSizeMm != null}">/ ${v.caseSizeMm}mm </c:if>
                                                         <c:if test="${v.storageCapacityGb != null}">${v.storageCapacityGb}GB </c:if>
                                                         <c:if test="${v.ramGb != null}">/ ${v.ramGb}GB RAM </c:if>
-                                                        <c:if test="${not empty v.chipOption}">/ <c:out value="${v.chipOption}"/> </c:if>
                                                         <c:if test="${not empty v.connectivity}">/ <c:out value="${v.connectivity}"/></c:if>
                                                         </td>
                                                         <td class="num"><fmt:formatNumber value="${v.price}" type="number" maxFractionDigits="0"/> ₫</td>
@@ -317,143 +338,179 @@
                 <c:if test="${not empty variants}">
                     <script>
                         (function () {
-                        // Dữ liệu variant do servlet chuẩn bị, JS chỉ dùng để đổi giá/tồn kho
-                        // khi khách bấm chọn màu/dung lượng khác nhau - KHÔNG có business logic
-                        // nào khác ngoài việc match đúng variant tương ứng.
-                        var productVariants = [
-                        <c:forEach items="${variants}" var="v" varStatus="st">
-                        {
-                        id: ${v.variantId},
-                                color: "${fn:escapeXml(v.colorName)}",
-                                storage: ${v.storageCapacityGb != null ? v.storageCapacityGb : 'null'},
-                                price: ${v.price},
-                                discountPrice: ${v.discountPrice != null ? v.discountPrice : 'null'},
-                                discountStart: "${v.discountStart}",
-                                discountEnd: "${v.discountEnd}",
-                                stock: ${v.stockQuantity},
-                                active: ${v.active}
-                        }<c:if test="${!st.last}">,</c:if>
-                        </c:forEach>
-                        ];
-                                var LOW_STOCK_THRESHOLD = ${lowStockThreshold};
-                                var defaultVariantId = ${defaultVariant != null ? defaultVariant.variantId : 'null'};
-                                var selectedColor = null;
-                                var selectedStorage = null;
-                                function findVariant(color, storage) {
-                                for (var i = 0; i < productVariants.length; i++) {
-                                var v = productVariants[i];
-                                        if ((color === null || v.color === color) && (storage === null || v.storage === storage)) {
-                                return v;
+                            var productVariants = <c:out value="${variantJson}" escapeXml="false"/>;
+                            var attributeDefinitions = <c:out value="${variantAttributeJson}" escapeXml="false"/>;
+                            var lowStockThreshold = ${lowStockThreshold};
+                            var defaultVariantId = ${defaultVariant != null ? defaultVariant.variantId : 'null'};
+                            var selectedValues = {};
+                            var selectorRoot = document.getElementById('variant-selector-groups');
+
+                            function valueOf(variant, key) {
+                                var value = variant[key];
+                                return value === null || value === undefined ? '' : String(value);
+                            }
+
+                            function displayValue(key, value) {
+                                if (key === 'storage' || key === 'ram') { return value + ' GB'; }
+                                if (key === 'caseSize') { return value + ' mm'; }
+                                if (key === 'connectivity' && value === 'WIFI_CELLULAR') { return 'WiFi + di động'; }
+                                if (key === 'connectivity' && value === 'WIFI') { return 'WiFi'; }
+                                return value;
+                            }
+
+                            function uniqueValues(key) {
+                                var seen = {};
+                                var result = [];
+                                productVariants.forEach(function (variant) {
+                                    var value = valueOf(variant, key);
+                                    if (value && !seen[value]) {
+                                        seen[value] = true;
+                                        result.push(value);
+                                    }
+                                });
+                                return result;
+                            }
+
+                            function renderSelectors() {
+                                selectorRoot.innerHTML = '';
+                                attributeDefinitions.forEach(function (definition) {
+                                    var values = uniqueValues(definition.key);
+                                    if (!values.length) { return; }
+                                    var fixed = values.length === 1;
+                                    var group = document.createElement('div');
+                                    group.style.marginBottom = '18px';
+                                    var head = document.createElement('div');
+                                    head.className = 'selector-head';
+                                    head.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:9px';
+                                    head.innerHTML = '<span class="t-eyebrow" style="margin:0"></span>'
+                                        + '<small style="font-size:12px;color:var(--ash)">Đã chọn: <span></span></small>';
+                                    head.querySelector('span').textContent = definition.label;
+                                    group.appendChild(head);
+                                    var options = document.createElement('div');
+                                    options.style.cssText = 'display:flex;gap:9px;flex-wrap:wrap';
+                                    values.forEach(function (value) {
+                                        var button = document.createElement('button');
+                                        button.type = 'button';
+                                        button.className = fixed ? 'option-chip fixed' : 'option-chip';
+                                        button.disabled = fixed;
+                                        button.dataset.fixed = fixed ? 'true' : 'false';
+                                        button.dataset.attributeKey = definition.key;
+                                        button.dataset.attributeValue = value;
+                                        button.textContent = displayValue(definition.key, value);
+                                        options.appendChild(button);
+                                    });
+                                    group.appendChild(options);
+                                    selectorRoot.appendChild(group);
+                                });
+                            }
+
+                            function updateSelectors() {
+                                selectorRoot.querySelectorAll('.option-chip').forEach(function (button) {
+                                    var key = button.dataset.attributeKey;
+                                    var value = button.dataset.attributeValue;
+                                    var active = selectedValues[key] === value;
+                                    // Cho phép đổi từng chiều để hiển thị rõ tổ hợp không tồn tại.
+                                    // Khi không có variant khớp, applySelection sẽ khóa thao tác mua.
+                                    button.disabled = button.dataset.fixed === 'true';
+                                    button.classList.toggle('active', active);
+                                    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+                                });
+                                selectorRoot.querySelectorAll('.selector-head').forEach(function (head, index) {
+                                    var definition = attributeDefinitions.filter(function (item) {
+                                        return uniqueValues(item.key).length > 0;
+                                    })[index];
+                                    var selected = selectedValues[definition.key] || 'Chưa chọn';
+                                    head.querySelector('small span').textContent = selected === 'Chưa chọn'
+                                        ? selected : displayValue(definition.key, selected);
+                                });
+                            }
+
+                            function findExactVariant() {
+                                return productVariants.find(function (variant) {
+                                    return attributeDefinitions.every(function (definition) {
+                                        return valueOf(variant, definition.key) === (selectedValues[definition.key] || '');
+                                    });
+                                }) || null;
+                            }
+
+                            function isDiscountActive(variant) {
+                                if (variant.discountPrice == null) { return false; }
+                                var now = new Date();
+                                var start = variant.discountStart ? new Date(variant.discountStart) : null;
+                                var end = variant.discountEnd ? new Date(variant.discountEnd) : null;
+                                return (!start || now >= start) && (!end || now <= end);
+                            }
+
+                            function formatPrice(value) {
+                                return Math.round(value).toLocaleString('vi-VN') + ' ₫';
+                            }
+
+                            function renderVariant(variant) {
+                                document.getElementById('selected-variant-id').value = variant.id;
+                                var currentPrice = document.getElementById('detail-current-price');
+                                var originalPrice = document.getElementById('detail-original-price');
+                                var saveBadge = document.getElementById('detail-save-badge');
+                                if (isDiscountActive(variant)) {
+                                    currentPrice.textContent = formatPrice(variant.discountPrice);
+                                    originalPrice.textContent = formatPrice(variant.price);
+                                    originalPrice.style.display = '';
+                                    saveBadge.textContent = 'Giảm ' + formatPrice(variant.price - variant.discountPrice);
+                                    saveBadge.style.display = 'inline-flex';
+                                } else {
+                                    currentPrice.textContent = formatPrice(variant.price);
+                                    originalPrice.style.display = 'none';
+                                    saveBadge.style.display = 'none';
                                 }
+                                var stockBadge = document.getElementById('detail-stock-badge');
+                                var addButton = document.getElementById('add-to-cart-btn');
+                                var quantity = document.getElementById('detail-quantity-input');
+                                var unavailable = variant.stock <= 0 || !variant.active;
+                                if (stockBadge) {
+                                    stockBadge.textContent = unavailable ? 'Hết hàng'
+                                        : (variant.stock < lowStockThreshold ? 'Sắp hết hàng' : 'Còn ' + variant.stock + ' máy');
+                                    stockBadge.className = unavailable ? 'badge off'
+                                        : (variant.stock < lowStockThreshold ? 'badge warn' : 'badge ok');
                                 }
-                                return null;
-                                }
+                                if (addButton) { addButton.disabled = unavailable; }
+                                quantity.max = unavailable ? 1 : variant.stock;
+                                if (Number(quantity.value) > Number(quantity.max)) { quantity.value = quantity.max; }
+                            }
 
-                        function isDiscountActive(v) {
-                        if (v.discountPrice == null) { return false; }
-                        var now = new Date();
-                                var start = v.discountStart ? new Date(v.discountStart) : null;
-                                var end = v.discountEnd ? new Date(v.discountEnd) : null;
-                                if (start && now < start) { return false; }
-                        if (end && now > end) { return false; }
-                        return true;
-                        }
+                            function clearVariant() {
+                                document.getElementById('selected-variant-id').value = '';
+                                document.getElementById('detail-current-price').textContent = 'Không có phiên bản';
+                                document.getElementById('detail-original-price').style.display = 'none';
+                                document.getElementById('detail-save-badge').style.display = 'none';
+                                var stockBadge = document.getElementById('detail-stock-badge');
+                                if (stockBadge) { stockBadge.textContent = 'Tổ hợp này không tồn tại'; stockBadge.className = 'badge off'; }
+                                var addButton = document.getElementById('add-to-cart-btn');
+                                if (addButton) { addButton.disabled = true; }
+                                document.getElementById('detail-quantity-input').max = 1;
+                            }
 
-                        function formatPrice(value) {
-                        return Math.round(value).toLocaleString('vi-VN') + ' ₫';
-                        }
+                            function applySelection() {
+                                var match = findExactVariant();
+                                if (match) { renderVariant(match); } else { clearVariant(); }
+                                updateSelectors();
+                            }
 
-                        function renderVariant(v) {
-                        if (!v) { return; }
-                        document.getElementById('selected-variant-id').value = v.id;
-                                var currentPriceEl = document.getElementById('detail-current-price');
-                                var originalPriceEl = document.getElementById('detail-original-price');
-                                var saveBadgeEl = document.getElementById('detail-save-badge');
-                                if (isDiscountActive(v)) {
-                        currentPriceEl.textContent = formatPrice(v.discountPrice);
-                                originalPriceEl.textContent = formatPrice(v.price);
-                                originalPriceEl.style.display = '';
-                                saveBadgeEl.textContent = 'Giảm ' + formatPrice(v.price - v.discountPrice);
-                                saveBadgeEl.style.display = 'inline-flex';
-                        } else {
-                        currentPriceEl.textContent = formatPrice(v.price);
-                                originalPriceEl.style.display = 'none';
-                                saveBadgeEl.style.display = 'none';
-                        }
-
-                        var stockBadge = document.getElementById('detail-stock-badge');
-                                var addBtn = document.getElementById('add-to-cart-btn');
-                                var qtyInput = document.getElementById('detail-quantity-input');
-                                if (v.stock <= 0 || !v.active) {
-                        if (stockBadge) { stockBadge.textContent = 'Hết hàng'; stockBadge.className = 'badge off'; }
-                        if (addBtn) { addBtn.disabled = true; }
-                        qtyInput.max = 1;
-                        } else if (v.stock < LOW_STOCK_THRESHOLD) {
-                        if (stockBadge) { stockBadge.textContent = 'Sắp hết hàng'; stockBadge.className = 'badge warn'; }
-                        if (addBtn) { addBtn.disabled = false; }
-                        qtyInput.max = v.stock;
-                        } else {
-                        if (stockBadge) { stockBadge.textContent = 'Còn ' + v.stock + ' máy'; stockBadge.className = 'badge ok'; }
-                        if (addBtn) { addBtn.disabled = false; }
-                        qtyInput.max = v.stock;
-                        }
-                        if (Number(qtyInput.value) > Number(qtyInput.max)) { qtyInput.value = qtyInput.max; }
-                        }
-
-                        function selectColor(color, btn) {
-                        selectedColor = color;
-                                var label = document.getElementById('detail-color-selected');
-                                if (label) { label.textContent = color; }
-                        document.querySelectorAll('#color-option-group .option-chip').forEach(function (c) {
-                        c.classList.remove('active');
-                                c.setAttribute('aria-pressed', 'false');
-                        });
-                                btn.classList.add('active');
-                                btn.setAttribute('aria-pressed', 'true');
+                            selectorRoot.addEventListener('click', function (event) {
+                                var button = event.target.closest('.option-chip');
+                                if (!button || button.disabled) { return; }
+                                selectedValues[button.dataset.attributeKey] = button.dataset.attributeValue;
                                 applySelection();
-                        }
+                            });
 
-                        function selectStorage(storage, btn) {
-                        selectedStorage = storage;
-                                var label = document.getElementById('detail-storage-selected');
-                                if (label) { label.textContent = storage + 'GB'; }
-                        document.querySelectorAll('#storage-option-group .option-chip').forEach(function (c) {
-                        c.classList.remove('active');
-                                c.setAttribute('aria-pressed', 'false');
-                        });
-                                btn.classList.add('active');
-                                btn.setAttribute('aria-pressed', 'true');
-                                applySelection();
-                        }
-
-                        function applySelection() {
-                        var match = findVariant(selectedColor, selectedStorage);
-                                if (match) { renderVariant(match); }
-                        }
-
-                        document.querySelectorAll('#color-option-group .option-chip').forEach(function (btn) {
-                        btn.addEventListener('click', function () {
-                        selectColor(btn.getAttribute('data-variant-color'), btn);
-                        });
-                        });
-                                document.querySelectorAll('#storage-option-group .option-chip').forEach(function (btn) {
-                        btn.addEventListener('click', function () {
-                        selectStorage(parseInt(btn.getAttribute('data-variant-storage'), 10), btn);
-                        });
-                        });
-                                // Khởi tạo trạng thái ban đầu theo defaultVariant do servlet chọn sẵn
-                                var initial = null;
-                                for (var i = 0; i < productVariants.length; i++) {
-                        if (productVariants[i].id === defaultVariantId) { initial = productVariants[i]; break; }
-                        }
-                        if (!initial && productVariants.length > 0) { initial = productVariants[0]; }
-                        if (initial) {
-                        var colorBtn = document.querySelector('#color-option-group .option-chip[data-variant-color="' + initial.color + '"]');
-                                var storageBtn = document.querySelector('#storage-option-group .option-chip[data-variant-storage="' + initial.storage + '"]');
-                                if (colorBtn) { selectColor(initial.color, colorBtn); }
-                        if (storageBtn) { selectStorage(initial.storage, storageBtn); }
-                        if (!colorBtn && !storageBtn) { renderVariant(initial); }
-                        }
+                            var initial = productVariants.find(function (variant) { return variant.id === defaultVariantId; })
+                                || productVariants[0];
+                            if (initial) {
+                                attributeDefinitions.forEach(function (definition) {
+                                    selectedValues[definition.key] = valueOf(initial, definition.key);
+                                });
+                            }
+                            renderSelectors();
+                            if (initial) { renderVariant(initial); }
+                            updateSelectors();
                         })();
                     </script>
                 </c:if>

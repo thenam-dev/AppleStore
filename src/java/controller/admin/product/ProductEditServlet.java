@@ -25,7 +25,7 @@ public class ProductEditServlet extends ProductServletSupport {
             }
 
             request.setAttribute("product", product);
-            setProductReferenceData(request);
+            setProductReferenceData(request, product);
             moveFlashMessagesToRequest(request);
             request.getRequestDispatcher(FORM_VIEW).forward(request, response);
         } catch (SQLException | IllegalArgumentException ex) {

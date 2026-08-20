@@ -3,6 +3,8 @@ package service.catalog;
 import config.AppConfig;
 import dao.catalog.CategoryDAO;
 import dao.catalog.ProductDAO;
+import dao.catalog.ProductVariantDAO;
+import model.entity.catalog.Category;
 import model.entity.catalog.Product;
 
 import java.sql.SQLException;
@@ -40,16 +42,23 @@ public class ProductService {
 
     private final ProductDAO productDAO;
     private final CategoryDAO categoryDAO;
+    private final ProductVariantDAO productVariantDAO;
 
     /** Khởi tạo service với DAO mặc định cho luồng CRUD sản phẩm. */
     public ProductService() {
-        this(new ProductDAO(), new CategoryDAO());
+        this(new ProductDAO(), new CategoryDAO(), new ProductVariantDAO());
     }
 
     /** Cho phép inject DAO để dễ kiểm thử hoặc thay đổi nguồn dữ liệu. */
     public ProductService(ProductDAO productDAO, CategoryDAO categoryDAO) {
+        this(productDAO, categoryDAO, new ProductVariantDAO());
+    }
+
+    /** Cho phép inject DAO để dễ kiểm thử hoặc thay đổi nguồn dữ liệu. */
+    public ProductService(ProductDAO productDAO, CategoryDAO categoryDAO, ProductVariantDAO productVariantDAO) {
         this.productDAO = productDAO;
         this.categoryDAO = categoryDAO;
+        this.productVariantDAO = productVariantDAO;
     }
 
     /** Lấy danh sách sản phẩm theo keyword, danh mục, trạng thái, sort và phân trang. */
@@ -86,7 +95,8 @@ public class ProductService {
     public int createProduct(Product product) throws SQLException {
         normalizeProduct(product);
         validateProduct(product);
-        validateCategoryExists(product.getCategoryId());
+        Category category = getCategoryOrThrow(product.getCategoryId());
+        validateCategoryCanReceiveNewProduct(category);
 
         if (productDAO.existsByName(product.getName())) {
             throw new IllegalArgumentException("Tên sản phẩm đã tồn tại.");
@@ -101,9 +111,12 @@ public class ProductService {
     /** Cập nhật sản phẩm sau khi validate ID, dữ liệu, danh mục và chống trùng với sản phẩm khác. */
     public void updateProduct(Product product) throws SQLException {
         validateProductId(product.getProductId());
+        Product existingProduct = getProductById(product.getProductId());
         normalizeProduct(product);
         validateProduct(product);
-        validateCategoryExists(product.getCategoryId());
+        Category category = getCategoryOrThrow(product.getCategoryId());
+        validateCategoryForProductUpdate(existingProduct, product, category);
+        validateProductStatusTransition(existingProduct, product.getStatus());
 
         if (productDAO.existsByNameForOtherProduct(product.getName(), product.getProductId())) {
             throw new IllegalArgumentException("Tên sản phẩm đã tồn tại.");
@@ -120,6 +133,8 @@ public class ProductService {
     public void changeStatus(int productId, String status) throws SQLException {
         validateProductId(productId);
         String normalizedStatus = normalizeRequiredStatus(status);
+        Product product = getProductById(productId);
+        validateProductStatusTransition(product, normalizedStatus);
         if (!productDAO.updateStatus(productId, normalizedStatus)) {
             throw new IllegalArgumentException("Sản phẩm không tồn tại.");
         }
@@ -211,9 +226,45 @@ public class ProductService {
     }
 
     /** Đảm bảo danh mục gắn với sản phẩm có tồn tại trong database. */
-    private void validateCategoryExists(int categoryId) throws SQLException {
-        if (categoryDAO.findById(categoryId).isEmpty()) {
-            throw new IllegalArgumentException("Danh mục không tồn tại.");
+    private Category getCategoryOrThrow(int categoryId) throws SQLException {
+        return categoryDAO.findById(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("Danh mục không tồn tại."));
+    }
+
+    private void validateCategoryCanReceiveNewProduct(Category category) {
+        if (!category.getIsActive()) {
+            throw new IllegalArgumentException("Không thể tạo sản phẩm mới trong danh mục đang tạm ẩn.");
+        }
+    }
+
+    private void validateCategoryForProductUpdate(Product existingProduct, Product submittedProduct, Category category) {
+        if (category.getIsActive()) {
+            return;
+        }
+        boolean keepCurrentCategory = existingProduct.getCategoryId() == submittedProduct.getCategoryId();
+        if (!keepCurrentCategory) {
+            throw new IllegalArgumentException("Không thể chuyển sản phẩm sang danh mục đang tạm ẩn.");
+        }
+        if ("ACTIVE".equals(submittedProduct.getStatus())) {
+            throw new IllegalArgumentException("Không thể bật sản phẩm khi danh mục đang tạm ẩn.");
+        }
+    }
+
+    private void validateProductStatusTransition(Product product, String targetStatus) throws SQLException {
+        if ("ACTIVE".equals(targetStatus)) {
+            Category category = getCategoryOrThrow(product.getCategoryId());
+            if (!category.getIsActive()) {
+                throw new IllegalArgumentException("Không thể bật sản phẩm khi danh mục đang tạm ẩn.");
+            }
+            return;
+        }
+        if ("INACTIVE".equals(targetStatus) || "DISCONTINUED".equals(targetStatus)) {
+            int activeVariantCount = productVariantDAO.countActiveByProduct(product.getProductId());
+            if (activeVariantCount > 0) {
+                throw new IllegalArgumentException("Không thể tắt " + product.getName()
+                        + " vì vẫn còn " + activeVariantCount
+                        + " biến thể đang bán. Vui lòng tắt các biến thể trước.");
+            }
         }
     }
 

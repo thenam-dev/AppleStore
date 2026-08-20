@@ -58,7 +58,7 @@ public class VariantListServlet extends VariantServletSupport {
         request.setAttribute("inactiveVariants", productVariantService.countVariantsByStatus(productId, "INACTIVE"));
         request.setAttribute("listQuery", listQuery);
         request.setAttribute("listQuerySuffix", listQuery.isBlank() ? "" : "&" + listQuery);
-        setVariantReferenceData(request);
+        setVariantReferenceData(request, managedProduct);
         moveFlashMessagesToRequest(request);
         request.getRequestDispatcher(LIST_VIEW).forward(request, response);
     }
