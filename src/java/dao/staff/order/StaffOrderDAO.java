@@ -68,12 +68,16 @@ public class StaffOrderDAO {
     }
 
     public Optional<Order> findById(int orderId) throws SQLException {
-        // Đã JOIN thêm deliveries và users để lấy tên Shipper phụ trách
+        // JOIN thêm bảng users lần nữa (với alias us) để lấy tên nhân viên Sale dựa trên assigned_sale_staff_id
         String sql = """
-            SELECT o.*, u.full_name AS shipper_name, d.staff_id AS shipper_id 
+            SELECT o.*, 
+                   u.full_name AS shipper_name, 
+                   d.staff_id AS shipper_id,
+                   us.full_name AS sale_staff_name
             FROM orders o 
             LEFT JOIN deliveries d ON o.order_id = d.order_id 
             LEFT JOIN users u ON d.staff_id = u.user_id 
+            LEFT JOIN users us ON o.assigned_sale_staff_id = us.user_id
             WHERE o.order_id = ?
         """;
         Order order = null;
@@ -92,10 +96,20 @@ public class StaffOrderDAO {
                     order.setFinalAmount(rs.getBigDecimal("final_amount"));
                     order.setPaymentMethod(rs.getString("payment_method"));
                     order.setStatus(rs.getString("status"));
+                    
+                    int assignedStaffId = rs.getInt("assigned_sale_staff_id");
+                    if (!rs.wasNull()) {
+                        order.setAssignedSaleStaffId(assignedStaffId);
+                    }
+
                     if (rs.getTimestamp("created_at") != null) {
                         order.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
                     }
+                    
                     order.setShipperName(rs.getString("shipper_name"));
+                    // Lấy tên nhân viên Sale phụ trách
+                    order.setAssignedSaleStaffName(rs.getString("sale_staff_name")); 
+
                     int shipperId = rs.getInt("shipper_id");
                     if (!rs.wasNull()) {
                         order.setShipperId(shipperId);
@@ -271,5 +285,103 @@ public class StaffOrderDAO {
             ps.setInt(1, orderId);
             ps.executeUpdate();
         }
+    }
+    
+    // Lọc đơn hàng dành riêng cho Staff hoặc Admin (có hỗ trợ filter theo staffId nếu admin chọn)
+    public List<Order> findFilteredOrdersByRole(String role, int userId, String staffFilter, String status, String keyword, int offset, int limit) throws SQLException {
+        StringBuilder sql = new StringBuilder("""
+            SELECT o.order_id, o.recipient_name, o.recipient_phone, o.total_amount, 
+                   o.discount_amount, o.final_amount, o.payment_method, o.status, o.created_at,
+                   o.assigned_sale_staff_id,
+                   (SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.order_id) as item_count
+            FROM orders o
+            WHERE 1=1
+        """);
+        
+        List<Object> params = new ArrayList<>();
+
+        // Nếu không phải ADMIN (tức là SALE_STAFF), bắt buộc chỉ xem đơn của chính mình
+        if (!"ADMIN".equals(role)) {
+            sql.append(" AND o.assigned_sale_staff_id = ?");
+            params.add(userId);
+        } else {
+            // Nếu là ADMIN, có thể lọc theo một nhân viên Sale cụ thể nếu được chọn trên giao diện
+            if (staffFilter != null && !staffFilter.isBlank()) {
+                sql.append(" AND o.assigned_sale_staff_id = ?");
+                params.add(Integer.parseInt(staffFilter));
+            }
+        }
+
+        if (status != null && !status.isBlank()) {
+            sql.append(" AND o.status = ?");
+            params.add(status);
+        }
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (o.order_id LIKE ? OR o.recipient_name LIKE ? OR o.recipient_phone LIKE ?)");
+            String likeKey = "%" + keyword.trim() + "%";
+            params.add(likeKey);
+            params.add(likeKey);
+            params.add(likeKey);
+        }
+        
+        sql.append(" ORDER BY o.created_at DESC LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
+
+        List<Order> orders = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Order o = new Order();
+                    o.setOrderId(rs.getInt("order_id"));
+                    o.setRecipientName(rs.getString("recipient_name"));
+                    o.setRecipientPhone(rs.getString("recipient_phone"));
+                    o.setTotalAmount(rs.getBigDecimal("total_amount"));
+                    o.setDiscountAmount(rs.getBigDecimal("discount_amount"));
+                    o.setFinalAmount(rs.getBigDecimal("final_amount"));
+                    o.setPaymentMethod(rs.getString("payment_method"));
+                    o.setStatus(rs.getString("status"));
+                    o.setAssignedSaleStaffId(rs.getInt("assigned_sale_staff_id"));
+                    if (rs.getTimestamp("created_at") != null) {
+                        o.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                    }
+                    o.setNotes(String.valueOf(rs.getInt("item_count"))); 
+                    orders.add(o);
+                }
+            }
+        }
+        return orders;
+    }
+
+    // Admin chuyển giao việc khi đơn đang ở trạng thái CONFIRMED
+    public boolean updateAssignedSaleStaff(int orderId, int newStaffId) throws SQLException {
+        String sql = "UPDATE orders SET assigned_sale_staff_id = ? WHERE order_id = ? AND status = 'CONFIRMED'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newStaffId);
+            ps.setInt(2, orderId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    // Lấy danh sách nhân viên Sale đang active để đổ vào thẻ <select> cho Admin
+    public List<Map<String, Object>> getActiveSaleStaffList() throws SQLException {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT user_id, full_name FROM users WHERE role = 'SALE_STAFF' AND status = 'ACTIVE'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Map<String, Object> staff = new HashMap<>();
+                staff.put("userId", rs.getInt("user_id"));
+                staff.put("fullName", rs.getString("full_name"));
+                list.add(staff);
+            }
+        }
+        return list;
     }
 }

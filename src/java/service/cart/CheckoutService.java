@@ -208,6 +208,16 @@ public class CheckoutService {
             order.setDiscountAmount(discountAmount);
             order.setFinalAmount(finalAmount);
             order.setPaymentMethod(form.paymentMethod);
+            
+            try {
+                int bestSaleId = orderDAO.findBestAvailableSaleStaffId();
+                if (bestSaleId > 0) {
+                    order.setAssignedSaleStaffId(bestSaleId);
+                }
+            } catch (SQLException ignored) {
+                // Best-effort: Nếu lỗi tìm kiếm, để trống cho Admin phân công sau
+            }
+            
             int orderId = orderDAO.insert(order);
 
             // Theo dõi các dòng đã trừ kho thành công để hoàn lại (compensate) nếu 1 dòng sau bị lỗi

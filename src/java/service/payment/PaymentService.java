@@ -137,7 +137,7 @@ public class PaymentService {
         paymentDAO.markLatestCompleted(orderId);
         orderDAO.updateStatus(orderId, "CONFIRMED");
         orderDAO.insertStatusHistory(orderId, "CONFIRMED", customerId,
-                "Khách tự xác nhận đã chuyển khoản (demo, chưa có webhook SePay thật)");
+                "Khách tự xác nhận đã chuyển khoản");
 
         result.success = true;
         result.message = "Xác nhận thanh toán thành công!";
