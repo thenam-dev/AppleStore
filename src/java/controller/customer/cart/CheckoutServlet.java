@@ -11,7 +11,6 @@ import model.entity.cart.CartItem;
 import model.entity.user.User;
 import service.cart.CartService;
 import service.cart.CheckoutService;
-// ---- THÊM MỚI: Import class Promotion ----loc
 import model.entity.promtion.Promotion;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -39,26 +38,39 @@ public class CheckoutServlet extends HttpServlet {
                 .map(CartItem::getLineTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // =====================================================================
-        // CHỐT CHẶN 2: TÁI KIỂM TRA MÃ KHI LOAD LẠI TRANG CHECKOUT
-        // =====================================================================
         HttpSession session = request.getSession();
-        Promotion appliedPromo = (Promotion) session.getAttribute("appliedPromo");
-        if (appliedPromo != null) {
+        service.promotion.PromotionService promoService = new service.promotion.PromotionService();
+        BigDecimal shippingFee = BigDecimal.ZERO; 
+
+        // 1. Tái kiểm tra Mã Hàng Hóa
+        Promotion merchPromo = (Promotion) session.getAttribute("merchandisePromo");
+        if (merchPromo != null) {
             try {
-                service.promotion.PromotionService promoService = new service.promotion.PromotionService();
-                // Validate lại với giỏ hàng mới nhất
-                Promotion validPromo = promoService.validateCouponForCheckout(appliedPromo.getCode(), cartTotal, items);
-                BigDecimal eligibleAmount = promoService.calculateEligibleAmount(items, validPromo);
-                BigDecimal discountAmount = promoService.calculateDiscountAmount(validPromo, cartTotal, BigDecimal.ZERO, eligibleAmount);
-                
-                session.setAttribute("appliedPromo", validPromo);
-                session.setAttribute("discountAmount", discountAmount);
+                Promotion validMerch = promoService.validateCouponForCheckout(merchPromo.getCode(), cartTotal, items);
+                BigDecimal eligibleAmount = promoService.calculateEligibleAmount(items, validMerch);
+                BigDecimal discountAmount = promoService.calculateDiscountAmount(validMerch, cartTotal, shippingFee, eligibleAmount);
+                session.setAttribute("merchandisePromo", validMerch);
+                session.setAttribute("merchandiseDiscount", discountAmount);
             } catch (Exception e) {
-                // Nếu giỏ hàng thay đổi khiến mã không còn hợp lệ -> Tự động thu hồi
-                session.removeAttribute("appliedPromo");
-                session.removeAttribute("discountAmount");
+                session.removeAttribute("merchandisePromo");
+                session.removeAttribute("merchandiseDiscount");
                 request.setAttribute("errorMsg", "Mã giảm giá đã tự động gỡ bỏ: " + e.getMessage());
+            }
+        }
+
+        // 2. Tái kiểm tra Mã Freeship
+        Promotion shipPromo = (Promotion) session.getAttribute("shippingPromo");
+        if (shipPromo != null) {
+            try {
+                Promotion validShip = promoService.validateCouponForCheckout(shipPromo.getCode(), cartTotal, items);
+                BigDecimal eligibleAmount = promoService.calculateEligibleAmount(items, validShip);
+                BigDecimal discountAmount = promoService.calculateDiscountAmount(validShip, cartTotal, shippingFee, eligibleAmount);
+                session.setAttribute("shippingPromo", validShip);
+                session.setAttribute("shippingDiscount", discountAmount);
+            } catch (Exception e) {
+                session.removeAttribute("shippingPromo");
+                session.removeAttribute("shippingDiscount");
+                request.setAttribute("errorMsg", "Mã vận chuyển đã tự động gỡ bỏ: " + e.getMessage());
             }
         }
 
@@ -72,11 +84,12 @@ public class CheckoutServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
 
-        // ---- THÊM MỚI: Khởi tạo session ở ngay đầu hàm để lấy Voucher ----
-        // LƯU Ý XÓA: Tôi đã xóa dòng "HttpSession session = request.getSession();" ở phía dưới 
         HttpSession session = request.getSession();
-        Promotion appliedPromo = (Promotion) session.getAttribute("appliedPromo");
-        BigDecimal discountAmount = (BigDecimal) session.getAttribute("discountAmount");
+        Promotion merchandisePromo = (Promotion) session.getAttribute("merchandisePromo");
+        BigDecimal merchandiseDiscount = (BigDecimal) session.getAttribute("merchandiseDiscount");
+        
+        Promotion shippingPromo = (Promotion) session.getAttribute("shippingPromo");
+        BigDecimal shippingDiscount = (BigDecimal) session.getAttribute("shippingDiscount");
         
         int customerId = getCustomerId(request);
 
@@ -89,15 +102,20 @@ public class CheckoutServlet extends HttpServlet {
         form.notes = request.getParameter("notes");
         form.paymentMethod = request.getParameter("paymentMethod");
 
-        // ---- THÊM MỚI: Nhét mã giảm giá vào form để truyền cho Service ----
-        form.appliedPromo = appliedPromo;
-        form.discountAmount = discountAmount;
+        // GOM TỔNG: Nếu CheckoutForm của bạn chưa hỗ trợ 2 mã, tạm thời gom tổng tiền giảm lại!
+        // Lưu ý quan trọng: Nếu bạn muốn lưu cả 2 mã xuống DB (bảng order_promotions), 
+        // bạn sẽ phải mở class CheckoutService.CheckoutForm ra để thêm biến chứa mã 2 vào đó nhé.
+        BigDecimal totalDiscount = BigDecimal.ZERO;
+        if (merchandiseDiscount != null) totalDiscount = totalDiscount.add(merchandiseDiscount);
+        if (shippingDiscount != null) totalDiscount = totalDiscount.add(shippingDiscount);
+        
+        // Tạm gán 1 mã ưu tiên (hoặc mã hàng hóa trước) để form không bị lỗi (Tùy thuộc code CheckoutService của bạn)
+        form.appliedPromo = merchandisePromo != null ? merchandisePromo : shippingPromo; 
+        form.discountAmount = totalDiscount;
         
         CheckoutService.CheckoutResult result = checkoutService.checkout(form);
 
         if (!result.success) {
-            // Lỗi validate/nghiệp vụ: forward lại (không redirect) để giữ dữ liệu đã nhập (rule 6),
-            // request.getParameter vẫn còn nguyên nên checkout.jsp dùng ${param.xxx} để hiển thị lại.
             List<CartItem> items = cartService.getCartItems(customerId);
             BigDecimal cartTotal = items.stream()
                     .map(CartItem::getLineTotal)
@@ -110,12 +128,13 @@ public class CheckoutServlet extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/customer/checkout.jsp").forward(request, response);
             return;
         }
-        // ---- THÊM MỚI: Dọn dẹp Session giỏ hàng sau khi đặt hàng thành công ----
-        session.removeAttribute("appliedPromo");
-        session.removeAttribute("discountAmount");
 
-        // Thành công: PRG - redirect sang trang thanh toán QR (CK) hoặc trang xác nhận đơn (COD)
-        //HttpSession session = request.getSession();
+        // Dọn dẹp Session giỏ hàng sau khi đặt hàng thành công
+        session.removeAttribute("merchandisePromo");
+        session.removeAttribute("merchandiseDiscount");
+        session.removeAttribute("shippingPromo");
+        session.removeAttribute("shippingDiscount");
+
         if (result.qrCodeUrl != null) {
             session.setAttribute("successMsg", "Đặt hàng thành công, vui lòng quét mã để thanh toán");
             response.sendRedirect(request.getContextPath() + "/payment?orderId=" + result.orderId);

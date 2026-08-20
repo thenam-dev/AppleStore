@@ -63,18 +63,21 @@ public class OrderService {
         String dbStatus = (String) raw.get("status");
         detail.put("status", mapUiStatus(dbStatus));
         detail.put("statusLabel", mapStatusLabel(dbStatus));
+        detail.put("rawStatus", dbStatus); // <-- THÊM DÒNG NÀY ĐỂ CHECK TRẠNG THÁI GỐC
         
         detail.put("receiverName", raw.get("recipientName"));
         detail.put("phone", raw.get("recipientPhone"));
         detail.put("fullAddress", raw.get("deliveryAddress"));
         
         String payMethod = (String) raw.get("paymentMethod");
+        detail.put("paymentMethod", payMethod); // <-- THÊM DÒNG NÀY ĐỂ CHECK PHƯƠNG THỨC THANH TOÁN
         detail.put("paymentMethodLabel", "CK".equals(payMethod) ? "Chuyển khoản QR" : "Thanh toán khi nhận hàng (COD)");
         
         detail.put("subtotal", raw.get("totalAmount") != null ? raw.get("totalAmount") : 0);
         detail.put("discount", raw.get("discountAmount") != null ? raw.get("discountAmount") : 0);
         detail.put("total", raw.get("finalAmount") != null ? raw.get("finalAmount") : 0);
 
+        // Đã sửa: Thêm EXPIRED và PAYMENT_FAILED vào danh sách bị loại trừ (-1)
         Map<String, Integer> statusRank = Map.of(
             "PENDING_PAYMENT", 0,
             "CONFIRMED", 1,
@@ -82,7 +85,9 @@ public class OrderService {
             "DISPATCHED", 3,
             "SHIPPING", 3,
             "DELIVERED", 4,
-            "CANCELLED", -1
+            "CANCELLED", -1,
+            "EXPIRED", -1,
+            "PAYMENT_FAILED", -1
         );
 
         int currentRank = statusRank.getOrDefault(dbStatus, 0);
@@ -97,13 +102,16 @@ public class OrderService {
         for (int i = 0; i < steps.length; i++) {
             Map<String, Object> step = new HashMap<>();
             step.put("label", labels[i]);
-            boolean isDone = (currentRank >= ranks[i]) && !"CANCELLED".equals(dbStatus);
+            
+            // Đã sửa: Vì Hủy/Hết hạn rank là -1, nên currentRank >= ranks[i] tự động = false. Không cần check CANCELLED riêng nữa.
+            boolean isDone = (currentRank >= ranks[i]);
             step.put("done", isDone);
             
             Object stepTime = null;
             for (Map<String, Object> h : history) {
                 String hStatus = (String) h.get("status");
-                if (steps[i].equals(hStatus) || ("CONFIRMED".equals(steps[i]) && "PENDING_PAYMENT".equals(hStatus))) {
+                // ĐÃ SỬA LỖI HIỆN THỜI GIAN ẢO: Bỏ đoạn code mượn thời gian của PENDING_PAYMENT
+                if (steps[i].equals(hStatus)) {
                     stepTime = h.get("changedAt");
                     break;
                 }
@@ -113,6 +121,20 @@ public class OrderService {
         }
         detail.put("timeline", timeline);
         return detail;
+    }
+ 
+    private String mapStatusLabel(String dbStatus) {
+        switch (dbStatus) {
+            case "PENDING_PAYMENT": return "Chờ thanh toán";
+            case "CONFIRMED": return "Đã xác nhận";
+            case "PREPARING": return "Đang chuẩn bị";
+            case "DISPATCHED": case "SHIPPING": return "Đang giao";
+            case "DELIVERED": return "Đã giao";
+            case "CANCELLED": return "Đã huỷ";
+            case "EXPIRED": return "Đã hết hạn"; // Thêm nhãn
+            case "PAYMENT_FAILED": return "Thanh toán thất bại"; // Thêm nhãn
+            default: return dbStatus;
+        }
     }
 
     public boolean cancelOrder(int orderId, int customerId) throws SQLException {
@@ -132,17 +154,6 @@ public class OrderService {
         return "CANCELLED";
     }
 
-    private String mapStatusLabel(String dbStatus) {
-        switch (dbStatus) {
-            case "PENDING_PAYMENT": return "Chờ thanh toán";
-            case "CONFIRMED": return "Đã xác nhận";
-            case "PREPARING": return "Đang chuẩn bị";
-            case "DISPATCHED": case "SHIPPING": return "Đang giao";
-            case "DELIVERED": return "Đã giao";
-            case "CANCELLED": return "Đã huỷ";
-            default: return dbStatus;
-        }
-    }
     
     public Map<String, Object> getOrderDetailWithItems(int orderId, int customerId) throws SQLException {
         // Lấy thông tin tóm tắt và timeline từ hàm cũ

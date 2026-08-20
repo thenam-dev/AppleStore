@@ -62,17 +62,17 @@
             
             <div class="field">
               <label for="discountValue">Giá trị giảm <span class="req">*</span></label>
-              <input id="discountValue" class="input" type="number" step="0.01" name="discountValue" value="${promo.discountValue}" placeholder="Ví dụ: 50000 hoặc 10" required>
+              <input id="discountValue" class="input" type="number" step="1" min="1" name="discountValue" value="${promo.discountValue}" placeholder="Ví dụ: 50000 hoặc 10" required>
             </div>
 
             <div class="field">
               <label for="discountMax">Giảm tối đa (đ)</label>
-              <input id="discountMax" class="input" type="number" step="0.01" name="discountMax" value="${promo.discountMax}" placeholder="Chỉ dùng khi giảm theo %">
+              <input id="discountMax" class="input" type="number" step="1000" min="0" name="discountMax" value="${promo.discountMax}" placeholder="Chỉ dùng khi giảm theo %">
             </div>
 
             <div class="field">
               <label for="minOrderValue">Đơn tối thiểu (đ)</label>
-              <input id="minOrderValue" class="input" type="number" step="0.01" name="minOrderValue" value="${not empty promo.minOrderValue ? promo.minOrderValue : '0'}">
+              <input id="minOrderValue" class="input" type="number" step="1000" min="0" name="minOrderValue" value="${not empty promo.minOrderValue ? promo.minOrderValue : '0'}">
             </div>
 
             <div class="field">
@@ -95,7 +95,16 @@
               <select id="benefitTarget" class="select" name="benefitTarget" required>
                 <option value="MERCHANDISE" ${promo.benefitTarget eq 'MERCHANDISE' ? 'selected' : ''}>Tiền hàng</option>
                 <option value="PRODUCT" ${promo.benefitTarget eq 'PRODUCT' ? 'selected' : ''}>Sản phẩm cụ thể</option>
+                <option value="SHIPPING" ${promo.benefitTarget eq 'SHIPPING' ? 'selected' : ''}>Phí vận chuyển (Freeship)</option>
               </select>
+            </div>
+            
+            <div class="field">
+              <label>Dùng kèm (Stack)</label>
+              <div style="display:flex;align-items:center;gap:10px;height:44px">
+                <input id="canStack" type="checkbox" name="canStack" value="1" ${promo.canStack ? 'checked' : ''}>
+                <label for="canStack" style="margin:0;font-weight:400;font-size:13.5px">Cho phép dùng chung với mã khác loại</label>
+              </div>
             </div>
 
             <!-- Khối Scope -->
@@ -153,8 +162,8 @@
 </div>
 
 <script>
-  // Script xử lý ẩn hiện Danh mục / Sản phẩm dựa theo Scope
   document.addEventListener("DOMContentLoaded", function() {
+      // 1. Script xử lý ẩn hiện Danh mục / Sản phẩm dựa theo Scope
       const scopeSelect = document.getElementById('scope');
       const catField = document.getElementById('categoryField');
       const prodField = document.getElementById('productField');
@@ -167,6 +176,22 @@
 
       scopeSelect.addEventListener('change', toggleFields);
       toggleFields(); // Chạy lần đầu khi load form
+      
+      // 2. Script giới hạn Max là 100 và điều chỉnh step nếu chọn kiểu giảm Phần trăm
+      const discountTypeSelect = document.getElementById('discountType');
+      const discountValueInput = document.getElementById('discountValue');
+
+      function updateDiscountValidation() {
+          if (discountTypeSelect.value === 'PERCENT') {
+              discountValueInput.max = 100;
+              discountValueInput.step = 1;
+          } else {
+              discountValueInput.removeAttribute('max');
+              discountValueInput.step = 1000;
+          }
+      }
+      discountTypeSelect.addEventListener('change', updateDiscountValidation);
+      updateDiscountValidation(); // Chạy lần đầu khi load form
   });
 </script>
 </body>

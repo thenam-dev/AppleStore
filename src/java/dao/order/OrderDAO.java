@@ -185,9 +185,9 @@ public class OrderDAO {
             WHERE o.customer_id = ?
         """);
 
-        // Cập nhật lấy theo tab, nếu "all" thì không nối chuỗi WHERE trạng thái
+        // Đã sửa: Thêm EXPIRED và PAYMENT_FAILED để đơn hủy tự động vẫn hiện ra
         if ("completed".equals(tab)) {
-            sql.append(" AND o.status IN ('DELIVERED', 'CANCELLED')");
+            sql.append(" AND o.status IN ('DELIVERED', 'CANCELLED', 'EXPIRED', 'PAYMENT_FAILED')");
         } else if ("active".equals(tab)) {
             sql.append(" AND o.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'PREPARING', 'DISPATCHED', 'SHIPPING')");
         }
@@ -222,8 +222,9 @@ public class OrderDAO {
 
     public int countTabOrders(int customerId, String tab) throws SQLException {
         String sql;
+        // Đã sửa: Thêm EXPIRED và PAYMENT_FAILED
         if ("completed".equals(tab)) {
-            sql = "SELECT COUNT(*) FROM orders WHERE customer_id = ? AND status IN ('DELIVERED', 'CANCELLED')";
+            sql = "SELECT COUNT(*) FROM orders WHERE customer_id = ? AND status IN ('DELIVERED', 'CANCELLED', 'EXPIRED', 'PAYMENT_FAILED')";
         } else if ("active".equals(tab)) {
             sql = "SELECT COUNT(*) FROM orders WHERE customer_id = ? AND status IN ('PENDING_PAYMENT', 'CONFIRMED', 'PREPARING', 'DISPATCHED', 'SHIPPING')";
         } else {
@@ -241,7 +242,6 @@ public class OrderDAO {
         }
         return 0;
     }
-
     public Map<String, Object> findOrderDetail(int orderId, int customerId) throws SQLException {
         String sql = "SELECT * FROM orders WHERE order_id = ? AND customer_id = ?";
         try (Connection conn = DBConnection.getConnection();

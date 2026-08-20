@@ -52,22 +52,45 @@ public class ApplyVoucherServlet extends HttpServlet {
                     .map(CartItem::getLineTotal)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            BigDecimal shippingFee = BigDecimal.ZERO;
+            BigDecimal shippingFee = BigDecimal.ZERO; // Phí ship (Lấy từ bảng tính phí ship của bạn)
 
-            // ---- CẬP NHẬT: Truyền thêm List<CartItem> để bóc tách và validate chính xác ----
-            Promotion validPromo = promotionService.validateCouponForCheckout(voucherCode, cartSubtotal, items);
+            // Validate mã khuyến mãi
+            Promotion newPromo = promotionService.validateCouponForCheckout(voucherCode, cartSubtotal, items);
             
-            // Tính tiền giảm dựa trên diện tích sản phẩm hợp lệ (eligibleAmount)
-            BigDecimal eligibleAmount = promotionService.calculateEligibleAmount(items, validPromo);
-            BigDecimal discountAmount = promotionService.calculateDiscountAmount(validPromo, cartSubtotal, shippingFee, eligibleAmount);
+            // Lấy các mã hiện có trong Session
+            Promotion currentShippingPromo = (Promotion) session.getAttribute("shippingPromo");
+            Promotion currentMerchPromo = (Promotion) session.getAttribute("merchandisePromo");
 
-            session.setAttribute("appliedPromo", validPromo);
-            session.setAttribute("discountAmount", discountAmount);
-            session.setAttribute("successMsg", "Áp dụng mã giảm giá thành công!");
+            boolean isShippingPromo = "SHIPPING".equals(newPromo.getBenefitTarget());
+
+            // Tách luồng xử lý mã
+            if (isShippingPromo) {
+                if (currentMerchPromo != null) {
+                    if (!newPromo.isCanStack() || !currentMerchPromo.isCanStack()) {
+                        throw new IllegalArgumentException("Mã Miễn phí vận chuyển này không thể dùng chung với mã Giảm giá hàng bạn đang chọn.");
+                    }
+                }
+                BigDecimal eligibleAmount = promotionService.calculateEligibleAmount(items, newPromo);
+                BigDecimal discountAmount = promotionService.calculateDiscountAmount(newPromo, cartSubtotal, shippingFee, eligibleAmount);
+                
+                session.setAttribute("shippingPromo", newPromo);
+                session.setAttribute("shippingDiscount", discountAmount);
+                session.setAttribute("successMsg", "Áp dụng mã Miễn phí vận chuyển thành công!");
+            } else {
+                if (currentShippingPromo != null) {
+                    if (!newPromo.isCanStack() || !currentShippingPromo.isCanStack()) {
+                        throw new IllegalArgumentException("Mã giảm giá này không thể dùng chung với mã Miễn phí vận chuyển bạn đang chọn.");
+                    }
+                }
+                BigDecimal eligibleAmount = promotionService.calculateEligibleAmount(items, newPromo);
+                BigDecimal discountAmount = promotionService.calculateDiscountAmount(newPromo, cartSubtotal, shippingFee, eligibleAmount);
+                
+                session.setAttribute("merchandisePromo", newPromo);
+                session.setAttribute("merchandiseDiscount", discountAmount);
+                session.setAttribute("successMsg", "Áp dụng mã Giảm giá thành công!");
+            }
 
         } catch (IllegalArgumentException e) {
-            session.removeAttribute("appliedPromo");
-            session.removeAttribute("discountAmount");
             session.setAttribute("errorMsg", e.getMessage());
         } catch (SQLException e) {
             session.setAttribute("errorMsg", "Lỗi hệ thống khi xử lý mã giảm giá.");
