@@ -17,26 +17,31 @@ public class OrderDAO {
 
     public int insert(Order order) throws SQLException {
         String sql = """
-                INSERT INTO orders (customer_id, delivery_address, recipient_name, recipient_phone,
+                INSERT INTO orders (customer_id, assigned_sale_staff_id, delivery_address, recipient_name, recipient_phone,
                     delivery_time_slot, notes, status, total_amount, delivery_fee, discount_amount,
                     final_amount, payment_method)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, order.getCustomerId());
-            statement.setString(2, order.getDeliveryAddress());
-            statement.setString(3, order.getRecipientName());
-            statement.setString(4, order.getRecipientPhone());
-            statement.setString(5, order.getDeliveryTimeSlot());
-            statement.setString(6, order.getNotes());
-            statement.setString(7, order.getStatus());
-            statement.setBigDecimal(8, order.getTotalAmount());
-            statement.setBigDecimal(9, order.getDeliveryFee());
-            statement.setBigDecimal(10, order.getDiscountAmount());
-            statement.setBigDecimal(11, order.getFinalAmount());
-            statement.setString(12, order.getPaymentMethod());
+            if (order.getAssignedSaleStaffId() != null && order.getAssignedSaleStaffId() > 0) {
+                statement.setInt(2, order.getAssignedSaleStaffId());
+            } else {
+                statement.setNull(2, Types.INTEGER);
+            }
+            statement.setString(3, order.getDeliveryAddress());
+            statement.setString(4, order.getRecipientName());
+            statement.setString(5, order.getRecipientPhone());
+            statement.setString(6, order.getDeliveryTimeSlot());
+            statement.setString(7, order.getNotes());
+            statement.setString(8, order.getStatus());
+            statement.setBigDecimal(9, order.getTotalAmount());
+            statement.setBigDecimal(10, order.getDeliveryFee());
+            statement.setBigDecimal(11, order.getDiscountAmount());
+            statement.setBigDecimal(12, order.getFinalAmount());
+            statement.setString(13, order.getPaymentMethod());
             statement.executeUpdate();
 
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -201,7 +206,6 @@ public class OrderDAO {
             WHERE o.customer_id = ?
         """);
 
-        // Đã sửa: Thêm EXPIRED và PAYMENT_FAILED để đơn hủy tự động vẫn hiện ra
         if ("completed".equals(tab)) {
             sql.append(" AND o.status IN ('DELIVERED', 'CANCELLED', 'EXPIRED', 'PAYMENT_FAILED')");
         } else if ("active".equals(tab)) {
@@ -238,7 +242,6 @@ public class OrderDAO {
 
     public int countTabOrders(int customerId, String tab) throws SQLException {
         String sql;
-        // Đã sửa: Thêm EXPIRED và PAYMENT_FAILED
         if ("completed".equals(tab)) {
             sql = "SELECT COUNT(*) FROM orders WHERE customer_id = ? AND status IN ('DELIVERED', 'CANCELLED', 'EXPIRED', 'PAYMENT_FAILED')";
         } else if ("active".equals(tab)) {
@@ -258,6 +261,7 @@ public class OrderDAO {
         }
         return 0;
     }
+
     public Map<String, Object> findOrderDetail(int orderId, int customerId) throws SQLException {
         String sql = "SELECT * FROM orders WHERE order_id = ? AND customer_id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -295,7 +299,7 @@ public class OrderDAO {
                     Map<String, Object> map = new HashMap<>();
                     map.put("status", rs.getString("status"));
                     map.put("changedAt", rs.getTimestamp("changed_at"));
-                    map.put("note", rs.getString("note")); // Lấy thêm ghi chú
+                    map.put("note", rs.getString("note"));
                     list.add(map);
                 }
             }
@@ -393,6 +397,58 @@ public class OrderDAO {
     }
 
     // =========================================================================
+    // PHẦN 3: BỔ SUNG THUẬT TOÁN TỰ ĐỘNG GÁN & ĐIỀU CHUYỂN NHÂN VIÊN SALE
+    // =========================================================================
+
+    public int findBestAvailableSaleStaffId() throws SQLException {
+        String sql = """
+            SELECT u.user_id 
+            FROM users u 
+            LEFT JOIN orders o ON u.user_id = o.assigned_sale_staff_id 
+            AND o.status NOT IN ('DELIVERED', 'CANCELLED', 'EXPIRED', 'PAYMENT_FAILED') 
+            WHERE u.role = 'SALE_STAFF' AND u.status = 'ACTIVE' 
+            GROUP BY u.user_id 
+            ORDER BY COUNT(o.order_id) ASC, RAND() 
+            LIMIT 1
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("user_id");
+            }
+        }
+        return 0;
+    }
+
+    // Admin chuyển giao việc CHỈ khi đơn đang ở trạng thái CONFIRMED
+    public boolean updateAssignedSaleStaff(int orderId, int newStaffId) throws SQLException {
+        String sql = "UPDATE orders SET assigned_sale_staff_id = ? WHERE order_id = ? AND status = 'CONFIRMED'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newStaffId);
+            ps.setInt(2, orderId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public List<Map<String, Object>> getActiveSaleStaffList() throws SQLException {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT user_id, full_name FROM users WHERE role = 'SALE_STAFF' AND status = 'ACTIVE'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Map<String, Object> staff = new HashMap<>();
+                staff.put("userId", rs.getInt("user_id"));
+                staff.put("fullName", rs.getString("full_name"));
+                list.add(staff);
+            }
+        }
+        return list;
+    }
+
+    // =========================================================================
     // MAPPING HELPERS
     // =========================================================================
 
@@ -411,6 +467,12 @@ public class OrderDAO {
         order.setDiscountAmount(resultSet.getBigDecimal("discount_amount"));
         order.setFinalAmount(resultSet.getBigDecimal("final_amount"));
         order.setPaymentMethod(resultSet.getString("payment_method"));
+        
+        int assignedStaffId = resultSet.getInt("assigned_sale_staff_id");
+        if (!resultSet.wasNull()) {
+            order.setAssignedSaleStaffId(assignedStaffId);
+        }
+
         Timestamp createdAt = resultSet.getTimestamp("created_at");
         if (createdAt != null) {
             order.setCreatedAt(createdAt.toLocalDateTime());

@@ -193,7 +193,7 @@
         <a href="${ctx}/profile" class="${activeMenu == 'profile' ? 'active' : ''}">Hồ sơ cá nhân</a>
         <c:if test="${sessionScope.user.role == 'CUSTOMER'}">
             <a href="${ctx}/addresses" class="${activeMenu == 'addresses' ? 'active' : ''}">Sổ địa chỉ</a>
-            <a href="${ctx}/orders" class="${activeMenu == 'orders' ? 'active' : ''}">Đơn hàng của tôi</a>
+            <a href="${ctx}/account/orders" class="${activeMenu == 'orders' ? 'active' : ''}">Đơn hàng của tôi</a>
             <a href="${ctx}/wishlist" class="${activeMenu == 'wishlist' ? 'active' : ''}">Yêu thích</a>
         </c:if>
         <c:if test="${sessionScope.user.role != 'CUSTOMER'}">

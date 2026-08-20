@@ -41,9 +41,9 @@ public class DashboardDAO {
     }
     // 3. Lấy đơn hàng mới nhất (Đổi TOP thành LIMIT)
 
-    public List<Order> getRecentOrders(int limit) {
-        return getRecentOrders(limit, null);
-    }
+//    public List<Order> getRecentOrders(int limit) {
+//        return getRecentOrders(limit, null);
+//    }
 
     public List<Order> getRecentOrders(int limit, String startDate, String endDate, Integer staffId) {
         List<Order> list = new ArrayList<>();

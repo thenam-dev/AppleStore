@@ -22,10 +22,27 @@ public class Order {
     private LocalDateTime createdAt;
     private List<OrderItem> items;
     private List<OrderStatusHistory> statusHistory;
-
+    private Integer assignedSaleStaffId;
+    private String assignedSaleStaffName;
     // Bổ sung thêm thông tin Shipper phụ trách đơn hàng
     private String shipperName;
     private Integer shipperId;
+
+    public Integer getAssignedSaleStaffId() {
+        return assignedSaleStaffId;
+    }
+
+    public void setAssignedSaleStaffId(Integer assignedSaleStaffId) {
+        this.assignedSaleStaffId = assignedSaleStaffId;
+    }
+
+    public String getAssignedSaleStaffName() {
+        return assignedSaleStaffName;
+    }
+
+    public void setAssignedSaleStaffName(String assignedSaleStaffName) {
+        this.assignedSaleStaffName = assignedSaleStaffName;
+    }
 
     public int getOrderId() {
         return orderId;

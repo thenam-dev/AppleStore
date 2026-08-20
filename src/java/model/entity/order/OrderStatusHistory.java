@@ -70,4 +70,11 @@ public class OrderStatusHistory implements Serializable {
     public void setChangedByName(String changedByName) {
         this.changedByName = changedByName;
     }
+    
+    public String getFormattedChangedAt() {
+        if (this.changedAt == null) {
+            return "Chưa cập nhật";
+        }
+        return this.changedAt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
 }
