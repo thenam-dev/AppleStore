@@ -1,7 +1,12 @@
 <%--
   payment.jsp — thanh toán chuyển khoản (SePay QR), chỉ dùng cho đơn paymentMethod = CK.
   Servlet (PaymentServlet) set: order : Order{orderId,finalAmount,...}, qrCodeUrl : String hoặc null.
-  POST /payment (orderId ẩn) = DEMO-ONLY khách tự xác nhận đã chuyển khoản (xem PaymentService).
+  Đơn có thể được xác nhận theo 2 cách, không loại trừ nhau:
+    1. TỰ ĐỘNG: SepayWebhookServlet nhận webhook thật từ SePay khi tiền về, xác
+       nhận ở phía server - trang này KHÔNG biết ngay, nên có đoạn JS poll định
+       kỳ (tải lại trang) để phát hiện và tự chuyển sang order-success.
+    2. THỦ CÔNG (dự phòng, vẫn giữ): POST /payment (orderId ẩn) - khách tự bấm
+       "Tôi đã chuyển khoản" (xem PaymentService.confirmManualPayment()).
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c"   uri="jakarta.tags.core" %>
@@ -138,6 +143,41 @@
                     }
                   });
                 }
+
+                // Poll phát hiện xác nhận TỰ ĐỘNG qua webhook SePay: hỏi ngầm
+                // /payment/status (trả về đúng 1 dòng JSON trạng thái, KHÔNG
+                // phải tải lại cả trang) - trang chỉ điều hướng đi khi trạng
+                // thái THỰC SỰ đổi, không còn nháy/reload toàn trang mỗi lần
+                // poll như trước. Nếu chưa cấu hình webhook thật (xem
+                // SepayWebhookServlet) thì đơn giản là trạng thái không đổi,
+                // khách vẫn bấm nút xác nhận thủ công như cũ.
+                var statusPollTimer = setInterval(function () {
+                  fetch('${ctx}/payment/status?orderId=${order.orderId}', {
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store'
+                  })
+                    .then(function (res) { return res.ok ? res.json() : null; })
+                    .then(function (data) {
+                      if (!data) { return; }
+                      if (data.status === 'CONFIRMED') {
+                        clearInterval(statusPollTimer);
+                        clearInterval(timer);
+                        window.location.href = '${ctx}/order-success?orderId=${order.orderId}';
+                      } else if (data.status !== 'PENDING_PAYMENT') {
+                        // EXPIRED/CANCELLED - đơn không còn hiệu lực, tải lại
+                        // ĐÚNG 1 LẦN để hiện đúng màn đã huỷ (khác vòng lặp
+                        // reload liên tục trước đây).
+                        clearInterval(statusPollTimer);
+                        clearInterval(timer);
+                        window.location.reload();
+                      }
+                    })
+                    .catch(function () { /* lỗi mạng tạm thời - bỏ qua, poll lại ở lượt sau */ });
+                }, 4000);
+                window.addEventListener('beforeunload', function () {
+                  clearInterval(statusPollTimer);
+                  clearInterval(timer);
+                });
               })();
             </script>
           </c:if>

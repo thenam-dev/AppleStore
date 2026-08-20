@@ -24,13 +24,11 @@ import java.util.List;
  *   - ProductDAO.countAll(keyword, categoryId, status) -> luôn truyền cứng status = "ACTIVE"
  *   - ProductDAO.findAll(keyword, categoryId, status, sort, page, pageSize)
  *
- * LƯU Ý VỀ SORT: ProductDAO.resolveOrderBy() hiện chỉ hỗ trợ các khoá:
- *   oldest, name_asc, name_desc, price_asc, price_desc, stock_asc, stock_desc
- *   (mặc định khi không khớp: p.product_id DESC = mới nhất trước).
- * Chưa có khoá nào sort theo is_featured hay sold_quantity, nên "featured"
- * và "best-selling" ở UI tạm thời fallback về mặc định (mới nhất trước).
- * Muốn có sort "bán chạy" thật, cần bổ sung 2 case ("sold_desc", "featured_desc")
- * vào ProductDAO.resolveOrderBy() - báo team trước khi sửa vì đây là file dùng chung.
+ * LƯU Ý VỀ SORT: ProductDAO.resolveOrderBy() hỗ trợ các khoá:
+ *   oldest, name_asc, name_desc, price_asc, price_desc, stock_asc, stock_desc,
+ *   featured_desc (is_featured DESC), sold_desc (sold_quantity DESC)
+ *   (mặc định khi không khớp/"newest": p.product_id DESC = mới nhất trước).
+ * mapToDaoSort() map "featured" -> featured_desc, "best-selling" -> sold_desc.
  */
 @WebServlet(name = "GuestProductListServlet", urlPatterns = {"/products"})
 public class ProductListServlet extends ProductServletSupport {
@@ -92,12 +90,13 @@ public class ProductListServlet extends ProductServletSupport {
                 return "price_asc";
             case "price-desc":
                 return "price_desc";
-            case "newest":
-                return "newest"; // không khớp key nào trong DAO -> rơi về mặc định product_id DESC, đúng là "mới nhất"
-            case "featured":
             case "best-selling":
+                return "sold_desc";
+            case "featured":
+                return "featured_desc";
+            case "newest":
             default:
-                return null; // DAO chưa hỗ trợ, fallback mặc định (mới nhất trước)
+                return null; // không khớp key nào trong DAO -> rơi về mặc định product_id DESC, đúng là "mới nhất"
         }
     }
 

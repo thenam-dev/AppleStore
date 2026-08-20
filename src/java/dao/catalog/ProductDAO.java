@@ -233,6 +233,11 @@ public class ProductDAO {
         if ("price_desc".equals(sort)) return "COALESCE(vs.min_price, 0) DESC, p.product_id DESC";
         if ("stock_asc".equals(sort)) return "COALESCE(vs.total_stock, 0) ASC, p.product_id ASC";
         if ("stock_desc".equals(sort)) return "COALESCE(vs.total_stock, 0) DESC, p.product_id DESC";
+        // Dùng cho sort "Nổi bật"/"Bán chạy" ở màn khách hàng (/products) - xem
+        // ProductListServlet.mapToDaoSort(). Sản phẩm nổi bật (is_featured=1)
+        // lên đầu; bán chạy xếp theo số lượng đã bán giảm dần.
+        if ("featured_desc".equals(sort)) return "p.is_featured DESC, p.product_id DESC";
+        if ("sold_desc".equals(sort)) return "p.sold_quantity DESC, p.product_id DESC";
         return "p.product_id DESC";
     }
 

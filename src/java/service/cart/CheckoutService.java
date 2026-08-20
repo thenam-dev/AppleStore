@@ -4,6 +4,7 @@
  */
 package service.cart;
 
+import config.AppConfig;
 import dao.cart.CartDAO;
 import dao.catalog.ProductVariantDAO;
 import dao.order.OrderDAO;
@@ -43,8 +44,6 @@ import model.entity.order.Order;
  */
 public class CheckoutService {
 
-    private static final String SEPAY_ACCOUNT_NUMBER = "9999928012004"; // TODO: đọc từ config chung thay vì hard-code
-    private static final String SEPAY_BANK_CODE = "MBBank";
     private static final String ORDER_PREFIX = "DH";
 
     private final CartDAO cartDAO;
@@ -325,7 +324,7 @@ public class CheckoutService {
     private String buildQrUrl(BigDecimal amount, String content) {
         String encodedContent = URLEncoder.encode(content, StandardCharsets.UTF_8);
         return String.format("https://qr.sepay.vn/img?acc=%s&bank=%s&amount=%s&des=%s",
-                SEPAY_ACCOUNT_NUMBER, SEPAY_BANK_CODE,
+                AppConfig.SEPAY_ACCOUNT_NUMBER, AppConfig.SEPAY_BANK_CODE,
                 amount.setScale(0, java.math.RoundingMode.HALF_UP).toPlainString(), encodedContent);
     }
 }

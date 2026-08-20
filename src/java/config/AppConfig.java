@@ -29,6 +29,13 @@ public class AppConfig {
     public static final long MAX_UPLOAD_SIZE_BYTES = 5L * 1024 * 1024;
     public static final String[] ALLOWED_IMAGE_EXTS = {"jpg", "jpeg", "png", "webp"};
 
+    // ==== SePay (thanh toán chuyển khoản QR) ====
+    public static final String SEPAY_ACCOUNT_NUMBER = "9999928012004";
+    public static final String SEPAY_BANK_CODE = "MBBank";
+    // API Key khai báo khi đăng ký Webhook trên dashboard SePay (Cấu hình >
+    // Webhooks > Authorization: "Apikey <giá trị này>").
+    public static final String SEPAY_WEBHOOK_API_KEY = "spsk_live_mX1i64k7v5SbxfYVFHSbZi65SvJu1THH";
+
     // Google OAuth2 Constants
     public static final String GOOGLE_CLIENT_ID = "684587825406-uc8fb2uv7rmn8nih7is39ss2dhqgj2os.apps.googleusercontent.com";
     public static final String GOOGLE_CLIENT_SECRET = "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";

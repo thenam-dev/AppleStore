@@ -179,4 +179,86 @@ public class PaymentDAO {
             return statement.executeUpdate() > 0;
         }
     }
+
+    // ==== Webhook SePay (xác thực giao dịch chuyển khoản thật) ====
+    // Xem SepayWebhookServlet / PaymentService.processSepayWebhook().
+
+    /**
+     * "Khoá" 1 giao dịch SePay (theo sepay_transaction_id) trước khi xử lý,
+     * dựa vào UNIQUE KEY sepay_webhook_dedup.sepay_transaction_id để chống
+     * race condition khi SePay gửi trùng cùng 1 webhook (retry vì chưa nhận
+     * đủ HTTP 2xx, hoặc gọi lại do timeout) - 2 request trùng đến gần như
+     * cùng lúc thì chỉ 1 request insert thành công.
+     * @return true nếu đây là lần đầu xử lý giao dịch này; false nếu đã xử lý
+     *         rồi (webhook trùng - phải trả 200 ngay, KHÔNG xử lý lại).
+     */
+    public boolean tryClaimWebhookTransaction(String sepayTransactionId, String orderCode) throws SQLException {
+        String sql = "INSERT INTO sepay_webhook_dedup (sepay_transaction_id, order_code, process_result) "
+                + "VALUES (?, ?, 'processing')";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, sepayTransactionId);
+            statement.setString(2, orderCode);
+            statement.executeUpdate();
+            return true;
+        } catch (SQLIntegrityConstraintViolationException duplicate) {
+            return false;
+        }
+    }
+
+    /** Cập nhật lại kết quả xử lý sau cùng của 1 giao dịch webhook (để đối soát/debug). */
+    public void updateWebhookDedupResult(String sepayTransactionId, String processResult) throws SQLException {
+        String sql = "UPDATE sepay_webhook_dedup SET process_result = ? WHERE sepay_transaction_id = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, processResult);
+            statement.setString(2, sepayTransactionId);
+            statement.executeUpdate();
+        }
+    }
+
+    /**
+     * Giống markLatestCompleted() nhưng dùng cho webhook thật: ghi thêm mã
+     * giao dịch/tham chiếu SePay trả về và toàn bộ payload gốc (đối soát sau
+     * này) - khác với xác nhận thủ công (markLatestCompleted) không có các
+     * thông tin xác thực này.
+     */
+    public boolean markLatestCompletedFromWebhook(int orderId, String sepayTransactionId,
+            String sepayReference, String rawPayload) throws SQLException {
+        String sql = """
+                UPDATE payment_transactions
+                SET status = 'COMPLETED', completed_at = NOW(),
+                    sepay_transaction_id = ?, sepay_reference = ?, provider_response = ?
+                WHERE order_id = ? AND status = 'PENDING'
+                ORDER BY attempt_no DESC
+                LIMIT 1
+                """;
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, sepayTransactionId);
+            statement.setString(2, sepayReference);
+            statement.setString(3, rawPayload);
+            statement.setInt(4, orderId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    /** Số tiền (VND) của phiên thanh toán PENDING mới nhất - để webhook đối chiếu số tiền chuyển thực tế. */
+    public Optional<BigDecimal> findLatestPendingAmount(int orderId) throws SQLException {
+        String sql = """
+                SELECT amount FROM payment_transactions
+                WHERE order_id = ? AND status = 'PENDING'
+                ORDER BY attempt_no DESC LIMIT 1
+                """;
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return Optional.ofNullable(resultSet.getBigDecimal("amount"));
+                }
+                return Optional.empty();
+            }
+        }
+    }
 }

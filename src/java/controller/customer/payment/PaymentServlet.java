@@ -78,7 +78,13 @@ public class PaymentServlet extends HttpServlet {
         }
     }
 
-    /** DEMO-ONLY: xem ghi chú trong PaymentService.confirmManualPayment(). */
+    /**
+     * Khách tự bấm "Tôi đã chuyển khoản" - phương án XÁC NHẬN DỰ PHÒNG, vẫn
+     * giữ lại song song với xác nhận TỰ ĐỘNG qua webhook thật (xem
+     * SepayWebhookServlet, PaymentService.processSepayWebhook()). Dùng khi
+     * chưa cấu hình webhook SePay, webhook bị trễ/lỗi, hoặc để demo nhanh
+     * không cần tài khoản SePay/URL public.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
