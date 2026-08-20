@@ -1,16 +1,11 @@
 -- ==========================================================================
 -- schema.sql
 -- AppleStore database schema for MySQL 8.0+.
--- This file contains tables, keys, checks, unique constraints, and indexes only.
--- Rerunning this file resets all AppleStore tables so team members can rebuild
--- the local database after pulling schema changes.
 -- ==========================================================================
 
 CREATE DATABASE IF NOT EXISTS AppleStore CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE AppleStore;
 
--- Reset current schema. This deletes local AppleStore data, then recreates it
--- from the definitions below. Run seed.sql after this file when sample data is needed.
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS audit_logs;
@@ -27,6 +22,8 @@ DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS cart_items;
 DROP TABLE IF EXISTS cart;
+DROP TABLE IF EXISTS promotion_products;
+DROP TABLE IF EXISTS promotion_categories;
 DROP TABLE IF EXISTS promotions;
 DROP TABLE IF EXISTS inventory_logs;
 DROP TABLE IF EXISTS product_addon_services;
@@ -44,24 +41,17 @@ DROP TABLE IF EXISTS users;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- PHẦN 1: TẠO SCHEMA
--- ==========================================================================
-
-
--- 1. users - roles: CUSTOMER, ADMIN, SALE_STAFF, DELIVERY
+-- 1. users
 CREATE TABLE users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NULL,
     phone VARCHAR(15) NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER'
-        CHECK (role IN ('CUSTOMER','ADMIN','SALE_STAFF','DELIVERY')),
-    status VARCHAR(20) NOT NULL DEFAULT 'INACTIVE'
-        CHECK (status IN ('ACTIVE','INACTIVE','LOCKED','SUSPENDED')),
+    role VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER' CHECK (role IN ('CUSTOMER','ADMIN','SALE_STAFF','DELIVERY')),
+    status VARCHAR(20) NOT NULL DEFAULT 'INACTIVE' CHECK (status IN ('ACTIVE','INACTIVE','LOCKED','SUSPENDED')),
     avatar_url VARCHAR(500) NULL,
-    auth_provider VARCHAR(20) NOT NULL DEFAULT 'LOCAL'
-        CHECK (auth_provider IN ('LOCAL','GOOGLE')),
+    auth_provider VARCHAR(20) NOT NULL DEFAULT 'LOCAL' CHECK (auth_provider IN ('LOCAL','GOOGLE')),
     google_id VARCHAR(100) NULL,
     is_email_verified TINYINT(1) NOT NULL DEFAULT 0,
     email_verification_code_hash VARCHAR(255) NULL,
@@ -76,7 +66,6 @@ CREATE TABLE users (
     UNIQUE KEY UX_users_google_id (google_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
 -- 2. user_sessions
 CREATE TABLE user_sessions (
     session_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -88,7 +77,6 @@ CREATE TABLE user_sessions (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 
 -- 3. user_addresses
 CREATE TABLE user_addresses (
@@ -107,7 +95,7 @@ CREATE TABLE user_addresses (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4. store_settings (THAY shop_owner_profiles) — luôn đúng 1 dòng (store_id=1)
+-- 4. store_settings
 CREATE TABLE store_settings (
     store_id            TINYINT PRIMARY KEY DEFAULT 1,
     store_name          VARCHAR(150) NOT NULL,
@@ -125,10 +113,6 @@ CREATE TABLE store_settings (
     CONSTRAINT CK_store_settings_single_row CHECK (store_id = 1)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ==========================================================================
--- NHÓM 2: SẢN PHẨM APPLE
--- ==========================================================================
-
 -- 5. categories
 CREATE TABLE categories (
     category_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -138,25 +122,22 @@ CREATE TABLE categories (
     is_active TINYINT(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 6. products — không còn owner_id / quy trình phê duyệt
+-- 6. products
 CREATE TABLE products (
     product_id            INT PRIMARY KEY AUTO_INCREMENT,
-    created_by             INT NULL,      -- Nhân viên/admin tạo sản phẩm (chỉ để audit)
+    created_by             INT NULL,
     category_id            INT NOT NULL,
     name                    VARCHAR(200) NOT NULL,
     description             TEXT NULL,
     brand                   VARCHAR(50) NOT NULL DEFAULT 'Apple',
     model_code              VARCHAR(50) NULL,
     release_year            INT NULL CHECK (release_year BETWEEN 1998 AND 2100),
-    product_condition       VARCHAR(20) NOT NULL DEFAULT 'NEW'
-                            CHECK (product_condition IN ('NEW','LIKE_NEW','REFURBISHED')),
-    import_type             VARCHAR(10) NOT NULL DEFAULT 'VN/A'
-                            CHECK (import_type IN ('VN/A','LL/A','ZA/A','ZP/A','J/A','KH/A')),
+    product_condition       VARCHAR(20) NOT NULL DEFAULT 'NEW' CHECK (product_condition IN ('NEW','LIKE_NEW','REFURBISHED')),
+    import_type             VARCHAR(10) NOT NULL DEFAULT 'VN/A' CHECK (import_type IN ('VN/A','LL/A','ZA/A','ZP/A','J/A','KH/A')),
     origin_country           VARCHAR(100) NULL,
     warranty_months          INT NOT NULL DEFAULT 12 CHECK (warranty_months >= 0),
     warranty_provider        VARCHAR(100) NULL DEFAULT 'Apple Việt Nam',
-    status                  VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
-                            CHECK (status IN ('ACTIVE','INACTIVE','DELETED','DISCONTINUED')),
+    status                  VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE','INACTIVE','DELETED','DISCONTINUED')),
     view_count              INT NOT NULL DEFAULT 0 CHECK (view_count >= 0),
     rating                  DECIMAL(3,2) NOT NULL DEFAULT 0 CHECK (rating >= 0 AND rating <= 5),
     sold_quantity            INT NOT NULL DEFAULT 0 CHECK (sold_quantity >= 0),
@@ -166,7 +147,6 @@ CREATE TABLE products (
     FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE SET NULL,
     FOREIGN KEY (category_id) REFERENCES categories(category_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 
 -- 7. product_images
 CREATE TABLE product_images (
@@ -182,7 +162,7 @@ CREATE TABLE product_images (
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 8. product_specifications (EAV)
+-- 8. product_specifications
 CREATE TABLE product_specifications (
     spec_id       INT PRIMARY KEY AUTO_INCREMENT,
     product_id    INT NOT NULL,
@@ -194,7 +174,6 @@ CREATE TABLE product_specifications (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE INDEX IX_product_specifications_product_id ON product_specifications (product_id, display_order);
 
-
 -- 9. product_variants
 CREATE TABLE product_variants (
     variant_id            INT PRIMARY KEY AUTO_INCREMENT,
@@ -205,8 +184,7 @@ CREATE TABLE product_variants (
     color_hex             VARCHAR(7) NULL,
     storage_capacity_gb   INT NULL CHECK (storage_capacity_gb IS NULL OR storage_capacity_gb >= 0),
     ram_gb                INT NULL CHECK (ram_gb IS NULL OR ram_gb >= 0),
-    connectivity          VARCHAR(20) NULL
-                          CHECK (connectivity IS NULL OR connectivity IN ('WIFI','WIFI_CELLULAR')),
+    connectivity          VARCHAR(20) NULL CHECK (connectivity IS NULL OR connectivity IN ('WIFI','WIFI_CELLULAR')),
     chip_option           VARCHAR(50) NULL,
     screen_size_inch      DECIMAL(4,1) NULL CHECK (screen_size_inch IS NULL OR screen_size_inch > 0),
     price                 DECIMAL(12,2) NOT NULL CHECK (price >= 0),
@@ -218,13 +196,11 @@ CREATE TABLE product_variants (
     is_active             TINYINT(1) NOT NULL DEFAULT 1,
     created_at            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT CK_product_variants_discount_price
-        CHECK (discount_price IS NULL OR discount_price <= price),
-    CONSTRAINT CK_product_variants_discount_dates
-        CHECK (
-            (discount_start IS NULL AND discount_end IS NULL)
-            OR (discount_start IS NOT NULL AND discount_end IS NOT NULL AND discount_end > discount_start)
-        ),
+    CONSTRAINT CK_product_variants_discount_price CHECK (discount_price IS NULL OR discount_price <= price),
+    CONSTRAINT CK_product_variants_discount_dates CHECK (
+        (discount_start IS NULL AND discount_end IS NULL)
+        OR (discount_start IS NOT NULL AND discount_end IS NOT NULL AND discount_end > discount_start)
+    ),
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -235,8 +211,7 @@ CREATE TABLE product_serials (
     serial_number         VARCHAR(50) NOT NULL UNIQUE,
     imei_1                VARCHAR(20) NULL,
     imei_2                VARCHAR(20) NULL,
-    status                 VARCHAR(20) NOT NULL DEFAULT 'IN_STOCK'
-                          CHECK (status IN ('IN_STOCK','RESERVED','SOLD','RETURNED','DEFECTIVE')),
+    status                 VARCHAR(20) NOT NULL DEFAULT 'IN_STOCK' CHECK (status IN ('IN_STOCK','RESERVED','SOLD','RETURNED','DEFECTIVE')),
     order_item_id          INT NULL,
     warranty_start_date    DATE NULL,
     warranty_end_date      DATE NULL,
@@ -251,13 +226,11 @@ CREATE TABLE product_addon_services (
     addon_id     INT PRIMARY KEY AUTO_INCREMENT,
     product_id   INT NOT NULL,
     name         VARCHAR(150) NOT NULL,
-    addon_type   VARCHAR(20) NOT NULL DEFAULT 'SERVICE'
-                CHECK (addon_type IN ('SERVICE','ACCESSORY','WARRANTY_EXTENSION')),
+    addon_type   VARCHAR(20) NOT NULL DEFAULT 'SERVICE' CHECK (addon_type IN ('SERVICE','ACCESSORY','WARRANTY_EXTENSION')),
     price_add    DECIMAL(12,2) NOT NULL DEFAULT 0 CHECK (price_add >= 0),
     is_active    TINYINT(1) NOT NULL DEFAULT 1,
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 
 -- 12. inventory_logs
 CREATE TABLE inventory_logs (
@@ -266,8 +239,7 @@ CREATE TABLE inventory_logs (
     changed_by INT NOT NULL,
     order_id INT NULL,
     order_item_id INT NULL,
-    change_type VARCHAR(20) NOT NULL
-        CHECK (change_type IN ('MANUAL_ADJUST','ORDER_RESERVE','ORDER_RELEASE','ORDER_CONFIRM','RETURN','DEFECTIVE')),
+    change_type VARCHAR(20) NOT NULL CHECK (change_type IN ('MANUAL_ADJUST','ORDER_RESERVE','ORDER_RELEASE','ORDER_CONFIRM','RETURN','DEFECTIVE')),
     quantity_delta INT NOT NULL,
     quantity_after INT NOT NULL CHECK (quantity_after >= 0),
     note VARCHAR(300) NULL,
@@ -276,8 +248,7 @@ CREATE TABLE inventory_logs (
     FOREIGN KEY (changed_by) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
--- 13. promotions
+-- 13. promotions (Đã loại bỏ hoàn toàn các cột product_id, category_id thừa)
 CREATE TABLE promotions (
     promo_id INT PRIMARY KEY AUTO_INCREMENT,
     code VARCHAR(50) NOT NULL UNIQUE,
@@ -285,16 +256,8 @@ CREATE TABLE promotions (
     discount_max DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (discount_max >= 0),
     discount_value DECIMAL(10,2) NOT NULL,
     min_order_value DECIMAL(14,2) NOT NULL DEFAULT 0 CHECK (min_order_value >= 0),
-    
-    -- 1. Thêm CATEGORY vào danh sách cho phép của scope
     scope VARCHAR(15) NOT NULL CHECK (scope IN ('ORDER','PRODUCT','CATEGORY')), 
-    
-    benefit_target VARCHAR(20) NOT NULL DEFAULT 'MERCHANDISE'
-        CHECK (benefit_target IN ('MERCHANDISE','SHIPPING','PRODUCT','PAYMENT_METHOD')),
-    
-    product_id INT NULL,
-    category_id INT NULL, -- 2. Thêm cột category_id
-    
+    benefit_target VARCHAR(20) NOT NULL DEFAULT 'MERCHANDISE' CHECK (benefit_target IN ('MERCHANDISE','SHIPPING','PRODUCT','PAYMENT_METHOD')),
     max_uses INT NULL CHECK (max_uses IS NULL OR max_uses >= 0),
     used_count INT NOT NULL DEFAULT 0 CHECK (used_count >= 0),
     can_stack TINYINT(1) NOT NULL DEFAULT 0,
@@ -311,16 +274,25 @@ CREATE TABLE promotions (
         OR (discount_type = 'FIXED' AND discount_value > 0)
     ),
     CONSTRAINT CK_promotions_used_count CHECK (max_uses IS NULL OR used_count <= max_uses),
-    
-    -- 3. Cập nhật lại logic Check Constraint cho 3 trường hợp
-    CONSTRAINT CK_promotions_scope_logic CHECK (
-        (scope = 'ORDER' AND product_id IS NULL AND category_id IS NULL)
-        OR (scope = 'PRODUCT' AND product_id IS NOT NULL AND category_id IS NULL)
-        OR (scope = 'CATEGORY' AND category_id IS NOT NULL AND product_id IS NULL)
-    ),
-    FOREIGN KEY (product_id) REFERENCES products(product_id),
-    FOREIGN KEY (category_id) REFERENCES categories(category_id), -- 4. Thêm khoá ngoại
     FOREIGN KEY (created_by) REFERENCES users(user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 13.1. Bảng nối: Danh mục (1 Promotion -> Nhiều Category)
+CREATE TABLE promotion_categories (
+    promo_id INT NOT NULL,
+    category_id INT NOT NULL,
+    PRIMARY KEY (promo_id, category_id),
+    FOREIGN KEY (promo_id) REFERENCES promotions(promo_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 13.2. Bảng nối: Sản phẩm (1 Promotion -> Nhiều Product)
+CREATE TABLE promotion_products (
+    promo_id INT NOT NULL,
+    product_id INT NOT NULL,
+    PRIMARY KEY (promo_id, product_id),
+    FOREIGN KEY (promo_id) REFERENCES promotions(promo_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 14. cart
@@ -347,8 +319,7 @@ CREATE TABLE cart_items (
     UNIQUE KEY UX_cart_items_cart_variant_addon (cart_id, variant_id, addon_id_norm)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
--- 16. orders - one cart creates one order because this is a single-shop system.
+-- 16. orders
 CREATE TABLE orders (
     order_id INT PRIMARY KEY AUTO_INCREMENT,
     customer_id INT NOT NULL,
@@ -361,17 +332,14 @@ CREATE TABLE orders (
     cancelled_at DATETIME NULL,
     cancelled_by INT NULL,
     cancellation_reason VARCHAR(500) NULL,
-    status VARCHAR(25) NOT NULL DEFAULT 'PENDING_PAYMENT' CHECK (status IN
-        ('PENDING_PAYMENT','APPROVED','CONFIRMED','PREPARING','DISPATCHED','DELIVERED','CANCELLED','PAYMENT_FAILED','EXPIRED')),
+    status VARCHAR(25) NOT NULL DEFAULT 'PENDING_PAYMENT' CHECK (status IN ('PENDING_PAYMENT','APPROVED','CONFIRMED','PREPARING','DISPATCHED','DELIVERED','CANCELLED','PAYMENT_FAILED','EXPIRED')),
     total_amount DECIMAL(14,2) NOT NULL CHECK (total_amount >= 0),
     delivery_fee DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (delivery_fee >= 0),
     discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0 CHECK (discount_amount >= 0),
     final_amount DECIMAL(14,2) NOT NULL CHECK (final_amount >= 0),
     payment_method VARCHAR(20) NOT NULL CHECK (payment_method IN ('CK','COD')),
-    refund_status VARCHAR(20) NOT NULL DEFAULT 'NONE'
-        CHECK (refund_status IN ('NONE','PENDING','APPROVED','REJECTED','PROCESSING','REFUNDED','FAILED')),
-    received_status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
-        CHECK (received_status IN ('PENDING','RECEIVED','NOT_RECEIVED')),
+    refund_status VARCHAR(20) NOT NULL DEFAULT 'NONE' CHECK (refund_status IN ('NONE','PENDING','APPROVED','REJECTED','PROCESSING','REFUNDED','FAILED')),
+    received_status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (received_status IN ('PENDING','RECEIVED','NOT_RECEIVED')),
     acceptance_deadline DATETIME NULL,
     accepted_at DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -382,7 +350,6 @@ CREATE TABLE orders (
     FOREIGN KEY (cancelled_by) REFERENCES users(user_id),
     UNIQUE KEY UQ_orders_order_customer (order_id, customer_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 
 -- 17. order_items
 CREATE TABLE order_items (
@@ -403,18 +370,10 @@ CREATE TABLE order_items (
     UNIQUE KEY UQ_order_items_order_item_order (order_item_id, order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-ALTER TABLE product_serials
-    ADD CONSTRAINT FK_product_serials_order_items
-    FOREIGN KEY (order_item_id) REFERENCES order_items(order_item_id);
+ALTER TABLE product_serials ADD CONSTRAINT FK_product_serials_order_items FOREIGN KEY (order_item_id) REFERENCES order_items(order_item_id);
+ALTER TABLE inventory_logs ADD CONSTRAINT FK_inventory_logs_orders FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE SET NULL, ADD CONSTRAINT FK_inventory_logs_order_items FOREIGN KEY (order_item_id) REFERENCES order_items(order_item_id) ON DELETE SET NULL;
 
-ALTER TABLE inventory_logs
-    ADD CONSTRAINT FK_inventory_logs_orders
-    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE SET NULL,
-    ADD CONSTRAINT FK_inventory_logs_order_items
-    FOREIGN KEY (order_item_id) REFERENCES order_items(order_item_id) ON DELETE SET NULL;
-
--- 17b. order_status_history — audit toàn bộ dòng thời gian chuyển trạng thái đơn.
--- changed_by = NULL nghĩa là hệ thống tự động chuyển (không phải actor nào bấm).
+-- 17b. order_status_history
 CREATE TABLE order_status_history (
     history_id INT PRIMARY KEY AUTO_INCREMENT,
     order_id INT NOT NULL,
@@ -427,7 +386,6 @@ CREATE TABLE order_status_history (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE INDEX IX_order_status_history_order_id ON order_status_history (order_id, changed_at DESC);
 
-
 -- 18. order_promotions
 CREATE TABLE order_promotions (
     usage_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -436,15 +394,13 @@ CREATE TABLE order_promotions (
     customer_id INT NOT NULL,
     discount_applied DECIMAL(12,2) NOT NULL CHECK (discount_applied >= 0),
     coupon_code VARCHAR(50) NULL,
-    benefit_target VARCHAR(20) NULL
-        CHECK (benefit_target IS NULL OR benefit_target IN ('MERCHANDISE','SHIPPING','PRODUCT','PAYMENT_METHOD')),
+    benefit_target VARCHAR(20) NULL CHECK (benefit_target IS NULL OR benefit_target IN ('MERCHANDISE','SHIPPING','PRODUCT','PAYMENT_METHOD')),
     used_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
     FOREIGN KEY (promo_id) REFERENCES promotions(promo_id),
     FOREIGN KEY (customer_id) REFERENCES users(user_id),
     FOREIGN KEY (order_id, customer_id) REFERENCES orders(order_id, customer_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 
 -- 19. return_requests
 CREATE TABLE return_requests (
@@ -453,16 +409,14 @@ CREATE TABLE return_requests (
     order_item_id INT NULL,
     customer_id INT NOT NULL,
     request_type VARCHAR(20) NOT NULL CHECK (request_type IN ('CANCEL','RETURN','EXCHANGE','WARRANTY_CLAIM')),
-    reason_code VARCHAR(50) NOT NULL
-        CHECK (reason_code IN ('WRONG_ITEM','HARDWARE_DEFECT','SOFTWARE_ISSUE','MISSING_ITEM','LATE_DELIVERY','NOT_AS_DESCRIBED','CHANGED_MIND','OTHER')),
+    reason_code VARCHAR(50) NOT NULL CHECK (reason_code IN ('WRONG_ITEM','HARDWARE_DEFECT','SOFTWARE_ISSUE','MISSING_ITEM','LATE_DELIVERY','NOT_AS_DESCRIBED','CHANGED_MIND','OTHER')),
     description VARCHAR(1000) NULL,
     evidence_url VARCHAR(500) NULL,
     requested_quantity INT NOT NULL DEFAULT 1 CHECK (requested_quantity >= 1),
     resolution_type VARCHAR(20) NULL CHECK (resolution_type IN ('REFUND','REPLACE','DISCOUNT','REJECT')),
     replacement_variant_id INT NULL,
     refund_amount DECIMAL(14,2) NOT NULL DEFAULT 0 CHECK (refund_amount >= 0),
-    status VARCHAR(20) NOT NULL DEFAULT 'REQUESTED'
-        CHECK (status IN ('REQUESTED','APPROVED','REJECTED','PROCESSING','COMPLETED','CANCELLED')),
+    status VARCHAR(20) NOT NULL DEFAULT 'REQUESTED' CHECK (status IN ('REQUESTED','APPROVED','REJECTED','PROCESSING','COMPLETED','CANCELLED')),
     decided_by INT NULL,
     decision_reason VARCHAR(500) NULL,
     resolved_at DATETIME NULL,
@@ -476,7 +430,6 @@ CREATE TABLE return_requests (
     FOREIGN KEY (order_id, customer_id) REFERENCES orders(order_id, customer_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
 -- 20. payment_transactions
 CREATE TABLE payment_transactions (
     transaction_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -488,9 +441,7 @@ CREATE TABLE payment_transactions (
     sepay_qr_code VARCHAR(500) NULL,
     amount DECIMAL(14,2) NOT NULL CHECK (amount >= 0),
     currency VARCHAR(3) NOT NULL DEFAULT 'VND',
-    status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN (
-        'PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED', 'REFUNDED', 'EXPIRED'
-    )),
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED', 'REFUNDED', 'EXPIRED')),
     initiated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     completed_at DATETIME NULL,
     expires_at DATETIME NULL,
@@ -543,13 +494,6 @@ CREATE TABLE deliveries (
     FOREIGN KEY (delivery_trip_id) REFERENCES delivery_trips(trip_id),
     FOREIGN KEY (staff_id) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- ==========================================================================
--- NHÓM 5: ĐÁNH GIÁ, THÔNG BÁO, HỆ THỐNG
--- (Đã bỏ hoàn toàn chat_sessions / chat_messages — không còn tính năng
---  chat/chatbot trong hệ thống.)
--- ==========================================================================
-
 
 -- 23. reviews
 CREATE TABLE reviews (
