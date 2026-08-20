@@ -26,6 +26,19 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute(AppConfig.SESSION_USER) instanceof User) {
+            User user = (User) session.getAttribute(AppConfig.SESSION_USER);
+            String role = user.getRole();
+            if (AppConfig.ROLE_ADMIN.equals(role) || AppConfig.ROLE_SALE_STAFF.equals(role)) {
+                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            } else if ("DELIVERY".equals(role)) {
+                response.sendRedirect(request.getContextPath() + "/staff/tasks");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/home");
+            }
+            return;
+        }
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 
@@ -54,9 +67,21 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute(AppConfig.SESSION_USER, result.user);
             session.setMaxInactiveInterval(rememberMe ? REMEMBER_ME_MAX_AGE_SECONDS : DEFAULT_MAX_AGE_SECONDS);
 
-            String target = (redirectTo != null) ? request.getContextPath() + redirectTo
-                    : request.getContextPath() + "/home";
-            response.sendRedirect(target);
+            if (redirectTo != null) {
+                response.sendRedirect(request.getContextPath() + redirectTo);
+                return;
+            }
+
+            // Redirect dựa theo Role
+            String role = result.user.getRole();
+            if (AppConfig.ROLE_ADMIN.equals(role) || AppConfig.ROLE_SALE_STAFF.equals(role)) {
+                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            } else if ("DELIVERY".equals(role)) {
+                response.sendRedirect(request.getContextPath() + "/staff/tasks");
+            } else {
+                // Mặc định là CUSTOMER
+                response.sendRedirect(request.getContextPath() + "/home");
+            }
         } catch (SQLException ex) {
             request.setAttribute("errorMsg", "Hiện chưa thể đăng nhập. Vui lòng thử lại sau.");
             request.setAttribute("form", Map.of("email", email == null ? "" : email));

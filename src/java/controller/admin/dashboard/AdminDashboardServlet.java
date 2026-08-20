@@ -25,12 +25,8 @@ public class AdminDashboardServlet extends HttpServlet {
         
         model.entity.user.User user = (model.entity.user.User) request.getSession().getAttribute(config.AppConfig.SESSION_USER);
         
-        // Mặc định staffId = null. Khi truyền null xuống DAO, hệ thống sẽ lấy TẤT CẢ dữ liệu (Dành cho ADMIN)
-        Integer staffId = null;
-        
-        if (user != null && config.AppConfig.ROLE_SALE_STAFF.equals(user.getRole())) {
-            staffId = user.getUserId();
-        }
+        // Giao việc quyết định xem user này có bị giới hạn dữ liệu (scoping) hay không cho tầng Service xử lý
+        Integer staffId = service.extractStaffId(user);
 
         // Lấy dữ liệu tổng quan
         dto.DashboardStatsDTO stats = service.getDashboardStats(staffId);

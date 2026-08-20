@@ -15,8 +15,12 @@ public class DashboardService {
 
     private DashboardDAO dashboardDAO = new DashboardDAO();
 
-    public DashboardStatsDTO getDashboardStats() {
-        return getDashboardStats(null);
+
+    public Integer extractStaffId(model.entity.user.User user) {
+        if (user != null && config.AppConfig.ROLE_SALE_STAFF.equals(user.getRole())) {
+            return user.getUserId();
+        }
+        return null;
     }
 
     public DashboardStatsDTO getDashboardStats(Integer staffId) {
@@ -55,24 +59,12 @@ public class DashboardService {
     }
 
 
-    public java.util.List<model.entity.order.Order> getRecentOrders(int limit) {
-        return getRecentOrders(limit, null);
-    }
-
     public java.util.List<model.entity.order.Order> getRecentOrders(int limit, Integer staffId) {
         return dashboardDAO.getRecentOrders(limit, staffId);
     }
     
-    public java.util.List<dto.BestSellingProductDTO> getBestSellingProducts(int limit) {
-        return getBestSellingProducts(limit, null);
-    }
-
     public java.util.List<dto.BestSellingProductDTO> getBestSellingProducts(int limit, Integer staffId) {
         return dashboardDAO.getBestSellingProducts(limit, staffId);
-    }
-
-    public java.util.LinkedHashMap<String, Double> getRevenueByDate(String startDate, String endDate) {
-        return dashboardDAO.getRevenueByDate(startDate, endDate, null);
     }
 
     public java.util.LinkedHashMap<String, Double> getRevenueByDate(String startDate, String endDate, Integer staffId) {
