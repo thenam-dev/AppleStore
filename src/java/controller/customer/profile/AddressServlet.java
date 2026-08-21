@@ -80,9 +80,9 @@ public class AddressServlet extends HttpServlet {
                     newAddress.setAddressDetail(aDetail);
 
                     if (addressService.addAddress(newAddress)) {
-                        request.getSession().setAttribute("message", "Thêm địa chỉ thành công!");
+                        request.getSession().setAttribute("successMsg", "Thêm địa chỉ thành công!");
                     } else {
-                        request.getSession().setAttribute("error", "Thêm địa chỉ thất bại!");
+                        request.getSession().setAttribute("errorMsg", "Thêm địa chỉ thất bại!");
                     }
                     break;
                 }
@@ -100,30 +100,30 @@ public class AddressServlet extends HttpServlet {
                     updatedAddress.setAddressDetail(aDetail);
 
                     if (addressService.updateAddress(updatedAddress)) {
-                        request.getSession().setAttribute("message", "Cập nhật địa chỉ thành công!");
+                        request.getSession().setAttribute("successMsg", "Cập nhật địa chỉ thành công!");
                     } else {
-                        request.getSession().setAttribute("error", "Cập nhật thất bại!");
+                        request.getSession().setAttribute("errorMsg", "Cập nhật thất bại!");
                     }
                     break;
                 }
                 case "/delete-address": {
                     int addressId = Integer.parseInt(request.getParameter("addressId"));
                     if (addressService.deleteAddress(addressId, user.getUserId())) {
-                        request.getSession().setAttribute("message", "Đã xóa địa chỉ!");
+                        request.getSession().setAttribute("successMsg", "Đã xóa địa chỉ!");
                     }
                     break;
                 }
                 case "/set-default-address": {
                     int addressId = Integer.parseInt(request.getParameter("addressId"));
                     if (addressService.setDefaultAddress(addressId, user.getUserId())) {
-                        request.getSession().setAttribute("message", "Đã thiết lập địa chỉ mặc định!");
+                        request.getSession().setAttribute("successMsg", "Đã thiết lập địa chỉ mặc định!");
                     }
                     break;
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            request.getSession().setAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            request.getSession().setAttribute("errorMsg", "Có lỗi xảy ra: " + e.getMessage());
         }
 
         // Dùng sendRedirect để tránh lỗi resubmit form khi F5

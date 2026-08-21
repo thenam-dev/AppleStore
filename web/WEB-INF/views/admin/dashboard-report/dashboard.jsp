@@ -32,12 +32,14 @@
       <form action="${appPath}/admin/dashboard" method="GET" class="toolbar" onsubmit="return validateDateRange(this);">
         <div class="search" style="border:none;box-shadow:none;background:transparent;padding:0;">
           <label for="startDate" style="margin-right:8px;font-size:13px;color:var(--ash);">Từ:</label>
-          <input type="date" id="startDate" name="startDate" class="input" value="${param.startDate}">
+          <input type="date" id="startDate" name="startDate" class="input" value="${not empty sessionScope.badStartDate ? sessionScope.badStartDate : param.startDate}">
         </div>
         <div class="search" style="border:none;box-shadow:none;background:transparent;padding:0;">
           <label for="endDate" style="margin-right:8px;font-size:13px;color:var(--ash);">Đến:</label>
-          <input type="date" id="endDate" name="endDate" class="input" value="${param.endDate}">
+          <input type="date" id="endDate" name="endDate" class="input" value="${not empty sessionScope.badEndDate ? sessionScope.badEndDate : param.endDate}">
         </div>
+        <c:remove var="badStartDate" scope="session"/>
+        <c:remove var="badEndDate" scope="session"/>
         <button type="submit" class="btn sm">Lọc</button>
         <button type="button" onclick="setQuickDateRange(30)" class="btn ghost sm">30 ngày</button>
         <button type="button" onclick="setQuickDateRange(7)" class="btn ghost sm">7 ngày</button>
