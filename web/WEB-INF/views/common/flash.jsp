@@ -24,6 +24,45 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
+<c:if test="${not empty successMsg}">
+  <div id="flashSuccessToastData" data-message="<c:out value='${successMsg}'/>" style="display:none" aria-hidden="true"></div>
+  <script>
+    (function () {
+      var dataEl = document.getElementById('flashSuccessToastData');
+      if (!dataEl) { return; }
+      var message = dataEl.dataset.message;
+      if (!message) { return; }
+
+      var stack = document.getElementById('toast-stack');
+      if (!stack) {
+        stack = document.createElement('div');
+        stack.id = 'toast-stack';
+        stack.className = 'toast-stack';
+        document.body.appendChild(stack);
+      }
+      var DURATION = 4000;
+      var ENTER_MS = 320;
+      var toast = document.createElement('div');
+      toast.className = 'toast ok';
+      toast.setAttribute('role', 'status');
+      toast.setAttribute('aria-live', 'polite');
+      toast.innerHTML = '<svg width="16" height="16"><use href="#i-check"/></svg>' +
+        '<span></span><i class="toast-timer"></i>';
+      toast.querySelector('span').textContent = message;
+      stack.appendChild(toast);
+      var timer = toast.querySelector('.toast-timer');
+      timer.style.transitionDuration = Math.max(DURATION - ENTER_MS, 0) + 'ms';
+      requestAnimationFrame(function () { toast.classList.add('show'); });
+      setTimeout(function () { timer.style.transform = 'scaleX(0)'; }, ENTER_MS);
+      setTimeout(function () {
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+        setTimeout(function () { toast.remove(); }, 220);
+      }, DURATION);
+    })();
+  </script>
+</c:if>
+
 <c:if test="${not empty errorMsg}">
   <c:choose>
     <c:when test="${empty fieldErrors}">
