@@ -57,7 +57,7 @@
                                     <label class="pm-option addr-option"
                                            data-name="<c:out value='${defaultAddress.recipientName}'/>"
                                            data-phone="<c:out value='${defaultAddress.recipientPhone}'/>"
-                                           data-address="<c:out value='${defaultAddress.addressDetail}, ${defaultAddress.ward}, ${defaultAddress.district}, ${defaultAddress.province}'/>">
+                                           data-address="<c:out value='${defaultAddress.addressDetail}'/>">
                                         <input type="radio" name="addressChoice" class="sr-only addr-radio" value="${defaultAddress.addressId}"
                                                ${otherSelected ? '' : 'checked'}>
                                         <span class="pm-dot"></span>
@@ -66,7 +66,7 @@
                                             &middot; <span class="mono" style="font-size:12px"><c:out value="${defaultAddress.recipientPhone}"/></span>
                                             <span class="tag" style="margin-left:6px; outline-color: red">Mặc định</span>
                                             <br><span style="font-size:12.5px;color:var(--ash)">
-                                                <c:out value="${defaultAddress.addressDetail}"/>, <c:out value="${defaultAddress.ward}"/>, <c:out value="${defaultAddress.district}"/>, <c:out value="${defaultAddress.province}"/>
+                                                <c:out value="${defaultAddress.addressDetail}"/>
                                             </span>
                                         </span>
                                     </label>

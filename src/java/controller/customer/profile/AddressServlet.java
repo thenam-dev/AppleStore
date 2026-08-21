@@ -77,7 +77,6 @@ public class AddressServlet extends HttpServlet {
                     newAddress.setUserId(user.getUserId());
                     newAddress.setRecipientName(rName);
                     newAddress.setRecipientPhone(rPhone);
-                    // Không lưu province, district, ward theo yêu cầu
                     newAddress.setAddressDetail(aDetail);
 
                     if (addressService.addAddress(newAddress)) {
