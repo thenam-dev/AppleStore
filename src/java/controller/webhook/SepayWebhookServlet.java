@@ -16,13 +16,9 @@ import java.util.Map;
 
 /**
  * Endpoint nhận webhook thật từ SePay khi có giao dịch chuyển khoản vào tài
- * khoản ngân hàng đã đăng ký - đây là mảnh còn thiếu để luồng "quét mã CK"
- * xác nhận đơn TỰ ĐỘNG dựa trên giao dịch thật, thay vì chỉ dựa vào khách tự
- * bấm "Tôi đã chuyển khoản" (PaymentServlet.doPost - vẫn được GIỮ LẠI làm
- * phương án dự phòng, xem PaymentService.confirmManualPayment()).
+ * khoản ngân hàng đã đăng ký.
  *
- * === CÁCH ĐẤU NỐI VỚI SEPAY (bắt buộc phải làm những bước dưới đây, code
- * không tự chạy được nếu chưa cấu hình) ===
+ * === CÁCH ĐẤU NỐI VỚI SEPAY ===
  * 1. Có tài khoản SePay (sepay.vn) đã liên kết với đúng số tài khoản ngân
  *    hàng dùng để nhận tiền (AppConfig.SEPAY_ACCOUNT_NUMBER).
  * 2. App phải có URL public mà SePay gọi tới được (SePay ở ngoài Internet,

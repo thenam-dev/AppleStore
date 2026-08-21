@@ -249,6 +249,38 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .shot.thumb{width:42px;height:42px;aspect-ratio:auto;border-radius:var(--r-sm)}
 .shot.thumb-lg{width:64px;height:64px;aspect-ratio:auto;border-radius:var(--r-sm)}
 
+/* ảnh chính ở trang chi tiết sản phẩm: lấp gần hết khung để không lộ viền nền quanh ảnh */
+.shot.gallery-stage img{width:96%;height:96%}
+
+/* thẻ trắng bọc cả ảnh lớn + dải ảnh nhỏ - để 2 nút chuyển ảnh có viền thẻ
+   làm điểm tựa nổi nửa trong nửa ngoài, giống carousel Apple/Samsung */
+.gallery-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);
+  box-shadow:var(--sh-2);padding:20px 20px 16px}
+.gallery-frame{position:relative}
+.gallery-nav{position:absolute;top:50%;width:52px;height:52px;border-radius:50%;
+  border:none;background:rgba(17,20,24,.14);color:#3A3D42;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s,color .15s,box-shadow .15s;z-index:3;
+  box-shadow:0 2px 10px -4px rgba(14,17,22,.25)}
+.gallery-nav:hover{background:rgba(17,20,24,.26);color:var(--ink)}
+.gallery-nav svg{width:22px;height:22px}
+/* -20px = đúng bằng padding ngang của .gallery-card, để tâm nút rơi thẳng
+   vào viền thẻ -> nút nổi đúng nửa trong nửa ngoài viền thẻ như ảnh mẫu */
+.gallery-nav.prev{left:-20px;transform:translate(-50%,-50%)}
+.gallery-nav.next{right:-20px;transform:translate(50%,-50%)}
+
+/* dải ảnh nhỏ: cuộn ngang 1 hàng thay vì xuống dòng, 2 nút nhỏ 2 đầu cuộn dải
+   (không đổi ảnh chính - đổi ảnh chính phải bấm đúng thumbnail) */
+.gallery-thumb-row{position:relative;margin-top:14px}
+.gallery-thumbs{display:flex;gap:8px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;padding:2px 1px}
+.gallery-thumbs::-webkit-scrollbar{display:none}
+.gallery-thumb{flex:0 0 auto;width:64px;height:64px;padding:3px;border:1px solid var(--line);
+  border-radius:var(--r-sm);background:#fff;cursor:pointer;transition:border-color .15s}
+.gallery-thumb.active{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.gallery-nav.sm{width:34px;height:34px;box-shadow:var(--sh-2)}
+.gallery-nav.sm svg{width:15px;height:15px}
+.gallery-nav.sm.prev{left:-20px;transform:translate(-50%,-50%)}
+.gallery-nav.sm.next{right:-20px;transform:translate(50%,-50%)}
+
 /* ---------- 9. GIAO DIỆN CỬA HÀNG ---------- */
 
 .sf-top{background:var(--ink);color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(255,255,255,.06)}

@@ -88,7 +88,7 @@ public class ProductVariantDAO {
         }
     }
 
-    /** Tìm biến thể theo ID, trả về Optional.empty nếu k   hông có bản ghi. */
+    /** Tìm biến thể theo ID, trả về Optional.empty nếu không có bản ghi. */
     public Optional<ProductVariant> findById(int variantId) throws SQLException {
         String sql = "SELECT " + VARIANT_COLUMNS + ' ' + VARIANT_FROM + " AND pv.variant_id = ?";
 
@@ -213,19 +213,19 @@ public class ProductVariantDAO {
     }
 
     /**
-     * Trừ tồn kho khi tạo đơn hàng, chỉ thành công nếu tồn kho hiện tại còn
-     * đủ - điều kiện này nằm ngay trong WHERE nên atomic ở mức 1 câu lệnh SQL
-     * mà không cần SELECT ... FOR UPDATE riêng.
-     * Trả về false nếu không đủ hàng (0 dòng bị ảnh hưởng) - Service phải
-     * kiểm tra giá trị trả về để rollback nghiệp vụ (hoàn lại các bước trước
+     * Trừ tồn kho khi tạo đơn hàng, chỉ thành công nếu tồn kho hiện tại còn đủ
+     * Trả về false nếu không đủ hàng 
+     * Service phải kiểm tra giá trị trả về để rollback nghiệp vụ (hoàn lại các bước trước
      * đó) vì không còn transaction tự động.
      */
     /**
      * Trừ tồn kho một cách an toàn, chỉ thành công khi biến thể còn đủ hàng.
+     * Giải quyết bài toán 2 ng mua cùng lúc (atomic update vs WHERE clause)
      * Join thêm bảng products và bắt buộc p.status = 'ACTIVE' để chặn trừ kho
      * (và do đó chặn đặt hàng) khi sản phẩm đã bị admin tạm khóa/ngừng kinh
      * doanh, đồng bộ với điều kiện ở findStockQuantity.
      */
+    
     public boolean decreaseStockIfAvailable(int variantId, int quantity) throws SQLException {
         String sql = """
                 UPDATE product_variants pv

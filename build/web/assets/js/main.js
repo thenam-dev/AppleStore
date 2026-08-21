@@ -86,25 +86,104 @@ function initQuantityControls() {
     });
 }
 
+// Bỏ dấu tiếng Việt, hạ chữ thường, đổi khoảng trắng/ký tự lạ thành "-".
+// Dùng để so khớp tên màu (vd "Xám Không Gian") với tên file ảnh
+// (vd "airpods-max-xam-khong-gian.png") - kho ảnh hiện đặt tên file theo
+// đúng quy tắc này nên không cần thêm cột ánh xạ màu-ảnh trong CSDL.
+function slugifyForImageMatch(text) {
+    return (text || "")
+        .toString()
+        .normalize("NFD")
+        .replace(new RegExp("[\\u0300-\\u036f]", "g"), "")
+        .replace(/đ/gi, "d")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+}
+
 function initProductGallery() {
     var mainImage = document.querySelector("[data-gallery-main]");
-    var thumbs = document.querySelectorAll("[data-gallery-thumb]");
+    var thumbs = Array.prototype.slice.call(document.querySelectorAll("[data-gallery-thumb]"));
+    var prevButton = document.querySelector("[data-gallery-prev]");
+    var nextButton = document.querySelector("[data-gallery-next]");
+    var thumbTrack = document.querySelector("[data-gallery-thumbs]");
+    var thumbPrevButton = document.querySelector("[data-gallery-thumb-prev]");
+    var thumbNextButton = document.querySelector("[data-gallery-thumb-next]");
 
     if (!mainImage || !thumbs.length) {
         return;
     }
 
-    thumbs.forEach(function (thumb) {
-        thumb.addEventListener("click", function () {
-            thumbs.forEach(function (button) {
-                button.classList.remove("active");
-            });
+    var currentIndex = Math.max(thumbs.findIndex(function (button) {
+        return button.classList.contains("active");
+    }), 0);
 
-            thumb.classList.add("active");
-            mainImage.src = thumb.getAttribute("data-image-src");
-            mainImage.alt = thumb.getAttribute("data-image-alt");
+    function showThumb(index) {
+        var count = thumbs.length;
+        currentIndex = ((index % count) + count) % count;
+        var thumb = thumbs[currentIndex];
+
+        thumbs.forEach(function (button) {
+            button.classList.remove("active");
+        });
+
+        thumb.classList.add("active");
+        mainImage.src = thumb.getAttribute("data-image-src");
+        mainImage.alt = thumb.getAttribute("data-image-alt");
+        // Dải ảnh nhỏ cuộn ngang (xem .gallery-thumbs trong style.css) - kéo ảnh
+        // đang chọn vào giữa khung nhìn cho khỏi bị khuất 2 đầu dải.
+        thumb.scrollIntoView({behavior: "smooth", inline: "center", block: "nearest"});
+    }
+
+    thumbs.forEach(function (thumb, index) {
+        thumb.addEventListener("click", function () {
+            showThumb(index);
         });
     });
+
+    if (prevButton) {
+        prevButton.addEventListener("click", function () {
+            showThumb(currentIndex - 1);
+        });
+    }
+
+    if (nextButton) {
+        nextButton.addEventListener("click", function () {
+            showThumb(currentIndex + 1);
+        });
+    }
+
+    // 2 nút nhỏ cạnh dải ảnh chỉ cuộn dải thumbnail, KHÔNG đổi ảnh chính -
+    // đổi ảnh chính vẫn phải bấm đúng thumbnail hoặc dùng 2 nút to ở ảnh lớn.
+    if (thumbTrack && thumbPrevButton) {
+        thumbPrevButton.addEventListener("click", function () {
+            thumbTrack.scrollBy({left: -thumbTrack.clientWidth * 0.8, behavior: "smooth"});
+        });
+    }
+
+    if (thumbTrack && thumbNextButton) {
+        thumbNextButton.addEventListener("click", function () {
+            thumbTrack.scrollBy({left: thumbTrack.clientWidth * 0.8, behavior: "smooth"});
+        });
+    }
+
+    // Gọi từ product-detail.jsp mỗi khi người dùng bấm chọn màu variant, để
+    // ảnh chính nảy sang đúng ảnh của màu đó. Không tìm thấy ảnh khớp thì
+    // giữ nguyên ảnh đang hiển thị (không có bảng ánh xạ màu-ảnh nào khác).
+    window.productGallerySelectColor = function (colorName) {
+        var slug = slugifyForImageMatch(colorName);
+        if (!slug) {
+            return;
+        }
+        var matchIndex = thumbs.findIndex(function (thumb) {
+            var src = (thumb.getAttribute("data-image-src") || "").toLowerCase();
+            return src.indexOf(slug) !== -1;
+        });
+        if (matchIndex !== -1) {
+            showThumb(matchIndex);
+        }
+    };
 }
 
 function initProductCatalog() {
