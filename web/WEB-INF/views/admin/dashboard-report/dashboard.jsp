@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <fmt:setLocale value="vi_VN" />
@@ -100,7 +100,7 @@
           <div class="panel-head">
             <h3>Đơn hàng gần đây</h3>
             <div class="r">
-              <a class="btn ghost sm" href="${appPath}/admin/orders">Xem tất cả</a>
+              <a class="btn ghost sm" href="${appPath}/staff/orders">Xem tất cả</a>
             </div>
           </div>
           <c:choose>
@@ -120,7 +120,6 @@
                       <th>Ngày đặt</th>
                       <th>Tổng tiền</th>
                       <th>Trạng thái</th>
-                      <th style="text-align:right">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -148,11 +147,6 @@
                               <span class="badge">Khác</span>
                             </c:otherwise>
                           </c:choose>
-                        </td>
-                        <td>
-                          <div class="row-actions">
-                            <a class="btn ghost xs" href="${appPath}/admin/orders/detail?id=${order.orderId}">Xem</a>
-                          </div>
                         </td>
                       </tr>
                     </c:forEach>
@@ -201,7 +195,7 @@
                   <div class="shot" style="width:40px;height:40px;aspect-ratio:auto;border-radius:var(--r-sm);overflow:hidden;background:white;">
                     <c:choose>
                       <c:when test="${not empty p.imageUrl}">
-                        <img src="${appPath}${p.imageUrl}" alt="<c:out value='${p.name}' />" style="width:100%;height:100%;object-fit:cover;">
+                        <img src="${appPath}/${p.imageUrl}" alt="<c:out value='${p.name}' />" style="width:100%;height:100%;object-fit:cover;">
                       </c:when>
                       <c:otherwise>
                         <img src="${appPath}/assets/images/default-product.png" alt="<c:out value='${p.name}' />" style="width:100%;height:100%;object-fit:cover;">
