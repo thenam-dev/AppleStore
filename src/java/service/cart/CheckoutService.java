@@ -209,8 +209,10 @@ public class CheckoutService {
             order.setPaymentMethod(form.paymentMethod);
             
             try {
-                int bestSaleId = orderDAO.findBestAvailableSaleStaffId();
-                if (bestSaleId > 0) {
+                // ĐÃ SỬA: Gọi đúng tên hàm findBestSaleStaffId và sử dụng wrapper class Integer
+                // để tránh lỗi NullPointerException khi DB trả về null (không có Sale Staff nào active).
+                Integer bestSaleId = orderDAO.findBestSaleStaffId();
+                if (bestSaleId != null && bestSaleId > 0) {
                     order.setAssignedSaleStaffId(bestSaleId);
                 }
             } catch (SQLException ignored) {

@@ -65,8 +65,15 @@
           </div>
           <select class="select" name="status" aria-label="Trạng thái">
             <option value="">Tất cả trạng thái</option>
-            <option value="1" ${statusFilter == '1' ? 'selected' : ''}>Đang chạy</option>
-            <option value="0" ${statusFilter == '0' ? 'selected' : ''}>Tạm dừng</option>
+            <option value="ACTIVE" ${selectedStatus eq 'ACTIVE' ? 'selected' : ''}>Đang chạy</option>
+            <option value="INACTIVE" ${selectedStatus eq 'INACTIVE' ? 'selected' : ''}>Tạm dừng</option>
+          </select>
+          <select class="select" name="sort" aria-label="Sắp xếp">
+            <c:forEach var="sortOpt" items="${sortOptions}">
+              <option value="${fn:escapeXml(sortOpt.value)}" ${selectedSort eq sortOpt.value ? 'selected' : ''}>
+                <c:out value="${sortOpt.label}" />
+              </option>
+            </c:forEach>
           </select>
           <input type="hidden" name="page" value="1">
           <button class="btn sm" type="submit">Áp dụng</button>
@@ -118,7 +125,7 @@
                       </td>
                       <td>
                         <c:choose>
-                          <c:when test="${p.IsActive()}"><span class="badge ok">Đang chạy</span></c:when>
+                          <c:when test="${p.isActive}"><span class="badge ok">Đang chạy</span></c:when>
                           <c:otherwise><span class="badge off">Đã dừng</span></c:otherwise>
                         </c:choose>
                       </td>
@@ -127,11 +134,12 @@
                           <a class="btn xs quiet" href="${appPath}/admin/promotions/edit?id=${p.promoId}" title="Sửa">
                             <svg width="13" height="13"><use href="#i-edit" /></svg>
                           </a>
+                          <!-- Rule 7: Status form POST -->
                           <form class="inline-form" action="${appPath}/admin/promotions/status" method="post">
                             <input type="hidden" name="promoId" value="${p.promoId}">
-                            <input type="hidden" name="isActive" value="${!p.IsActive()}">
-                            <button class="btn xs ${p.IsActive() ? 'danger' : ''}" type="submit">
-                              ${p.IsActive() ? 'Dừng' : 'Bật'}
+                            <input type="hidden" name="status" value="${p.isActive ? 'INACTIVE' : 'ACTIVE'}">
+                            <button class="btn xs ${p.isActive ? 'danger' : ''}" type="submit">
+                              ${p.isActive ? 'Dừng' : 'Bật'}
                             </button>
                           </form>
                         </div>

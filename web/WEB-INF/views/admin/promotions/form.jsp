@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="appPath" value="${pageContext.request.contextPath}" />
+<c:set var="isEdit" value="${not empty promo and promo.promoId gt 0}" />
 <c:set var="formModeLabel" value="${isEdit ? 'Chỉnh sửa' : 'Tạo mới'}" />
 <!DOCTYPE html>
 <html lang="vi">
@@ -20,7 +21,7 @@
                 <div class="adm-bar">
                     <h2>${formModeLabel} khuyến mãi</h2>
                     <c:if test="${isEdit}">
-                        <span class="mono" style="font-size:11px;color:var(--ash)">ID ${promo.promoId}</span>
+                        <span class="mono" style="font-size:11px;color:var(--ash)">ID #${promo.promoId}</span>
                     </c:if>
                     <div class="who">
                         <a class="btn ghost sm" href="${appPath}/admin/promotions">Hủy</a>
@@ -29,21 +30,14 @@
                 </div>
 
                 <div class="adm-body">
+                    <!-- Rule 10: Chỉ dùng 1 flash include chung, bỏ đoạn if errorMessage dư thừa -->
                     <jsp:include page="/WEB-INF/views/common/flash.jsp" />
-
-                    <c:if test="${not empty errorMessage}">
-                        <div class="flash err" style="margin-bottom: 20px;">
-                            <svg width="18" height="18"><use href="#i-alert"/></svg>
-                            <div><c:out value="${errorMessage}" /></div>
-                        </div>
-                    </c:if>
 
                     <form id="promoForm" class="panel" action="${appPath}/admin/promotions/update" method="post">
                         <c:if test="${isEdit}">
                             <input type="hidden" name="promoId" value="${promo.promoId}">
                         </c:if>
 
-                        <!-- BẮT BUỘC: Ép ngầm định Mục tiêu giảm luôn là MERCHANDISE -->
                         <input type="hidden" name="benefitTarget" value="MERCHANDISE">
 
                         <div class="panel-head"><h3>Thông tin cấu hình mã</h3></div>
@@ -52,8 +46,8 @@
 
                                 <div class="field full">
                                     <label for="code">Mã giảm giá (Code) <span class="req">*</span></label>
-                                    <input id="code" class="input" type="text" name="code" maxlength="20" value="${fn:escapeXml(promo.code)}" placeholder="VD: HALOSALE50" required>
-                                    <div class="help">Viết hoa không dấu, độ dài 4 - 20 ký tự.</div>
+                                    <input id="code" class="input" type="text" name="code" maxlength="50" value="${fn:escapeXml(promo.code)}" placeholder="VD: HALOSALE50" required>
+                                    <div class="help">Viết hoa không dấu, độ dài 4 - 50 ký tự.</div>
                                 </div>
 
                                 <div class="field">
@@ -66,7 +60,7 @@
 
                                 <div class="field">
                                     <label for="discountValue">Giá trị giảm <span class="req">*</span></label>
-                                    <input id="discountValue" class="input" type="number" step="1" min="1" name="discountValue" value="${promo.discountValue}" placeholder="Ví dụ: 50000(nếu cố định) hoặc 10%(nếu giảm %)" required>
+                                    <input id="discountValue" class="input" type="number" step="1" min="1" name="discountValue" value="${promo.discountValue}" placeholder="Ví dụ: 50000 hoặc 10" required>
                                 </div>
 
                                 <div class="field">
@@ -94,7 +88,6 @@
                                     <input id="maxUses" class="input" type="number" min="1" name="maxUses" value="${promo.maxUses}" placeholder="Để trống nếu không giới hạn">
                                 </div>
 
-                                <!-- Khối Scope -->
                                 <div class="field full">
                                     <label for="scope">Phạm vi áp dụng (Scope) <span class="req">*</span></label>
                                     <select id="scope" class="select" name="scope" required>
@@ -104,7 +97,6 @@
                                     </select>
                                 </div>
 
-                                <!-- DANH MỤC DẠNG CHECKBOX DROPDOWN -->
                                 <div class="field full" id="categoryField" style="display: none;">
                                     <label>Danh mục áp dụng (Chọn nhiều) <span class="req">*</span></label>
                                     <div style="border: 1px solid var(--line, #ddd); border-radius: 6px; background: #fff; max-height: 180px; overflow-y: auto; padding: 10px 15px;">
@@ -122,7 +114,6 @@
                                     <div class="help" style="margin-top: 5px;">Tick chọn các danh mục muốn áp dụng mã giảm giá.</div>
                                 </div>
 
-                                <!-- SẢN PHẨM DẠNG CHECKBOX DROPDOWN -->
                                 <div class="field full" id="productField" style="display: none;">
                                     <label>Sản phẩm áp dụng (Chọn nhiều) <span class="req">*</span></label>
                                     <div style="border: 1px solid var(--line, #ddd); border-radius: 6px; background: #fff; max-height: 200px; overflow-y: auto; padding: 10px 15px;">
@@ -140,12 +131,11 @@
                                     <div class="help" style="margin-top: 5px;">Tick chọn các sản phẩm cụ thể muốn áp dụng mã giảm giá.</div>
                                 </div>
 
-                                <!-- Tùy chọn hệ thống (Đã bỏ canStack, chỉ giữ lại trạng thái kích hoạt) -->
                                 <div class="field full" style="margin-top: 5px;">
                                     <label>Tùy chọn hệ thống</label>
                                     <div style="display: flex; align-items: center; height: 48px; background: #f8f9fa; padding: 0 16px; border-radius: 6px; border: 1px solid var(--line, #eee);">
                                         <div style="display:flex; align-items:center; gap:8px;">
-                                            <input id="isActive" type="checkbox" name="isActive" value="true" ${not isEdit or promo.IsActive() ? 'checked' : ''}>
+                                            <input id="isActive" type="checkbox" name="status" value="ACTIVE" ${not isEdit or promo.isActive ? 'checked' : ''}>
                                             <label for="isActive" style="margin:0; font-weight:500; font-size:13.5px; cursor: pointer; color: var(--titan);">Kích hoạt chạy ngay</label>
                                         </div>
                                     </div>

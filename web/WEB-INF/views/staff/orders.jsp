@@ -319,53 +319,5 @@
                 </div>
             </div>
         </div>
-
-        <!-- Đoạn script tự động sinh Toast thông báo thành công mà không cần sửa flash.jsp -->
-        <c:if test="${not empty sessionScope.successMsg}">
-            <script>
-                (function () {
-                    var message = "${sessionScope.successMsg}";
-                    if (!message)
-                        return;
-
-                    var stack = document.getElementById('toast-stack');
-                    if (!stack) {
-                        stack = document.createElement('div');
-                        stack.id = 'toast-stack';
-                        stack.className = 'toast-stack';
-                        document.body.appendChild(stack);
-                    }
-
-                    var DURATION = 4000;
-                    var ENTER_MS = 320;
-                    var toast = document.createElement('div');
-                    toast.className = 'toast ok';
-                    toast.setAttribute('role', 'alert');
-                    toast.innerHTML = '<svg width="16" height="16"><use href="#i-check"/></svg>' +
-                            '<span></span><i class="toast-timer"></i>';
-                    toast.querySelector('span').textContent = message;
-                    stack.appendChild(toast);
-
-                    var timer = toast.querySelector('.toast-timer');
-                    timer.style.transitionDuration = Math.max(DURATION - ENTER_MS, 0) + 'ms';
-                    requestAnimationFrame(function () {
-                        toast.classList.add('show');
-                    });
-
-                    setTimeout(function () {
-                        timer.style.transform = 'scaleX(0)';
-                    }, ENTER_MS);
-                    setTimeout(function () {
-                        toast.classList.remove('show');
-                        toast.classList.add('hide');
-                        setTimeout(function () {
-                            toast.remove();
-                        }, 220);
-                    }, DURATION);
-                })();
-            </script>
-            <c:remove var="successMsg" scope="session"/>
-        </c:if>
-
     </body>
 </html>

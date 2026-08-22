@@ -1,68 +1,68 @@
 package controller.admin.promotion;
 
 import model.entity.promtion.Promotion;
-import service.promotion.PromotionService;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @WebServlet(name = "PromotionListServlet", urlPatterns = {"/admin/promotions"})
-public class PromotionListServlet extends HttpServlet {
-
-    private final PromotionService promotionService = new PromotionService();
+public class PromotionListServlet extends PromotionServletSupport {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
             String keyword = req.getParameter("keyword");
-            String statusFilter = req.getParameter("status");
-            String sortCol = req.getParameter("sortCol");
-            String sortDir = req.getParameter("sortDir");
+            String status = normalizeStatusFilter(req.getParameter("status"));
+            String sort = normalizeSort(req.getParameter("sort"));
 
-            int page = 1;
-            int pageSize = 10;
-            if (req.getParameter("page") != null) {
-                try { page = Integer.parseInt(req.getParameter("page")); } catch (NumberFormatException ignored) {}
+            int page = parseIntOrDefault(req.getParameter("page"), 1);
+            int pageSize = config.AppConfig.PAGE_SIZE_ADMIN;
+            int offset = Math.max(0, (page - 1) * pageSize);
+
+            int totalRecords = promotionService.countAll(keyword, status);
+            int totalPages = Math.max(1, (int) Math.ceil((double) totalRecords / pageSize));
+            if (page > totalPages) {
+                page = totalPages;
+                offset = (page - 1) * pageSize;
             }
-            int offset = (page - 1) * pageSize;
 
-            int totalRecords = promotionService.countAll(keyword, statusFilter);
-            int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
-            List<Promotion> promotions = promotionService.findAllWithPaging(keyword, statusFilter, sortCol, sortDir, offset, pageSize);
+            List<Promotion> promotions = promotionService.findAllWithPaging(keyword, status, sort, offset, pageSize);
+            String listQuery = buildListQueryString(keyword, status, sort);
 
-            // Số liệu KPI
-            int activeCount = promotionService.countAll(null, "1");
+            // KPIs
+            int activeCount = promotionService.countAll(null, "ACTIVE");
             long totalRedeemed = promotionService.getTotalRedeemedCount();
             int expiringSoon = promotionService.getExpiringSoonCount();
 
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            req.setAttribute("dateFormatter", dateFormatter);
-
+            req.setAttribute("dateFormatter", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
             req.setAttribute("promotions", promotions);
+            req.setAttribute("keyword", keyword);
+            req.setAttribute("selectedStatus", status);
+            req.setAttribute("selectedSort", sort);
+            req.setAttribute("sortOptions", buildSortOptions());
+            
             req.setAttribute("currentPage", page);
             req.setAttribute("totalPages", totalPages);
-            req.setAttribute("keyword", keyword);
-            req.setAttribute("statusFilter", statusFilter);
-            req.setAttribute("sortCol", sortCol);
-            req.setAttribute("sortDir", sortDir);
+            req.setAttribute("listQuery", listQuery);
+            req.setAttribute("listQuerySuffix", listQuery.isBlank() ? "" : "&" + listQuery);
 
             req.setAttribute("totalRecords", totalRecords);
             req.setAttribute("activeCount", activeCount);
             req.setAttribute("totalRedeemed", totalRedeemed);
             req.setAttribute("expiringSoon", expiringSoon);
 
-            req.getRequestDispatcher("/WEB-INF/views/admin/promotions/list.jsp").forward(req, resp);
+            moveFlashMessagesToRequest(req);
+            req.getRequestDispatcher(LIST_VIEW).forward(req, resp);
 
         } catch (Exception e) {
             getServletContext().log("Lỗi tại PromotionListServlet", e);
-            req.setAttribute("errorMessage", "Đã xảy ra lỗi hệ thống: " + e.getMessage());
-            req.getRequestDispatcher("/WEB-INF/views/admin/promotions/list.jsp").forward(req, resp);
+            req.setAttribute(FLASH_ERROR_KEY, "Đã xảy ra lỗi hệ thống: " + e.getMessage());
+            req.getRequestDispatcher(LIST_VIEW).forward(req, resp);
         }
     }
 }
