@@ -195,4 +195,13 @@ public class Promotion {
     public void setIsActive(boolean isActive) {
         this.isActive = isActive;
     }
+    
+    // Thêm 2 hàm này để JSP EL có thể đọc được ${promo.isActive} và ${promo.isDeleted}
+    public boolean getIsActive() {
+        return this.isActive;
+    }
+
+    public boolean getIsDeleted() {
+        return this.isDeleted;
+    }
 }
