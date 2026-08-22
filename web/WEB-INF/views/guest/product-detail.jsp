@@ -37,7 +37,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=5">
+        <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=10">
     </head>
     <body>
 
@@ -45,7 +45,7 @@
             <%-- ================= KHÔNG TÌM THẤY SẢN PHẨM ================= --%>
             <c:when test="${empty product}">
                 <jsp:include page="/WEB-INF/views/common/header.jsp"/>
-                <div style="padding:60px 26px">
+                <div style="padding:60px 26px;max-width:1280px;margin:0 auto">
                     <div class="empty">
                         <div class="ring"><svg width="26" height="26"><use href="#i-alert"/></svg></div>
                         <h3>Không tìm thấy sản phẩm</h3>
@@ -62,17 +62,17 @@
                 <c:set var="activeMenu" value="${product.categoryId == 1 ? 'iphone' : product.categoryId == 2 ? 'ipad' : product.categoryId == 3 ? 'mac' : product.categoryId == 4 ? 'watch' : product.categoryId == 7 ? 'accessory' : ''}" scope="request"/>
                 <jsp:include page="/WEB-INF/views/common/header.jsp"/>
 
-                <nav class="crumb">
+                <nav class="crumb" style="max-width:1280px;margin:0 auto">
                     <a href="${ctx}/home">Trang chủ</a><span>/</span>
                     <a href="${ctx}/products?categoryId=${product.categoryId}"><c:out value="${product.categoryName}"/></a><span>/</span>
                     <span style="color:var(--ink)"><c:out value="${product.name}"/></span>
                 </nav>
 
-                <div style="padding:0 26px">
+                <div style="padding:0 26px;max-width:1280px;margin:0 auto">
                     <jsp:include page="/WEB-INF/views/common/flash.jsp"/>
                 </div>
 
-                <div style="padding:14px 26px 30px;display:grid;grid-template-columns:1fr 1fr;gap:34px">
+                <div style="padding:14px 26px 30px;display:grid;grid-template-columns:1fr 1fr;gap:34px;max-width:1280px;margin:0 auto">
 
                     <div>
                         <div class="gallery-card">
@@ -108,11 +108,7 @@
 
                             <c:if test="${not empty productImages}">
                                 <div class="gallery-thumb-row">
-                                    <c:if test="${fn:length(productImages) > 1}">
-                                        <button type="button" class="gallery-nav sm prev" data-gallery-thumb-prev aria-label="Cuộn ảnh nhỏ sang trái">
-                                            <svg width="15" height="15"><use href="#i-chevron-left"/></svg>
-                                        </button>
-                                    </c:if>
+                                    
                                     <div class="gallery-thumbs" data-gallery-thumbs aria-label="Ảnh sản phẩm">
                                         <c:forEach var="image" items="${productImages}" varStatus="status">
                                             <c:choose>
@@ -130,11 +126,7 @@
                                             </button>
                                         </c:forEach>
                                     </div>
-                                    <c:if test="${fn:length(productImages) > 1}">
-                                        <button type="button" class="gallery-nav sm next" data-gallery-thumb-next aria-label="Cuộn ảnh nhỏ sang phải">
-                                            <svg width="15" height="15"><use href="#i-chevron-right"/></svg>
-                                        </button>
-                                    </c:if>
+                 
                                 </div>
                             </c:if>
                         </div>
@@ -197,7 +189,7 @@
                                         <button type="button" class="btn quiet" style="flex:1" disabled>Hết hàng</button>
                                     </c:otherwise>
                                 </c:choose>
-                                <a class="btn ghost" href="${ctx}/cart">Xem giỏ hàng</a>
+                                <a class="btn ghost" href="${ctx}/cart">Mua ngay</a>
                             </div>
                         </form>
 
@@ -264,7 +256,7 @@
                 </div>
 
                 <!-- ================= KHU VỰC ĐÁNH GIÁ (FEEDBACK) ================= -->
-                <div style="padding: 0 26px 30px;">
+                <div style="padding: 0 26px 30px;max-width:1280px;margin:0 auto">
                     <div class="panel">
                         <div class="panel-head" style="display: flex; align-items: center; justify-content: space-between;">
                             <h3 style="margin: 0;">Khách hàng đánh giá</h3>
@@ -345,19 +337,21 @@
                 
                 <c:if test="${not empty relatedProducts}">
                     <section class="sec" style="border-top:1px solid var(--line)">
-                        <div class="sec-head"><h3>Sản phẩm liên quan</h3><a href="${ctx}/products?categoryId=${product.categoryId}">Xem cả danh mục</a></div>
-                        <div class="p-grid">
-                            <c:forEach var="p" items="${relatedProducts}">
-                                <c:set var="card" value="${p}" scope="request"/>
-                                <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
-                            </c:forEach>
+                        <div class="sec-inner">
+                            <div class="sec-head"><h3>Sản phẩm liên quan</h3><a href="${ctx}/products?categoryId=${product.categoryId}">Xem cả danh mục</a></div>
+                            <div class="p-grid">
+                                <c:forEach var="p" items="${relatedProducts}">
+                                    <c:set var="card" value="${p}" scope="request"/>
+                                    <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
+                                </c:forEach>
+                            </div>
                         </div>
                     </section>
                 </c:if>
 
                 <jsp:include page="/WEB-INF/views/common/footer.jsp"/>
 
-                <script src="${ctx}/assets/js/main.js?v=3"></script>
+                <script src="${ctx}/assets/js/main.js?v=9"></script>
                 <c:if test="${not empty variants}">
                     <script>
                         (function () {
@@ -726,6 +720,23 @@
                         })();
                     })();
                 </script>
+
+                <%-- Lightbox phóng to ảnh - bấm vào ảnh chính (data-gallery-main) sẽ mở
+                     lớp phủ toàn màn hình này, hiện đúng ảnh đang xem to hơn, có nút
+                     đóng/chuyển ảnh trước-sau. Nội dung <img> để trống, JS
+                     (initProductGallery trong main.js) tự đổ src khi mở. --%>
+                <div class="lightbox" data-lightbox aria-hidden="true">
+                    <button type="button" class="lightbox-close" data-lightbox-close aria-label="Đóng ảnh phóng to">
+                        <svg width="20" height="20"><use href="#i-x"/></svg>
+                    </button>
+                    <button type="button" class="lightbox-nav prev" data-lightbox-prev aria-label="Ảnh trước">
+                        <svg width="24" height="24"><use href="#i-chevron-left"/></svg>
+                    </button>
+                    <img class="lightbox-image" data-lightbox-image src="" alt="">
+                    <button type="button" class="lightbox-nav next" data-lightbox-next aria-label="Ảnh sau">
+                        <svg width="24" height="24"><use href="#i-chevron-right"/></svg>
+                    </button>
+                </div>
             </c:otherwise>
         </c:choose>
     </body>

@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=2">
+  <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=3">
 </head>
 <body>
 
@@ -72,103 +72,113 @@
 
 <%-- ================= DANH MỤC ================= --%>
 <section class="sec">
-  <div class="sec-head"><h3>Khám phá theo danh mục</h3><a href="${ctx}/products">Xem tất cả</a></div>
-  <div class="cat-rail">
-    <a class="cat" href="${ctx}/products?categoryId=1"><svg width="34" height="34"><use href="#d-phone"/></svg><b>iPhone</b><span>Xem ngay</span></a>
-    <a class="cat" href="${ctx}/products?categoryId=2"><svg width="34" height="34"><use href="#d-pad"/></svg><b>iPad</b><span>Xem ngay</span></a>
-    <a class="cat" href="${ctx}/products?categoryId=3"><svg width="34" height="34"><use href="#d-mac"/></svg><b>Mac</b><span>Xem ngay</span></a>
-    <a class="cat" href="${ctx}/products?categoryId=4"><svg width="34" height="34"><use href="#d-watch"/></svg><b>Apple Watch</b><span>Xem ngay</span></a>
-    <a class="cat" href="${ctx}/products?categoryId=5"><svg width="34" height="34"><use href="#d-pods"/></svg><b>AirPods</b><span>Xem ngay</span></a>
-    <a class="cat" href="${ctx}/products?categoryId=7"><svg width="34" height="34"><use href="#d-acc"/></svg><b>Phụ kiện</b><span>Xem ngay</span></a>
+  <div class="sec-inner">
+    <div class="sec-head"><h3>Khám phá theo danh mục</h3><a href="${ctx}/products">Xem tất cả</a></div>
+    <div class="cat-rail">
+      <a class="cat" href="${ctx}/products?categoryId=1"><svg width="34" height="34"><use href="#d-phone"/></svg><b>iPhone</b><span>Xem ngay</span></a>
+      <a class="cat" href="${ctx}/products?categoryId=2"><svg width="34" height="34"><use href="#d-pad"/></svg><b>iPad</b><span>Xem ngay</span></a>
+      <a class="cat" href="${ctx}/products?categoryId=3"><svg width="34" height="34"><use href="#d-mac"/></svg><b>Mac</b><span>Xem ngay</span></a>
+      <a class="cat" href="${ctx}/products?categoryId=4"><svg width="34" height="34"><use href="#d-watch"/></svg><b>Apple Watch</b><span>Xem ngay</span></a>
+      <a class="cat" href="${ctx}/products?categoryId=5"><svg width="34" height="34"><use href="#d-pods"/></svg><b>AirPods</b><span>Xem ngay</span></a>
+      <a class="cat" href="${ctx}/products?categoryId=7"><svg width="34" height="34"><use href="#d-acc"/></svg><b>Phụ kiện</b><span>Xem ngay</span></a>
+    </div>
   </div>
 </section>
 
 <%-- ================= SẢN PHẨM NỔI BẬT ================= --%>
 <section class="sec" style="background:#FAFBFC">
-  <div class="sec-head"><h3>Sản phẩm nổi bật</h3><a href="${ctx}/products">Xem tất cả sản phẩm</a></div>
-  <c:choose>
-    <c:when test="${empty featuredList}">
-      <div class="empty">
-        <div class="ring"><svg width="26" height="26"><use href="#i-box"/></svg></div>
-        <h3>Chưa có sản phẩm nổi bật</h3>
-        <p>Ghé lại sau hoặc xem toàn bộ sản phẩm đang bán.</p>
-      </div>
-    </c:when>
-    <c:otherwise>
-      <div class="p-grid-pager" data-page-size="4">
-        <div class="p-grid">
-          <c:forEach var="p" items="${featuredList}">
-            <c:set var="card" value="${p}" scope="request"/>
-            <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
-          </c:forEach>
+  <div class="sec-inner">
+    <div class="sec-head"><h3>Sản phẩm nổi bật</h3><a href="${ctx}/products">Xem tất cả sản phẩm</a></div>
+    <c:choose>
+      <c:when test="${empty featuredList}">
+        <div class="empty">
+          <div class="ring"><svg width="26" height="26"><use href="#i-box"/></svg></div>
+          <h3>Chưa có sản phẩm nổi bật</h3>
+          <p>Ghé lại sau hoặc xem toàn bộ sản phẩm đang bán.</p>
         </div>
-        <nav class="pages home-pager" aria-label="Phân trang sản phẩm nổi bật"
-             style="display:flex;justify-content:center;gap:5px;margin-top:18px"></nav>
-      </div>
-    </c:otherwise>
-  </c:choose>
+      </c:when>
+      <c:otherwise>
+        <div class="p-grid-pager" data-page-size="4">
+          <div class="p-grid">
+            <c:forEach var="p" items="${featuredList}">
+              <c:set var="card" value="${p}" scope="request"/>
+              <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
+            </c:forEach>
+          </div>
+          <nav class="pages home-pager" aria-label="Phân trang sản phẩm nổi bật"
+               style="display:flex;justify-content:center;gap:5px;margin-top:18px"></nav>
+        </div>
+      </c:otherwise>
+    </c:choose>
+  </div>
 </section>
 
 <%-- ================= SẢN PHẨM MỚI ================= --%>
 <section class="sec">
-  <div class="sec-head"><h3>Hàng mới về</h3><a href="${ctx}/products?sort=newest">Xem thêm</a></div>
-  <c:choose>
-    <c:when test="${empty newList}">
-      <div class="empty">
-        <div class="ring"><svg width="26" height="26"><use href="#i-box"/></svg></div>
-        <h3>Chưa có sản phẩm mới</h3>
-      </div>
-    </c:when>
-    <c:otherwise>
-      <div class="p-grid-pager" data-page-size="4">
-        <div class="p-grid">
-          <c:forEach var="p" items="${newList}">
-            <c:set var="card" value="${p}" scope="request"/>
-            <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
-          </c:forEach>
+  <div class="sec-inner">
+    <div class="sec-head"><h3>Hàng mới về</h3><a href="${ctx}/products?sort=newest">Xem thêm</a></div>
+    <c:choose>
+      <c:when test="${empty newList}">
+        <div class="empty">
+          <div class="ring"><svg width="26" height="26"><use href="#i-box"/></svg></div>
+          <h3>Chưa có sản phẩm mới</h3>
         </div>
-        <nav class="pages home-pager" aria-label="Phân trang hàng mới về"
-             style="display:flex;justify-content:center;gap:5px;margin-top:18px"></nav>
-      </div>
-    </c:otherwise>
-  </c:choose>
+      </c:when>
+      <c:otherwise>
+        <div class="p-grid-pager" data-page-size="4">
+          <div class="p-grid">
+            <c:forEach var="p" items="${newList}">
+              <c:set var="card" value="${p}" scope="request"/>
+              <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
+            </c:forEach>
+          </div>
+          <nav class="pages home-pager" aria-label="Phân trang hàng mới về"
+               style="display:flex;justify-content:center;gap:5px;margin-top:18px"></nav>
+        </div>
+      </c:otherwise>
+    </c:choose>
+  </div>
 </section>
 
 <%-- ================= BÁN CHẠY NHẤT ================= --%>
 <section class="sec" style="background:#FAFBFC">
-  <div class="sec-head"><h3>Bán chạy nhất</h3><a href="${ctx}/products?sort=best-selling">Xem thêm</a></div>
-  <c:choose>
-    <c:when test="${empty bestSellerList}">
-      <div class="empty">
-        <div class="ring"><svg width="26" height="26"><use href="#i-box"/></svg></div>
-        <h3>Chưa có dữ liệu bán chạy</h3>
-      </div>
-    </c:when>
-    <c:otherwise>
-      <div class="p-grid-pager" data-page-size="4">
-        <div class="p-grid">
-          <c:forEach var="p" items="${bestSellerList}" varStatus="st">
-            <c:set var="card" value="${p}" scope="request"/>
-            <c:set var="cardBadge" value="#${st.count} bán chạy" scope="request"/>
-            <c:set var="cardMeta" value="Đã bán ${p.soldQuantity} máy" scope="request"/>
-            <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
-          </c:forEach>
+  <div class="sec-inner">
+    <div class="sec-head"><h3>Bán chạy nhất</h3><a href="${ctx}/products?sort=best-selling">Xem thêm</a></div>
+    <c:choose>
+      <c:when test="${empty bestSellerList}">
+        <div class="empty">
+          <div class="ring"><svg width="26" height="26"><use href="#i-box"/></svg></div>
+          <h3>Chưa có dữ liệu bán chạy</h3>
         </div>
-        <nav class="pages home-pager" aria-label="Phân trang bán chạy nhất"
-             style="display:flex;justify-content:center;gap:5px;margin-top:18px"></nav>
-      </div>
-    </c:otherwise>
-  </c:choose>
+      </c:when>
+      <c:otherwise>
+        <div class="p-grid-pager" data-page-size="4">
+          <div class="p-grid">
+            <c:forEach var="p" items="${bestSellerList}" varStatus="st">
+              <c:set var="card" value="${p}" scope="request"/>
+              <c:set var="cardBadge" value="#${st.count} bán chạy" scope="request"/>
+              <c:set var="cardMeta" value="Đã bán ${p.soldQuantity} máy" scope="request"/>
+              <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
+            </c:forEach>
+          </div>
+          <nav class="pages home-pager" aria-label="Phân trang bán chạy nhất"
+               style="display:flex;justify-content:center;gap:5px;margin-top:18px"></nav>
+        </div>
+      </c:otherwise>
+    </c:choose>
+  </div>
 </section>
 
 <%-- ================= DỊCH VỤ ================= --%>
 <section class="sec">
-  <div class="sec-head"><h3>Vì sao chọn AppleStore</h3></div>
-  <div class="strip" style="border-radius:var(--r-md);border:1px solid var(--line)">
-    <div><svg width="20" height="20" style="color:var(--titan);margin-bottom:8px"><use href="#i-truck"/></svg><b>Giao hàng nhanh</b><span>Miễn phí vận chuyển toàn quốc</span></div>
-    <div><svg width="20" height="20" style="color:var(--titan);margin-bottom:8px"><use href="#i-lock"/></svg><b>Bảo hành chính hãng</b><span>Theo tiêu chuẩn Apple</span></div>
-    <div><svg width="20" height="20" style="color:var(--titan);margin-bottom:8px"><use href="#i-tag"/></svg><b>Giá minh bạch</b><span>Không phụ phí ẩn</span></div>
-    <div><svg width="20" height="20" style="color:var(--titan);margin-bottom:8px"><use href="#i-check"/></svg><b>Đổi trả dễ dàng</b><span>Trong vòng 7 ngày</span></div>
+  <div class="sec-inner">
+    <div class="sec-head"><h3>Vì sao chọn AppleStore</h3></div>
+    <div class="strip" style="border-radius:var(--r-md);border:1px solid var(--line);max-width:none;margin:0">
+      <div><svg width="20" height="20" style="color:var(--titan);margin-bottom:8px"><use href="#i-truck"/></svg><b>Giao hàng nhanh</b><span>Miễn phí vận chuyển toàn quốc</span></div>
+      <div><svg width="20" height="20" style="color:var(--titan);margin-bottom:8px"><use href="#i-lock"/></svg><b>Bảo hành chính hãng</b><span>Theo tiêu chuẩn Apple</span></div>
+      <div><svg width="20" height="20" style="color:var(--titan);margin-bottom:8px"><use href="#i-tag"/></svg><b>Giá minh bạch</b><span>Không phụ phí ẩn</span></div>
+      <div><svg width="20" height="20" style="color:var(--titan);margin-bottom:8px"><use href="#i-check"/></svg><b>Đổi trả dễ dàng</b><span>Trong vòng 7 ngày</span></div>
+    </div>
   </div>
 </section>
 

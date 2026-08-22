@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=2">
+  <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=3">
 </head>
 <body>
 
@@ -31,7 +31,7 @@
 <c:set var="activeStep" value="3" scope="request"/>
 <jsp:include page="/WEB-INF/views/common/checkout-steps.jsp"/>
 
-<div style="padding:22px 26px">
+<div style="padding:22px 26px;max-width:1280px;margin:0 auto">
   <jsp:include page="/WEB-INF/views/common/flash.jsp"/>
 
   <div class="panel" style="max-width:520px;margin:0 auto">
