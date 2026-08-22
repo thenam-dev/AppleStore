@@ -24,7 +24,18 @@ public class DashboardService {
         return null;
     }
 
+    private String sanitizeDate(String date) {
+        if (date == null || date.trim().isEmpty()) return null;
+        if (date.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
+            return date;
+        }
+        return null;
+    }
+
     public DashboardStatsDTO getDashboardStats(String startDate, String endDate, model.entity.user.User user) {
+        startDate = sanitizeDate(startDate);
+        endDate = sanitizeDate(endDate);
+        
         DashboardStatsDTO stats = new DashboardStatsDTO();
         
         String staffRole = (user != null && user.getRole() != null) ? user.getRole() : "ADMIN";
@@ -35,7 +46,7 @@ public class DashboardService {
             java.util.List<String> deliveryConditionsList = new java.util.ArrayList<>();
             deliveryConditionsList.add("staff_id = " + staffId);
             
-            if (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
+            if (startDate != null && endDate != null) {
                 String dateFilter = "order_id IN (SELECT order_id FROM orders WHERE created_at BETWEEN '" + startDate + " 00:00:00' AND '" + endDate + " 23:59:59')";
                 deliveryConditionsList.add(dateFilter);
             }
@@ -61,7 +72,7 @@ public class DashboardService {
             orderConditionsList.add("assigned_sale_staff_id = " + staffId);
         }
         
-        if (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
+        if (startDate != null && endDate != null) {
             String dateFilter = "created_at BETWEEN '" + startDate + " 00:00:00' AND '" + endDate + " 23:59:59'";
             orderConditionsList.add(dateFilter);
             userConditionsList.add(dateFilter); // Đếm user đăng ký trong khoảng thời gian này
@@ -100,12 +111,16 @@ public class DashboardService {
 
 
     public java.util.List<model.entity.order.Order> getRecentOrders(int limit, String startDate, String endDate, model.entity.user.User user) {
+        startDate = sanitizeDate(startDate);
+        endDate = sanitizeDate(endDate);
         String staffRole = (user != null && user.getRole() != null) ? user.getRole() : "ADMIN";
         Integer staffId = extractStaffId(user);
         return dashboardDAO.getRecentOrders(limit, startDate, endDate, staffId, staffRole);
     }
     
     public java.util.List<dto.BestSellingProductDTO> getBestSellingProducts(int limit, String startDate, String endDate, model.entity.user.User user) {
+        startDate = sanitizeDate(startDate);
+        endDate = sanitizeDate(endDate);
         String staffRole = (user != null && user.getRole() != null) ? user.getRole() : "ADMIN";
         Integer staffId = extractStaffId(user);
         // Shipper không cần xem sản phẩm bán chạy
@@ -114,6 +129,8 @@ public class DashboardService {
     }
 
     public java.util.LinkedHashMap<String, Double> getRevenueByDate(String startDate, String endDate, model.entity.user.User user) {
+        startDate = sanitizeDate(startDate);
+        endDate = sanitizeDate(endDate);
         String staffRole = (user != null && user.getRole() != null) ? user.getRole() : "ADMIN";
         Integer staffId = extractStaffId(user);
         if ("DELIVERY".equals(staffRole)) return new java.util.LinkedHashMap<>();
@@ -121,6 +138,8 @@ public class DashboardService {
     }
 
     public java.util.LinkedHashMap<String, Integer> getOrderStatusStats(String startDate, String endDate, model.entity.user.User user) {
+        startDate = sanitizeDate(startDate);
+        endDate = sanitizeDate(endDate);
         String staffRole = (user != null && user.getRole() != null) ? user.getRole() : "ADMIN";
         Integer staffId = extractStaffId(user);
         return dashboardDAO.getOrderStatusStats(startDate, endDate, staffId, staffRole);
