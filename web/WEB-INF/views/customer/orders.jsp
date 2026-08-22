@@ -12,11 +12,15 @@
     </head>
     <body>
         <jsp:include page="/WEB-INF/views/common/icons.jsp"/>
-        <c:set var="activeMenu" value="order"/>
         <jsp:include page="/WEB-INF/views/common/header.jsp"/>
 
-        <div style="max-width: 900px; margin: 30px auto; padding: 0 20px; min-height: 520px;">
-            <div style="background: var(--porcelain, #f8f9fa); padding: 24px; border-radius: 8px;">
+        <div class="profile-container" style="max-width: 1200px; margin: 30px auto; padding: 0 20px; min-height: 520px;">
+            <!-- Sidebar tài khoản -->
+            <c:set var="activeMenu" value="orders"/>
+            <jsp:include page="/WEB-INF/views/common/account-sidebar.jsp"/>
+
+            <!-- Nội dung chính -->
+            <div class="profile-content">
                 <jsp:include page="/WEB-INF/views/common/flash.jsp"/>
                 <h2 style="font-size: 22px; text-transform: uppercase; margin-bottom: 20px; font-weight: 700;">Đơn hàng của tôi</h2>
 
@@ -66,14 +70,12 @@
                                         </div>
                                     </div>
                                     <div style="display:flex;gap:10px; justify-content: flex-end; border-top: 1px dashed #eee; padding-top: 14px;">
-                                        <!-- Thêm nút Thanh toán ngay -->
                                         <c:if test="${o.status eq 'PENDING_PAYMENT'}">
                                             <a class="btn titan sm" href="${ctx}/payment?orderId=${o.rawId}">Thanh toán ngay</a>
                                         </c:if>
 
                                         <a class="btn sm" href="${ctx}/account/order-detail?id=${o.rawId}">Xem chi tiết & Đánh giá</a>
 
-                                        <!-- Thay vì check status eq 'PENDING' chung chung làm lộ nút hủy ở cả trạng thái chuẩn bị -->
                                         <c:if test="${o.rawStatus eq 'PENDING_PAYMENT' or o.rawStatus eq 'CONFIRMED'}">
                                             <form method="post" action="${ctx}/order/cancel" style="margin:0;">
                                                 <input type="hidden" name="code" value="${o.code}">
