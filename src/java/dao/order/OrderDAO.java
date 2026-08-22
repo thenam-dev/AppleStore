@@ -12,7 +12,7 @@ import java.util.*;
 public class OrderDAO {
 
     // =========================================================================
-    // PHẦN 1: LOGIC CỦA NHÂN VIÊN / HỆ THỐNG (Từ OrderDAO cũ)
+    // PHẦN 1: LOGIC CỦA NHÂN VIÊN / HỆ THỐNG QUẢN TRỊ
     // =========================================================================
 
     public int insert(Order order) throws SQLException {
@@ -23,28 +23,30 @@ public class OrderDAO {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setInt(1, order.getCustomerId());
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
+            ps.setInt(1, order.getCustomerId());
             if (order.getAssignedSaleStaffId() != null && order.getAssignedSaleStaffId() > 0) {
-                statement.setInt(2, order.getAssignedSaleStaffId());
+                ps.setInt(2, order.getAssignedSaleStaffId());
             } else {
-                statement.setNull(2, Types.INTEGER);
+                ps.setNull(2, Types.INTEGER);
             }
-            statement.setString(3, order.getDeliveryAddress());
-            statement.setString(4, order.getRecipientName());
-            statement.setString(5, order.getRecipientPhone());
-            statement.setString(6, order.getDeliveryTimeSlot());
-            statement.setString(7, order.getNotes());
-            statement.setString(8, order.getStatus());
-            statement.setBigDecimal(9, order.getTotalAmount());
-            statement.setBigDecimal(10, order.getDeliveryFee());
-            statement.setBigDecimal(11, order.getDiscountAmount());
-            statement.setBigDecimal(12, order.getFinalAmount());
-            statement.setString(13, order.getPaymentMethod());
-            statement.executeUpdate();
+            ps.setString(3, order.getDeliveryAddress());
+            ps.setString(4, order.getRecipientName());
+            ps.setString(5, order.getRecipientPhone());
+            ps.setString(6, order.getDeliveryTimeSlot());
+            ps.setString(7, order.getNotes());
+            ps.setString(8, order.getStatus());
+            ps.setBigDecimal(9, order.getTotalAmount());
+            ps.setBigDecimal(10, order.getDeliveryFee());
+            ps.setBigDecimal(11, order.getDiscountAmount());
+            ps.setBigDecimal(12, order.getFinalAmount());
+            ps.setString(13, order.getPaymentMethod());
+            
+            ps.executeUpdate();
 
-            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     return generatedKeys.getInt(1);
                 }
@@ -62,20 +64,22 @@ public class OrderDAO {
 
         BigDecimal addonPrice = cartItem.getAddonPrice() == null ? BigDecimal.ZERO : cartItem.getAddonPrice();
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setInt(1, orderId);
-            statement.setInt(2, cartItem.getVariantId());
-            statement.setString(3, cartItem.getProductName());
-            statement.setString(4, cartItem.getVariantLabel());
-            statement.setInt(5, cartItem.getQuantity());
-            statement.setBigDecimal(6, cartItem.getUnitPrice());
-            statement.setBigDecimal(7, cartItem.getLineTotal());
-            statement.setString(8, cartItem.getAddonLabel());
-            statement.setBigDecimal(9, addonPrice);
-            statement.executeUpdate();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
+            ps.setInt(1, orderId);
+            ps.setInt(2, cartItem.getVariantId());
+            ps.setString(3, cartItem.getProductName());
+            ps.setString(4, cartItem.getVariantLabel());
+            ps.setInt(5, cartItem.getQuantity());
+            ps.setBigDecimal(6, cartItem.getUnitPrice());
+            ps.setBigDecimal(7, cartItem.getLineTotal());
+            ps.setString(8, cartItem.getAddonLabel());
+            ps.setBigDecimal(9, addonPrice);
+            
+            ps.executeUpdate();
 
-            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     return generatedKeys.getInt(1);
                 }
@@ -88,12 +92,12 @@ public class OrderDAO {
         List<OrderItem> items = new ArrayList<>();
         String sql = "SELECT * FROM order_items WHERE order_id = ? ORDER BY order_item_id ASC";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, orderId);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    items.add(mapOrderItem(resultSet));
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    items.add(mapOrderItem(rs));
                 }
             }
         }
@@ -102,19 +106,19 @@ public class OrderDAO {
 
     public void deleteOrderItem(int orderItemId) throws SQLException {
         String sql = "DELETE FROM order_items WHERE order_item_id = ?";
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, orderItemId);
-            statement.executeUpdate();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderItemId);
+            ps.executeUpdate();
         }
     }
 
     public void deleteOrder(int orderId) throws SQLException {
         String sql = "DELETE FROM orders WHERE order_id = ?";
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, orderId);
-            statement.executeUpdate();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.executeUpdate();
         }
     }
 
@@ -126,29 +130,29 @@ public class OrderDAO {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, variantId);
-            statement.setInt(2, changedBy);
-            if (orderId == null) statement.setNull(3, Types.INTEGER); else statement.setInt(3, orderId);
-            if (orderItemId == null) statement.setNull(4, Types.INTEGER); else statement.setInt(4, orderItemId);
-            statement.setString(5, changeType);
-            statement.setInt(6, quantityDelta);
-            statement.setInt(7, quantityAfter);
-            statement.setString(8, "Auto log từ luồng checkout");
-            statement.executeUpdate();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, variantId);
+            ps.setInt(2, changedBy);
+            if (orderId == null) ps.setNull(3, Types.INTEGER); else ps.setInt(3, orderId);
+            if (orderItemId == null) ps.setNull(4, Types.INTEGER); else ps.setInt(4, orderItemId);
+            ps.setString(5, changeType);
+            ps.setInt(6, quantityDelta);
+            ps.setInt(7, quantityAfter);
+            ps.setString(8, "Auto log từ luồng checkout");
+            ps.executeUpdate();
         }
     }
 
     public void insertStatusHistory(int orderId, String status, Integer changedBy, String note) throws SQLException {
         String sql = "INSERT INTO order_status_history (order_id, status, changed_by, note) VALUES (?, ?, ?, ?)";
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, orderId);
-            statement.setString(2, status);
-            if (changedBy == null) statement.setNull(3, Types.INTEGER); else statement.setInt(3, changedBy);
-            statement.setString(4, note);
-            statement.executeUpdate();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.setString(2, status);
+            if (changedBy == null) ps.setNull(3, Types.INTEGER); else ps.setInt(3, changedBy);
+            ps.setString(4, note);
+            ps.executeUpdate();
         }
     }
 
@@ -163,8 +167,8 @@ public class OrderDAO {
             ORDER BY active_tasks ASC, RAND()
             LIMIT 1
         """;
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql);
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt("user_id");
@@ -175,8 +179,8 @@ public class OrderDAO {
 
     public void assignSaleStaff(int orderId, int staffId) throws SQLException {
         String sql = "UPDATE orders SET assigned_sale_staff_id = ? WHERE order_id = ?";
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, staffId);
             ps.setInt(2, orderId);
             ps.executeUpdate();
@@ -185,46 +189,66 @@ public class OrderDAO {
 
     public boolean updateStatus(int orderId, String newStatus) throws SQLException {
         String sql = "UPDATE orders SET status = ? WHERE order_id = ?";
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, newStatus);
-            statement.setInt(2, orderId);
-            return statement.executeUpdate() > 0;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newStatus);
+            ps.setInt(2, orderId);
+            return ps.executeUpdate() > 0;
         }
     }
 
-    /**
-     * Chuyển đơn CK sang EXPIRED khi hết hạn giữ chỗ thanh toán, chỉ thành
-     * công nếu đơn còn đang PENDING_PAYMENT (điều kiện nằm trong WHERE nên
-     * atomic) - tránh xử lý trùng khi job quét chạy chồng lượt, hoặc khách
-     * vừa thanh toán xong đúng lúc job chạy.
-     */
     public boolean expireIfStillPending(int orderId) throws SQLException {
         String sql = "UPDATE orders SET status = 'EXPIRED' WHERE order_id = ? AND status = 'PENDING_PAYMENT'";
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, orderId);
-            return statement.executeUpdate() > 0;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            return ps.executeUpdate() > 0;
         }
     }
 
     public Optional<Order> findById(int orderId) throws SQLException {
         String sql = "SELECT * FROM orders WHERE order_id = ?";
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, orderId);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return Optional.of(mapOrder(resultSet));
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapOrder(rs));
                 }
                 return Optional.empty();
             }
         }
     }
 
+    public boolean updateAssignedSaleStaff(int orderId, int newStaffId) throws SQLException {
+        String sql = "UPDATE orders SET assigned_sale_staff_id = ? WHERE order_id = ? AND status = 'CONFIRMED'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newStaffId);
+            ps.setInt(2, orderId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public List<Map<String, Object>> getActiveSaleStaffList() throws SQLException {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT user_id, full_name FROM users WHERE role = 'SALE_STAFF' AND status = 'ACTIVE'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Map<String, Object> staff = new HashMap<>();
+                staff.put("userId", rs.getInt("user_id"));
+                staff.put("fullName", rs.getString("full_name"));
+                list.add(staff);
+            }
+        }
+        return list;
+    }
+
+
     // =========================================================================
-    // PHẦN 2: LOGIC CỦA KHÁCH HÀNG (Từ CustomerOrderDAO cũ chuyển sang)
+    // PHẦN 2: LOGIC CỦA KHÁCH HÀNG (CUSTOMER)
     // =========================================================================
 
     public List<Map<String, Object>> findOrdersByCustomer(int customerId, String tab) throws SQLException {
@@ -338,17 +362,44 @@ public class OrderDAO {
         return list;
     }
 
+    public List<Map<String, Object>> findOrderItems(int orderId) throws SQLException {
+        List<Map<String, Object>> items = new ArrayList<>();
+        String sql = "SELECT order_item_id, product_name_snapshot, variant_label_snapshot, quantity, subtotal " +
+                     "FROM order_items WHERE order_id = ?";
+                     
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("orderItemId", rs.getInt("order_item_id"));
+                    item.put("productNameSnapshot", rs.getString("product_name_snapshot"));
+                    item.put("variantLabelSnapshot", rs.getString("variant_label_snapshot"));
+                    item.put("quantity", rs.getInt("quantity"));
+                    item.put("subtotal", rs.getBigDecimal("subtotal"));
+                    items.add(item);
+                }
+            }
+        }
+        return items;
+    }
+
     public boolean cancelOrderByCustomer(int orderId, int customerId) throws SQLException {
         String updateOrderSql = "UPDATE orders SET status = 'CANCELLED', cancelled_at = NOW(), cancelled_by = ? WHERE order_id = ? AND customer_id = ? AND status IN ('PENDING_PAYMENT', 'CONFIRMED')";
         String selectItemsSql = "SELECT order_item_id, variant_id, quantity FROM order_items WHERE order_id = ?";
+        // Sửa câu lệnh UPDATE stock để trả về luôn lượng tồn kho mới trong một câu thực thi nếu cần, 
+        // hoặc kết hợp SELECT lấy stock ngay trong transaction khép kín chống race condition.
         String updateStockSql = "UPDATE product_variants SET stock_quantity = stock_quantity + ? WHERE variant_id = ?";
-        String checkStockSql = "SELECT stock_quantity FROM product_variants WHERE variant_id = ?";
+        String getStockSql = "SELECT stock_quantity FROM product_variants WHERE variant_id = ?";
         String insertLogSql = "INSERT INTO inventory_logs (variant_id, changed_by, order_id, order_item_id, change_type, quantity_delta, quantity_after, note) VALUES (?, ?, ?, ?, 'ORDER_RELEASE', ?, ?, 'Hoàn lại tồn kho do khách hàng huỷ đơn')";
         String insertHistorySql = "INSERT INTO order_status_history (order_id, status, changed_by, note) VALUES (?, 'CANCELLED', ?, 'Khách hàng tự huỷ đơn')";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false); 
             try {
+                // 1. Khóa và cập nhật trạng thái đơn hàng (chỉ cho phép hủy khi ở PENDING_PAYMENT hoặc CONFIRMED)
                 try (PreparedStatement ps = conn.prepareStatement(updateOrderSql)) {
                     ps.setInt(1, customerId);
                     ps.setInt(2, orderId);
@@ -360,6 +411,7 @@ public class OrderDAO {
                     }
                 }
 
+                // 2. Lấy danh sách sản phẩm trong đơn để hoàn kho
                 List<Map<String, Integer>> items = new ArrayList<>();
                 try (PreparedStatement psItems = conn.prepareStatement(selectItemsSql)) {
                     psItems.setInt(1, orderId);
@@ -379,7 +431,7 @@ public class OrderDAO {
 
                 if (!items.isEmpty()) {
                     try (PreparedStatement psUpdateStock = conn.prepareStatement(updateStockSql);
-                         PreparedStatement psCheckStock = conn.prepareStatement(checkStockSql);
+                         PreparedStatement psGetStock = conn.prepareStatement(getStockSql);
                          PreparedStatement psInsertLog = conn.prepareStatement(insertLogSql)) {
                          
                         for (Map<String, Integer> item : items) {
@@ -387,18 +439,21 @@ public class OrderDAO {
                             int qty = item.get("quantity");
                             int itemId = item.get("orderItemId");
 
+                            // Cộng lại kho
                             psUpdateStock.setInt(1, qty);
                             psUpdateStock.setInt(2, vId);
                             psUpdateStock.executeUpdate();
 
+                            // Đọc lại stock ngay trong cùng transaction an toàn
                             int currentStock = 0;
-                            psCheckStock.setInt(1, vId);
-                            try (ResultSet rs = psCheckStock.executeQuery()) {
-                                if (rs.next()) {
-                                    currentStock = rs.getInt(1);
+                            psGetStock.setInt(1, vId);
+                            try (ResultSet rsStock = psGetStock.executeQuery()) {
+                                if (rsStock.next()) {
+                                    currentStock = rsStock.getInt(1);
                                 }
                             }
 
+                            // Ghi log kho an toàn
                             psInsertLog.setInt(1, vId);
                             psInsertLog.setInt(2, customerId); 
                             psInsertLog.setInt(3, orderId);
@@ -410,6 +465,7 @@ public class OrderDAO {
                     }
                 }
 
+                // 3. Ghi lịch sử trạng thái đơn hàng
                 try (PreparedStatement psHistory = conn.prepareStatement(insertHistorySql)) {
                     psHistory.setInt(1, orderId);
                     psHistory.setInt(2, customerId);
@@ -427,132 +483,57 @@ public class OrderDAO {
         }
     }
 
-    // =========================================================================
-    // PHẦN 3: BỔ SUNG THUẬT TOÁN TỰ ĐỘNG GÁN & ĐIỀU CHUYỂN NHÂN VIÊN SALE
-    // =========================================================================
-
-    public int findBestAvailableSaleStaffId() throws SQLException {
-        String sql = """
-            SELECT u.user_id 
-            FROM users u 
-            LEFT JOIN orders o ON u.user_id = o.assigned_sale_staff_id 
-            AND o.status NOT IN ('DELIVERED', 'CANCELLED', 'EXPIRED', 'PAYMENT_FAILED') 
-            WHERE u.role = 'SALE_STAFF' AND u.status = 'ACTIVE' 
-            GROUP BY u.user_id 
-            ORDER BY COUNT(o.order_id) ASC, RAND() 
-            LIMIT 1
-            """;
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt("user_id");
-            }
-        }
-        return 0;
-    }
-
-    // Admin chuyển giao việc CHỈ khi đơn đang ở trạng thái CONFIRMED
-    public boolean updateAssignedSaleStaff(int orderId, int newStaffId) throws SQLException {
-        String sql = "UPDATE orders SET assigned_sale_staff_id = ? WHERE order_id = ? AND status = 'CONFIRMED'";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, newStaffId);
-            ps.setInt(2, orderId);
-            return ps.executeUpdate() > 0;
-        }
-    }
-
-    public List<Map<String, Object>> getActiveSaleStaffList() throws SQLException {
-        List<Map<String, Object>> list = new ArrayList<>();
-        String sql = "SELECT user_id, full_name FROM users WHERE role = 'SALE_STAFF' AND status = 'ACTIVE'";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                Map<String, Object> staff = new HashMap<>();
-                staff.put("userId", rs.getInt("user_id"));
-                staff.put("fullName", rs.getString("full_name"));
-                list.add(staff);
-            }
-        }
-        return list;
-    }
 
     // =========================================================================
     // MAPPING HELPERS
     // =========================================================================
 
-    private Order mapOrder(ResultSet resultSet) throws SQLException {
+    private Order mapOrder(ResultSet rs) throws SQLException {
         Order order = new Order();
-        order.setOrderId(resultSet.getInt("order_id"));
-        order.setCustomerId(resultSet.getInt("customer_id"));
-        order.setDeliveryAddress(resultSet.getString("delivery_address"));
-        order.setRecipientName(resultSet.getString("recipient_name"));
-        order.setRecipientPhone(resultSet.getString("recipient_phone"));
-        order.setDeliveryTimeSlot(resultSet.getString("delivery_time_slot"));
-        order.setNotes(resultSet.getString("notes"));
-        order.setStatus(resultSet.getString("status"));
-        order.setTotalAmount(resultSet.getBigDecimal("total_amount"));
-        order.setDeliveryFee(resultSet.getBigDecimal("delivery_fee"));
-        order.setDiscountAmount(resultSet.getBigDecimal("discount_amount"));
-        order.setFinalAmount(resultSet.getBigDecimal("final_amount"));
-        order.setPaymentMethod(resultSet.getString("payment_method"));
+        order.setOrderId(rs.getInt("order_id"));
+        order.setCustomerId(rs.getInt("customer_id"));
+        order.setDeliveryAddress(rs.getString("delivery_address"));
+        order.setRecipientName(rs.getString("recipient_name"));
+        order.setRecipientPhone(rs.getString("recipient_phone"));
+        order.setDeliveryTimeSlot(rs.getString("delivery_time_slot"));
+        order.setNotes(rs.getString("notes"));
+        order.setStatus(rs.getString("status"));
+        order.setTotalAmount(rs.getBigDecimal("total_amount"));
+        order.setDeliveryFee(rs.getBigDecimal("delivery_fee"));
+        order.setDiscountAmount(rs.getBigDecimal("discount_amount"));
+        order.setFinalAmount(rs.getBigDecimal("final_amount"));
+        order.setPaymentMethod(rs.getString("payment_method"));
         
-        int assignedStaffId = resultSet.getInt("assigned_sale_staff_id");
-        if (!resultSet.wasNull()) {
+        int assignedStaffId = rs.getInt("assigned_sale_staff_id");
+        if (!rs.wasNull()) {
             order.setAssignedSaleStaffId(assignedStaffId);
         }
 
-        Timestamp createdAt = resultSet.getTimestamp("created_at");
+        Timestamp createdAt = rs.getTimestamp("created_at");
         if (createdAt != null) {
             order.setCreatedAt(createdAt.toLocalDateTime());
         }
         return order;
     }
 
-    private OrderItem mapOrderItem(ResultSet resultSet) throws SQLException {
+    private OrderItem mapOrderItem(ResultSet rs) throws SQLException {
         OrderItem item = new OrderItem();
-        item.setOrderItemId(resultSet.getInt("order_item_id"));
-        item.setOrderId(resultSet.getInt("order_id"));
+        item.setOrderItemId(rs.getInt("order_item_id"));
+        item.setOrderId(rs.getInt("order_id"));
 
-        int variantId = resultSet.getInt("variant_id");
-        item.setVariantId(resultSet.wasNull() ? null : variantId);
+        int variantId = rs.getInt("variant_id");
+        item.setVariantId(rs.wasNull() ? null : variantId);
 
-        int serialId = resultSet.getInt("serial_id");
-        item.setSerialId(resultSet.wasNull() ? null : serialId);
+        int serialId = rs.getInt("serial_id");
+        item.setSerialId(rs.wasNull() ? null : serialId);
 
-        item.setProductNameSnapshot(resultSet.getString("product_name_snapshot"));
-        item.setVariantLabelSnapshot(resultSet.getString("variant_label_snapshot"));
-        item.setQuantity(resultSet.getInt("quantity"));
-        item.setUnitPrice(resultSet.getBigDecimal("unit_price"));
-        item.setSubtotal(resultSet.getBigDecimal("subtotal"));
-        item.setAddonLabelSnapshot(resultSet.getString("addon_label_snapshot"));
-        item.setAddonPriceSnapshot(resultSet.getBigDecimal("addon_price_snapshot"));
+        item.setProductNameSnapshot(rs.getString("product_name_snapshot"));
+        item.setVariantLabelSnapshot(rs.getString("variant_label_snapshot"));
+        item.setQuantity(rs.getInt("quantity"));
+        item.setUnitPrice(rs.getBigDecimal("unit_price"));
+        item.setSubtotal(rs.getBigDecimal("subtotal"));
+        item.setAddonLabelSnapshot(rs.getString("addon_label_snapshot"));
+        item.setAddonPriceSnapshot(rs.getBigDecimal("addon_price_snapshot"));
         return item;
-    }
-    
-    public List<Map<String, Object>> findOrderItems(int orderId) throws SQLException {
-        List<Map<String, Object>> items = new java.util.ArrayList<>();
-        String sql = "SELECT order_item_id, product_name_snapshot, variant_label_snapshot, quantity, subtotal " +
-                     "FROM order_items WHERE order_id = ?";
-                     
-        try (java.sql.Connection conn = util.DBConnection.getConnection();
-             java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setInt(1, orderId);
-            try (java.sql.ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Map<String, Object> item = new java.util.HashMap<>();
-                    item.put("orderItemId", rs.getInt("order_item_id"));
-                    item.put("productNameSnapshot", rs.getString("product_name_snapshot"));
-                    item.put("variantLabelSnapshot", rs.getString("variant_label_snapshot"));
-                    item.put("quantity", rs.getInt("quantity"));
-                    item.put("subtotal", rs.getBigDecimal("subtotal"));
-                    items.add(item);
-                }
-            }
-        }
-        return items;
     }
 }

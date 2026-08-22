@@ -30,14 +30,8 @@ public class PromotionEditServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            // 1. LẤY DỮ LIỆU DANH MỤC VÀ SẢN PHẨM TỪ SERVICE
-            // Chỉ lấy danh mục đang ACTIVE
             List<Category> categories = categoryService.getActiveCategories();
-            
-            // Gọi hàm getProducts với page=1, pageSize=1000 để lấy mảng sản phẩm ACTIVE cho dropdown
             List<Product> products = productService.getProducts(null, null, "ACTIVE", "name_asc", 1, 1000);
-            
-            // Đẩy dữ liệu ra giao diện (JSP)
             req.setAttribute("categories", categories);
             req.setAttribute("products", products);
 

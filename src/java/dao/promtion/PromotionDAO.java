@@ -10,13 +10,19 @@ import java.util.List;
 
 public class PromotionDAO {
 
+    /** =======================================================================
+     *  PHẦN 1: CÁC HÀM CHO ADMIN QUẢN TRỊ (CRUD, PHÂN TRANG, THỐNG KÊ)
+     *  ======================================================================= */
+
     public List<Promotion> findAll() throws SQLException {
         List<Promotion> list = new ArrayList<>();
         String sql = "SELECT * FROM promotions WHERE is_deleted = 0 ORDER BY promo_id DESC";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql); 
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Promotion p = mapRow(rs);
-                loadRelations(conn, p); // Đọc mảng ID từ bảng phụ
+                loadRelations(conn, p);
                 list.add(p);
             }
         }
@@ -25,7 +31,8 @@ public class PromotionDAO {
 
     public Promotion findById(int id) throws SQLException {
         String sql = "SELECT * FROM promotions WHERE promo_id = ? AND is_deleted = 0";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -40,7 +47,8 @@ public class PromotionDAO {
 
     public Promotion findByCode(String code) throws SQLException {
         String sql = "SELECT * FROM promotions WHERE code = ? AND is_deleted = 0";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, code);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -53,24 +61,16 @@ public class PromotionDAO {
         return null;
     }
 
-    public void softDelete(int id) throws SQLException {
-        String sql = "UPDATE promotions SET is_deleted = 1, is_active = 0 WHERE promo_id = ?";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            ps.executeUpdate();
-        }
-    }
-
     public void toggleStatus(int id, boolean newStatus) throws SQLException {
         String sql = "UPDATE promotions SET is_active = ? WHERE promo_id = ?";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setBoolean(1, newStatus);
             ps.setInt(2, id);
             ps.executeUpdate();
         }
     }
 
-    // ĐÃ SỬA: Loại bỏ Category và Product ID (Do đã sang bảng phụ)
     private void setPromotionParams(PreparedStatement ps, Promotion p) throws SQLException {
         ps.setString(1, p.getCode());
         ps.setString(2, p.getDiscountType());
@@ -80,7 +80,7 @@ public class PromotionDAO {
         ps.setString(6, p.getScope());
         ps.setString(7, p.getBenefitTarget());
 
-        if (p.getMaxUses() != null) {
+        if (p.getMaxUses() != null && p.getMaxUses() > 0) {
             ps.setInt(8, p.getMaxUses());
         } else {
             ps.setNull(8, Types.INTEGER);
@@ -88,53 +88,75 @@ public class PromotionDAO {
         ps.setBoolean(9, p.isCanStack());
     }
 
-    // ĐÃ SỬA: Dùng RETURN_GENERATED_KEYS và Insert bảng phụ
     public void insert(Promotion p) throws SQLException {
         String sql = "INSERT INTO promotions (code, discount_type, discount_max, discount_value, min_order_value, "
                 + "scope, benefit_target, max_uses, can_stack, valid_from, valid_until, created_by, is_active) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            setPromotionParams(ps, p); // Từ 1 đến 9
-            ps.setTimestamp(10, Timestamp.valueOf(p.getValidFrom()));
-            ps.setTimestamp(11, Timestamp.valueOf(p.getValidUntil()));
-            ps.setInt(12, p.getCreatedBy());
-            ps.setBoolean(13, p.IsActive());
-            ps.executeUpdate();
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false); // Bắt đầu Transaction
+            
+            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                setPromotionParams(ps, p); 
+                ps.setTimestamp(10, Timestamp.valueOf(p.getValidFrom()));
+                ps.setTimestamp(11, Timestamp.valueOf(p.getValidUntil()));
+                ps.setInt(12, p.getCreatedBy());
+                ps.setBoolean(13, p.isActive()); 
+                ps.executeUpdate();
 
-            // Lấy ID tự sinh
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    int newPromoId = rs.getInt(1);
-                    p.setPromoId(newPromoId);
-                    // Lưu dữ liệu vào 2 bảng phụ
-                    saveRelations(conn, p);
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        p.setPromoId(rs.getInt(1));
+                        saveRelations(conn, p); // Lưu mapping Category/Product
+                    }
                 }
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            if (conn != null) conn.rollback();
+            throw e;
+        } finally {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
             }
         }
     }
 
-    // ĐÃ SỬA: Xóa dữ liệu cũ ở bảng phụ, ghi đè dữ liệu mới
     public void update(Promotion p) throws SQLException {
         String sql = "UPDATE promotions SET code=?, discount_type=?, discount_max=?, discount_value=?, min_order_value=?, "
                 + "scope=?, benefit_target=?, max_uses=?, can_stack=?, valid_from=?, valid_until=?, is_active=? "
                 + "WHERE promo_id=?";
-        try (Connection conn = DBConnection.getConnection()) {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false); // Bắt đầu Transaction
+            
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                setPromotionParams(ps, p); // Từ 1 đến 9
+                setPromotionParams(ps, p);
                 ps.setTimestamp(10, Timestamp.valueOf(p.getValidFrom()));
                 ps.setTimestamp(11, Timestamp.valueOf(p.getValidUntil()));
-                ps.setBoolean(12, p.IsActive());
+                ps.setBoolean(12, p.isActive());
                 ps.setInt(13, p.getPromoId());
                 ps.executeUpdate();
             }
             
-            // Xóa rác và cập nhật lại bảng phụ
-            deleteRelations(conn, p.getPromoId());
-            saveRelations(conn, p);
+            deleteRelations(conn, p.getPromoId()); // Xóa mapping cũ
+            saveRelations(conn, p); // Cập nhật mapping mới
+            
+            conn.commit();
+        } catch (SQLException e) {
+            if (conn != null) conn.rollback();
+            throw e;
+        } finally {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 
-    // ĐÃ SỬA: Bỏ ánh xạ ID sản phẩm/danh mục (Do đã nằm ở bảng phụ)
     private Promotion mapRow(ResultSet rs) throws SQLException {
         Promotion p = new Promotion();
         p.setPromoId(rs.getInt("promo_id"));
@@ -159,7 +181,6 @@ public class PromotionDAO {
         return p;
     }
 
-    // HÀM MỚI: Lôi dữ liệu mảng từ bảng phụ
     private void loadRelations(Connection conn, Promotion p) throws SQLException {
         p.setCategoryIds(new ArrayList<>());
         p.setProductIds(new ArrayList<>());
@@ -181,7 +202,6 @@ public class PromotionDAO {
         }
     }
 
-    // HÀM MỚI: Lưu mảng vào bảng phụ
     private void saveRelations(Connection conn, Promotion p) throws SQLException {
         if (p.getCategoryIds() != null && !p.getCategoryIds().isEmpty()) {
             String sqlCat = "INSERT INTO promotion_categories (promo_id, category_id) VALUES (?, ?)";
@@ -208,7 +228,6 @@ public class PromotionDAO {
         }
     }
 
-    // HÀM MỚI: Xóa dữ liệu cũ ở bảng phụ trước khi Update
     private void deleteRelations(Connection conn, int promoId) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement("DELETE FROM promotion_categories WHERE promo_id = ?")) {
             ps.setInt(1, promoId);
@@ -222,15 +241,20 @@ public class PromotionDAO {
 
     public long sumTotalRedeemed() throws SQLException {
         String sql = "SELECT SUM(used_count) FROM promotions WHERE is_deleted = 0";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql); 
+             ResultSet rs = ps.executeQuery()) {
             if (rs.next()) return rs.getLong(1);
         }
         return 0;
     }
 
     public int countExpiringSoon() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM promotions WHERE is_deleted = 0 AND is_active = 1 AND valid_until BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 7 DAY)";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        String sql = "SELECT COUNT(*) FROM promotions WHERE is_deleted = 0 AND is_active = 1 "
+                   + "AND valid_until BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 7 DAY)";
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql); 
+             ResultSet rs = ps.executeQuery()) {
             if (rs.next()) return rs.getInt(1);
         }
         return 0;
@@ -238,13 +262,23 @@ public class PromotionDAO {
 
     public int countAll(String keyword, String statusFilter) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM promotions WHERE is_deleted = 0 ");
-        if (keyword != null && !keyword.trim().isEmpty()) sql.append("AND code LIKE ? ");
-        if (statusFilter != null && !statusFilter.isEmpty()) sql.append("AND is_active = ? ");
+        List<Object> params = new ArrayList<>();
 
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            int paramIndex = 1;
-            if (keyword != null && !keyword.trim().isEmpty()) ps.setString(paramIndex++, "%" + keyword.trim() + "%");
-            if (statusFilter != null && !statusFilter.isEmpty()) ps.setBoolean(paramIndex++, "1".equals(statusFilter));
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND code LIKE ? ");
+            params.add("%" + keyword.trim() + "%");
+        }
+        if ("ACTIVE".equals(statusFilter)) {
+            sql.append("AND is_active = 1 ");
+        } else if ("INACTIVE".equals(statusFilter)) {
+            sql.append("AND is_active = 0 ");
+        }
+
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }
@@ -252,27 +286,39 @@ public class PromotionDAO {
         return 0;
     }
 
-    public List<Promotion> findAllWithPaging(String keyword, String statusFilter, String sortCol, String sortDir, int offset, int limit) throws SQLException {
+    public List<Promotion> findAllWithPaging(String keyword, String statusFilter, String sort, int offset, int limit) throws SQLException {
         List<Promotion> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT * FROM promotions WHERE is_deleted = 0 ");
+        List<Object> params = new ArrayList<>();
 
-        if (keyword != null && !keyword.trim().isEmpty()) sql.append("AND code LIKE ? ");
-        if (statusFilter != null && !statusFilter.isEmpty()) sql.append("AND is_active = ? ");
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND code LIKE ? ");
+            params.add("%" + keyword.trim() + "%");
+        }
+        if ("ACTIVE".equals(statusFilter)) {
+            sql.append("AND is_active = 1 ");
+        } else if ("INACTIVE".equals(statusFilter)) {
+            sql.append("AND is_active = 0 ");
+        }
 
-        String safeCol = "promo_id"; 
-        if ("code".equals(sortCol)) safeCol = "code";
-        else if ("valid_until".equals(sortCol)) safeCol = "valid_until";
+        String orderClause = "ORDER BY promo_id DESC";
+        if ("oldest".equals(sort)) {
+            orderClause = "ORDER BY promo_id ASC";
+        } else if ("discount_desc".equals(sort)) {
+            orderClause = "ORDER BY discount_value DESC, promo_id DESC";
+        } else if ("discount_asc".equals(sort)) {
+            orderClause = "ORDER BY discount_value ASC, promo_id ASC";
+        }
 
-        String safeDir = "ASC".equalsIgnoreCase(sortDir) ? "ASC" : "DESC"; 
-        sql.append("ORDER BY ").append(safeCol).append(" ").append(safeDir).append(" LIMIT ? OFFSET ?");
+        sql.append(orderClause).append(" LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
 
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            int paramIndex = 1;
-            if (keyword != null && !keyword.trim().isEmpty()) ps.setString(paramIndex++, "%" + keyword.trim() + "%");
-            if (statusFilter != null && !statusFilter.isEmpty()) ps.setBoolean(paramIndex++, "1".equals(statusFilter));
-            ps.setInt(paramIndex++, limit);
-            ps.setInt(paramIndex++, offset);
-
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Promotion p = mapRow(rs);
@@ -283,6 +329,10 @@ public class PromotionDAO {
         }
         return list;
     }
+
+    /** =======================================================================
+     *  PHẦN 2: CÁC HÀM CHO CUSTOMER VÀ CHECKOUT (TUYỆT ĐỐI KHÔNG ĐÓNG CONNECTION Ở ĐÂY)
+     *  ======================================================================= */
 
     public void insertOrderPromotion(Connection conn, int orderId, int promoId, int customerId, BigDecimal discountApplied, String couponCode, String benefitTarget) throws SQLException {
         String sql = "INSERT INTO order_promotions (order_id, promo_id, customer_id, discount_applied, coupon_code, benefit_target) VALUES (?, ?, ?, ?, ?, ?)";
@@ -305,11 +355,6 @@ public class PromotionDAO {
         }
     }
 
-    /**
-     * Hoàn lại used_count đã tăng nhầm khi checkout phải huỷ ngang giữa chừng
-     * (best-effort, không có transaction xuyên suốt - theo đúng pattern
-     * "rollback nghiệp vụ" của CheckoutService).
-     */
     public void decrementUsedCount(Connection conn, int promoId) throws SQLException {
         String sql = "UPDATE promotions SET used_count = used_count - 1 WHERE promo_id = ? AND used_count > 0";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -320,13 +365,14 @@ public class PromotionDAO {
 
     public List<Promotion> findAvailableVouchersForCart() throws SQLException {
         List<Promotion> list = new ArrayList<>();
-        // Bỏ điều kiện lọc cứng scope = 'ORDER' để hiển thị tất cả các mã đang hoạt động và còn hạn
         String sql = "SELECT * FROM promotions WHERE is_deleted = 0 AND is_active = 1 "
                 + "AND valid_from <= NOW() AND valid_until >= NOW() "
                 + "AND (max_uses IS NULL OR used_count < max_uses) "
                 + "ORDER BY discount_value DESC";
 
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql); 
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Promotion p = mapRow(rs);
                 loadRelations(conn, p);

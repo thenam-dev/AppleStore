@@ -10,65 +10,93 @@ import java.util.List;
 
 public class ReviewDAO {
 
-    public boolean insertReview(Review review) {
+    public boolean insertReviewSecure(Review review) throws SQLException {
+        String verifySql = """
+            SELECT o.status, o.cancelled_by 
+            FROM order_items oi 
+            JOIN orders o ON oi.order_id = o.order_id 
+            WHERE oi.order_item_id = ? AND o.order_id = ? AND o.customer_id = ? 
+              AND (
+                    o.status = 'DELIVERED' 
+                    OR (o.status = 'CANCELLED' AND (o.cancelled_by IS NULL OR o.cancelled_by <> ?))
+                  )
+        """;
+
         String insertSql = "INSERT INTO reviews (order_item_id, order_id, customer_id, rating, review_text) VALUES (?, ?, ?, ?, ?)";
 
-        // Câu lệnh cập nhật lại rating trung bình cho sản phẩm tương ứng
         String updateProductRatingSql = """
-        UPDATE products p
-        SET p.rating = (
-            SELECT COALESCE(ROUND(AVG(r.rating), 2), 0)
-            FROM reviews r
-            JOIN order_items oi ON r.order_item_id = oi.order_item_id
-            JOIN product_variants pv ON oi.variant_id = pv.variant_id
-            WHERE pv.product_id = ? AND r.is_hidden = 0
-        )
-        WHERE p.product_id = ?
-    """;
+            UPDATE products p
+            SET p.rating = (
+                SELECT COALESCE(ROUND(AVG(r.rating), 2), 0)
+                FROM reviews r
+                JOIN order_items oi ON r.order_item_id = oi.order_item_id
+                JOIN product_variants pv ON oi.variant_id = pv.variant_id
+                WHERE pv.product_id = ? AND r.is_hidden = 0
+            )
+            WHERE p.product_id = ?
+        """;
 
         try (Connection conn = DBConnection.getConnection()) {
-            conn.setAutoCommit(false); // Dùng giao dịch (Transaction) để đảm bảo an toàn dữ liệu
+            conn.setAutoCommit(false); // Tuân thủ Rule 4: Quản lý Transaction an toàn
+            try {
+                // 1. Xác thực bảo mật IDOR & Kiểm tra trạng thái hợp lệ để được review
+                try (PreparedStatement psVerify = conn.prepareStatement(verifySql)) {
+                    psVerify.setInt(1, review.getOrderItemId());
+                    psVerify.setInt(2, review.getOrderId());
+                    psVerify.setInt(3, review.getCustomerId());
+                    psVerify.setInt(4, review.getCustomerId()); // Truyền thêm để check cancelled_by <> customer_id
 
-            int productId = -1;
-            // 1. Lấy productId từ order_item_id của review đang gửi
-            String getProductSql = "SELECT pv.product_id FROM order_items oi JOIN product_variants pv ON oi.variant_id = pv.variant_id WHERE oi.order_item_id = ?";
-            try (PreparedStatement psGet = conn.prepareStatement(getProductSql)) {
-                psGet.setInt(1, review.getOrderItemId());
-                try (ResultSet rs = psGet.executeQuery()) {
-                    if (rs.next()) {
-                        productId = rs.getInt("product_id");
+                    try (ResultSet rs = psVerify.executeQuery()) {
+                        if (!rs.next()) {
+                            conn.rollback();
+                            return false; // Không thỏa mãn điều kiện hoặc vi phạm IDOR -> Chặn đứng!
+                        }
                     }
                 }
-            }
 
-            // 2. Insert review mới vào bảng reviews
-            try (PreparedStatement psInsert = conn.prepareStatement(insertSql)) {
-                psInsert.setInt(1, review.getOrderItemId());
-                psInsert.setInt(2, review.getOrderId());
-                psInsert.setInt(3, review.getCustomerId());
-                psInsert.setInt(4, review.getRating());
-                psInsert.setString(5, review.getReviewText());
-                psInsert.executeUpdate();
-            }
-
-            // 3. Nếu tìm thấy productId, tiến hành tính lại và cập nhật rating cho sản phẩm đó
-            if (productId > 0) {
-                try (PreparedStatement psUpdate = conn.prepareStatement(updateProductRatingSql)) {
-                    psUpdate.setInt(1, productId);
-                    psUpdate.setInt(2, productId);
-                    psUpdate.executeUpdate();
+                // 2. Lấy productId tương ứng để cập nhật rating trung bình
+                int productId = -1;
+                String getProductSql = "SELECT pv.product_id FROM order_items oi JOIN product_variants pv ON oi.variant_id = pv.variant_id WHERE oi.order_item_id = ?";
+                try (PreparedStatement psGet = conn.prepareStatement(getProductSql)) {
+                    psGet.setInt(1, review.getOrderItemId());
+                    try (ResultSet rs = psGet.executeQuery()) {
+                        if (rs.next()) {
+                            productId = rs.getInt("product_id");
+                        }
+                    }
                 }
-            }
 
-            conn.commit();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
+                // 3. Insert review mới
+                try (PreparedStatement psInsert = conn.prepareStatement(insertSql)) {
+                    psInsert.setInt(1, review.getOrderItemId());
+                    psInsert.setInt(2, review.getOrderId());
+                    psInsert.setInt(3, review.getCustomerId());
+                    psInsert.setInt(4, review.getRating());
+                    psInsert.setString(5, review.getReviewText());
+                    psInsert.executeUpdate();
+                }
+
+                // 4. Cập nhật rating trung bình cho sản phẩm
+                if (productId > 0) {
+                    try (PreparedStatement psUpdate = conn.prepareStatement(updateProductRatingSql)) {
+                        psUpdate.setInt(1, productId);
+                        psUpdate.setInt(2, productId);
+                        psUpdate.executeUpdate();
+                    }
+                }
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         }
-        return false;
     }
 
-    public Review getReviewByItemAndCustomer(int orderItemId, int customerId) {
+    public Review getReviewByItemAndCustomer(int orderItemId, int customerId) throws SQLException {
         String sql = "SELECT * FROM reviews WHERE order_item_id = ? AND customer_id = ?";
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -94,8 +122,6 @@ public class ReviewDAO {
                     return r;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }

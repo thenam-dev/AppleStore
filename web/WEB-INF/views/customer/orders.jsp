@@ -73,7 +73,8 @@
 
                                         <a class="btn sm" href="${ctx}/account/order-detail?id=${o.rawId}">Xem chi tiết & Đánh giá</a>
 
-                                        <c:if test="${o.status eq 'PENDING' or o.status eq 'PENDING_PAYMENT'}">
+                                        <!-- Thay vì check status eq 'PENDING' chung chung làm lộ nút hủy ở cả trạng thái chuẩn bị -->
+                                        <c:if test="${o.rawStatus eq 'PENDING_PAYMENT' or o.rawStatus eq 'CONFIRMED'}">
                                             <form method="post" action="${ctx}/order/cancel" style="margin:0;">
                                                 <input type="hidden" name="code" value="${o.code}">
                                                 <input type="hidden" name="tab" value="${not empty param.tab ? param.tab : 'all'}">

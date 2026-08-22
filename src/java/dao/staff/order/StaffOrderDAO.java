@@ -68,7 +68,6 @@ public class StaffOrderDAO {
     }
 
     public Optional<Order> findById(int orderId) throws SQLException {
-        // JOIN thêm bảng users lần nữa (với alias us) để lấy tên nhân viên Sale dựa trên assigned_sale_staff_id
         String sql = """
             SELECT o.*, 
                    u.full_name AS shipper_name, 
@@ -107,7 +106,6 @@ public class StaffOrderDAO {
                     }
                     
                     order.setShipperName(rs.getString("shipper_name"));
-                    // Lấy tên nhân viên Sale phụ trách
                     order.setAssignedSaleStaffName(rs.getString("sale_staff_name")); 
 
                     int shipperId = rs.getInt("shipper_id");
@@ -149,13 +147,49 @@ public class StaffOrderDAO {
         return items;
     }
 
-    public void updateStatus(int orderId, String status) throws SQLException {
-        String sql = "UPDATE orders SET status = ? WHERE order_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
-            ps.setInt(2, orderId);
-            ps.executeUpdate();
+    /** 
+     * Cập nhật trạng thái an toàn chống IDOR cho Staff:
+     * Chỉ cho phép Admin hoặc chính Sale Staff được phân công mới thao tác được đơn này.
+     */
+    public boolean updateStatusSecure(int orderId, String status, int userId, String role) throws SQLException {
+        String checkSql = "ADMIN".equals(role) ? 
+            "SELECT 1 FROM orders WHERE order_id = ?" : 
+            "SELECT 1 FROM orders WHERE order_id = ? AND assigned_sale_staff_id = ?";
+            
+        String updateSql = "UPDATE orders SET status = ? WHERE order_id = ?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // 1. Kiểm tra quyền sở hữu đơn hàng (Chống IDOR)
+                try (PreparedStatement psCheck = conn.prepareStatement(checkSql)) {
+                    psCheck.setInt(1, orderId);
+                    if (!"ADMIN".equals(role)) {
+                        psCheck.setInt(2, userId);
+                    }
+                    try (ResultSet rs = psCheck.executeQuery()) {
+                        if (!rs.next()) {
+                            conn.rollback();
+                            return false; // Không có quyền hoặc không tìm thấy đơn
+                        }
+                    }
+                }
+
+                // 2. Thực hiện update trạng thái
+                try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                    ps.setString(1, status);
+                    ps.setInt(2, orderId);
+                    ps.executeUpdate();
+                }
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         }
     }
 
@@ -278,16 +312,53 @@ public class StaffOrderDAO {
         return history;
     }
 
-    public void updateDeliveryCompleted(int orderId) throws SQLException {
-        String sql = "UPDATE deliveries SET status = 'DELIVERED', delivered_at = NOW() WHERE order_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, orderId);
-            ps.executeUpdate();
+    /** 
+     * Shipper xác nhận giao hàng hoàn tất (Đã sửa vá lỗi thiếu điều kiện staff_id chống IDOR) 
+     */
+    public boolean updateDeliveryCompletedSecure(int orderId, int shipperId) throws SQLException {
+        String updateOrderSql = "UPDATE orders SET status = 'DELIVERED' WHERE order_id = ?";
+        String updateDeliverySql = "UPDATE deliveries SET status = 'DELIVERED', delivered_at = NOW() WHERE order_id = ? AND staff_id = ?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // 1. Kiểm tra phân quyền: Đơn hàng này có thực sự được gán cho Shipper này không?
+                try (PreparedStatement psCheck = conn.prepareStatement("SELECT 1 FROM deliveries WHERE order_id = ? AND staff_id = ?")) {
+                    psCheck.setInt(1, orderId);
+                    psCheck.setInt(2, shipperId);
+                    try (ResultSet rs = psCheck.executeQuery()) {
+                        if (!rs.next()) {
+                            conn.rollback();
+                            return false; // Không khớp Shipper -> Chặn đứng IDOR!
+                        }
+                    }
+                }
+
+                // 2. Cập nhật bảng deliveries
+                try (PreparedStatement psDeliv = conn.prepareStatement(updateDeliverySql)) {
+                    psDeliv.setInt(1, orderId);
+                    psDeliv.setInt(2, shipperId);
+                    psDeliv.executeUpdate();
+                }
+
+                // 3. Cập nhật trạng thái tổng đơn hàng sang DELIVERED
+                try (PreparedStatement psOrder = conn.prepareStatement(updateOrderSql)) {
+                    psOrder.setInt(1, orderId);
+                    psOrder.executeUpdate();
+                }
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         }
     }
     
-    // Lọc đơn hàng dành riêng cho Staff hoặc Admin (có hỗ trợ filter theo staffId nếu admin chọn)
+    // Lọc đơn hàng dành riêng cho Staff hoặc Admin
     public List<Order> findFilteredOrdersByRole(String role, int userId, String staffFilter, String status, String keyword, int offset, int limit) throws SQLException {
         StringBuilder sql = new StringBuilder("""
             SELECT o.order_id, o.recipient_name, o.recipient_phone, o.total_amount, 
@@ -300,12 +371,10 @@ public class StaffOrderDAO {
         
         List<Object> params = new ArrayList<>();
 
-        // Nếu không phải ADMIN (tức là SALE_STAFF), bắt buộc chỉ xem đơn của chính mình
         if (!"ADMIN".equals(role)) {
             sql.append(" AND o.assigned_sale_staff_id = ?");
             params.add(userId);
         } else {
-            // Nếu là ADMIN, có thể lọc theo một nhân viên Sale cụ thể nếu được chọn trên giao diện
             if (staffFilter != null && !staffFilter.isBlank()) {
                 sql.append(" AND o.assigned_sale_staff_id = ?");
                 params.add(Integer.parseInt(staffFilter));
@@ -357,7 +426,6 @@ public class StaffOrderDAO {
         return orders;
     }
 
-    // Admin chuyển giao việc khi đơn đang ở trạng thái CONFIRMED
     public boolean updateAssignedSaleStaff(int orderId, int newStaffId) throws SQLException {
         String sql = "UPDATE orders SET assigned_sale_staff_id = ? WHERE order_id = ? AND status = 'CONFIRMED'";
         try (Connection conn = DBConnection.getConnection();
@@ -368,7 +436,6 @@ public class StaffOrderDAO {
         }
     }
 
-    // Lấy danh sách nhân viên Sale đang active để đổ vào thẻ <select> cho Admin
     public List<Map<String, Object>> getActiveSaleStaffList() throws SQLException {
         List<Map<String, Object>> list = new ArrayList<>();
         String sql = "SELECT user_id, full_name FROM users WHERE role = 'SALE_STAFF' AND status = 'ACTIVE'";
@@ -383,5 +450,66 @@ public class StaffOrderDAO {
             }
         }
         return list;
+    }
+    
+    public void cancelOrderAndRestoreStock(int orderId, int staffId, String note) throws SQLException {
+        String updateOrderSql = "UPDATE orders SET status = 'CANCELLED' WHERE order_id = ?";
+        String selectItemsSql = "SELECT order_item_id, variant_id, quantity FROM order_items WHERE order_id = ? AND variant_id IS NOT NULL";
+        String updateStockSql = "UPDATE product_variants SET stock_quantity = stock_quantity + ? WHERE variant_id = ?";
+        String insertLogSql = "INSERT INTO inventory_logs (variant_id, changed_by, order_id, order_item_id, change_type, quantity_delta, quantity_after, note) " +
+                              "VALUES (?, ?, ?, ?, 'ORDER_RELEASE', ?, (SELECT stock_quantity FROM product_variants WHERE variant_id = ?), ?)";
+        String insertHistorySql = "INSERT INTO order_status_history (order_id, status, changed_by, note) VALUES (?, 'CANCELLED', ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement(updateOrderSql)) {
+                    ps.setInt(1, orderId);
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement psItems = conn.prepareStatement(selectItemsSql)) {
+                    psItems.setInt(1, orderId);
+                    try (ResultSet rs = psItems.executeQuery()) {
+                        try (PreparedStatement psUpdateStock = conn.prepareStatement(updateStockSql);
+                             PreparedStatement psInsertLog = conn.prepareStatement(insertLogSql)) {
+                             
+                            while (rs.next()) {
+                                int itemId = rs.getInt("order_item_id");
+                                int variantId = rs.getInt("variant_id");
+                                int qty = rs.getInt("quantity");
+
+                                psUpdateStock.setInt(1, qty);
+                                psUpdateStock.setInt(2, variantId);
+                                psUpdateStock.executeUpdate();
+
+                                psInsertLog.setInt(1, variantId);
+                                psInsertLog.setInt(2, staffId);
+                                psInsertLog.setInt(3, orderId);
+                                psInsertLog.setInt(4, itemId);
+                                psInsertLog.setInt(5, qty);
+                                psInsertLog.setInt(6, variantId); 
+                                psInsertLog.setString(7, "Nhân viên huỷ đơn: " + (note != null ? note : ""));
+                                psInsertLog.executeUpdate();
+                            }
+                        }
+                    }
+                }
+
+                try (PreparedStatement psHistory = conn.prepareStatement(insertHistorySql)) {
+                    psHistory.setInt(1, orderId);
+                    psHistory.setInt(2, staffId);
+                    psHistory.setString(3, note != null && !note.isBlank() ? note : "Nhân viên huỷ đơn");
+                    psHistory.executeUpdate();
+                }
+
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
     }
 }
