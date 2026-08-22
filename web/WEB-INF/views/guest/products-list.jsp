@@ -106,52 +106,16 @@
 </div>
 
 <%-- phân trang: giữ nguyên bộ lọc đang áp dụng trên mỗi liên kết trang --%>
-<c:if test="${not empty productList and totalPages > 1}">
-  <div class="pager" style="border-top:1px solid var(--line)">
-    <span class="info">Trang ${currentPage} / ${totalPages} &middot; ${totalItems} sản phẩm</span>
-    <nav class="pages" aria-label="Phân trang">
-      <c:choose>
-        <c:when test="${currentPage le 1}">
-          <span class="pg disabled" aria-hidden="true">‹</span>
-        </c:when>
-        <c:otherwise>
-          <c:url var="prevUrl" value="/products">
-            <c:param name="keyword" value="${keyword}"/><c:param name="categoryId" value="${categoryId}"/>
-            <c:param name="sort" value="${sort}"/><c:param name="page" value="${currentPage - 1}"/>
-          </c:url>
-          <a class="pg" href="${prevUrl}" aria-label="Trang trước">‹</a>
-        </c:otherwise>
-      </c:choose>
-
-      <c:forEach begin="1" end="${totalPages}" var="pg">
-        <c:choose>
-          <c:when test="${pg == currentPage}">
-            <span class="pg on" aria-current="page">${pg}</span>
-          </c:when>
-          <c:otherwise>
-            <c:url var="pageUrl" value="/products">
-              <c:param name="keyword" value="${keyword}"/><c:param name="categoryId" value="${categoryId}"/>
-              <c:param name="sort" value="${sort}"/><c:param name="page" value="${pg}"/>
-            </c:url>
-            <a class="pg" href="${pageUrl}">${pg}</a>
-          </c:otherwise>
-        </c:choose>
-      </c:forEach>
-
-      <c:choose>
-        <c:when test="${currentPage ge totalPages}">
-          <span class="pg disabled" aria-hidden="true">›</span>
-        </c:when>
-        <c:otherwise>
-          <c:url var="nextUrl" value="/products">
-            <c:param name="keyword" value="${keyword}"/><c:param name="categoryId" value="${categoryId}"/>
-            <c:param name="sort" value="${sort}"/><c:param name="page" value="${currentPage + 1}"/>
-          </c:url>
-          <a class="pg" href="${nextUrl}" aria-label="Trang sau">›</a>
-        </c:otherwise>
-      </c:choose>
-    </nav>
-  </div>
+<c:if test="${not empty productList}">
+  <c:url var="filterQueryUrl" value="">
+    <c:param name="keyword" value="${keyword}"/>
+    <c:param name="categoryId" value="${categoryId}"/>
+    <c:param name="sort" value="${sort}"/>
+  </c:url>
+  <c:set var="filterQuery" value="&${fn:substringAfter(filterQueryUrl, '?')}"/>
+  <c:set var="pageUrl" value="${ctx}/products"/>
+  <c:set var="itemLabel" value="sản phẩm"/>
+  <jsp:include page="/WEB-INF/views/common/pagination.jsp"/>
 </c:if>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp"/>

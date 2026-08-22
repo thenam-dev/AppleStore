@@ -173,12 +173,15 @@
                     </form>
 
                     <!-- Alerts -->
-                    <c:if test="${not empty requestScope.message}">
-                        <div class="alert-msg success" style="margin-bottom: 24px;"><strong>Thành công!</strong> ${requestScope.message}</div>
+                    <c:if test="${not empty sessionScope.successMsg}">
+                        <div class="alert-msg success" style="margin-bottom: 24px;"><strong>Thành công!</strong> ${sessionScope.successMsg}</div>
+                        <c:remove var="successMsg" scope="session"/>
                     </c:if>
-                    <c:if test="${not empty requestScope.error}">
-                        <div class="alert-msg error" style="margin-bottom: 24px;"><strong>Lỗi!</strong> ${requestScope.error}</div>
+                    <c:if test="${not empty sessionScope.message}">
+                        <div class="alert-msg success" style="margin-bottom: 24px;"><strong>Thành công!</strong> ${sessionScope.message}</div>
+                        <c:remove var="message" scope="session"/>
                     </c:if>
+                    <jsp:include page="/WEB-INF/views/common/flash.jsp"/>
 
                     <!-- Address List -->
                     <div>
@@ -310,6 +313,20 @@
         });
     });
 </script>
+<c:if test="${not empty sessionScope.form_recipientName}">
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            openModal('', 
+                '<c:out value="${sessionScope.form_recipientName}" />', 
+                '<c:out value="${sessionScope.form_recipientPhone}" />', 
+                '<c:out value="${sessionScope.form_addressDetail}" />'
+            );
+        });
+    </script>
+    <c:remove var="form_recipientName" scope="session"/>
+    <c:remove var="form_recipientPhone" scope="session"/>
+    <c:remove var="form_addressDetail" scope="session"/>
+</c:if>
 </body>
 
 

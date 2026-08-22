@@ -33,12 +33,19 @@ public class DateValidationFilter implements Filter {
 
                 if (startDate.isAfter(endDate)) {
                     HttpSession session = req.getSession();
-                    session.setAttribute("errorMessage", "Ngày bắt đầu không được lớn hơn ngày kết thúc.");
+                    session.setAttribute("errorMsg", "Ngày bắt đầu không được lớn hơn ngày kết thúc.");
+                    session.setAttribute("badStartDate", startDateStr);
+                    session.setAttribute("badEndDate", endDateStr);
                     res.sendRedirect(req.getContextPath() + "/admin/dashboard");
                     return; 
                 }
             } catch (DateTimeParseException e) {
-                // Bỏ qua lỗi parse
+                HttpSession session = req.getSession();
+                session.setAttribute("errorMsg", "Định dạng ngày tháng không hợp lệ.");
+                session.setAttribute("badStartDate", startDateStr);
+                session.setAttribute("badEndDate", endDateStr);
+                res.sendRedirect(req.getContextPath() + "/admin/dashboard");
+                return;
             }
         }
         

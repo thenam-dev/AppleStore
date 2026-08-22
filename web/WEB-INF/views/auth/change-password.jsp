@@ -1,4 +1,4 @@
-﻿<%--
+<%--
   change-password.jsp — đổi mật khẩu cho user đã đăng nhập.
   Servlet cần set: errors (Map lỗi từng ô: currentPassword/newPassword/confirmNewPassword)
 --%>
@@ -48,7 +48,7 @@
                     <form method="post" action="${ctx}/change-password" style="max-width: 460px;">
                         <div class="field ${not empty errors.currentPassword ? 'err' : ''}">
                             <label>Mật khẩu hiện tại <span class="req">*</span></label>
-                            <input class="input" type="password" name="currentPassword">
+                            <input class="input" type="password" name="currentPassword" required>
                             <c:if test="${not empty errors.currentPassword}">
                                 <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.currentPassword}"/></div>
                             </c:if>
@@ -56,7 +56,7 @@
 
                         <div class="field ${not empty errors.newPassword ? 'err' : ''}">
                             <label>Mật khẩu mới <span class="req">*</span></label>
-                            <input class="input" type="password" name="newPassword">
+                            <input class="input" type="password" name="newPassword" required>
                             <c:choose>
                                 <c:when test="${not empty errors.newPassword}">
                                     <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.newPassword}"/></div>
@@ -67,7 +67,7 @@
 
                         <div class="field ${not empty errors.confirmNewPassword ? 'err' : ''}">
                             <label>Xác nhận mật khẩu mới <span class="req">*</span></label>
-                            <input class="input" type="password" name="confirmNewPassword">
+                            <input class="input" type="password" name="confirmNewPassword" required>
                             <c:if test="${not empty errors.confirmNewPassword}">
                                 <div class="err-msg"><svg width="14" height="14"><use href="#i-alert"/></svg><c:out value="${errors.confirmNewPassword}"/></div>
                             </c:if>
