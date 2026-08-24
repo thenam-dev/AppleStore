@@ -37,7 +37,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=3">
+        <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=10">
     </head>
     <body>
 
@@ -45,7 +45,7 @@
             <%-- ================= KHÔNG TÌM THẤY SẢN PHẨM ================= --%>
             <c:when test="${empty product}">
                 <jsp:include page="/WEB-INF/views/common/header.jsp"/>
-                <div style="padding:60px 26px">
+                <div style="padding:60px 26px;max-width:1280px;margin:0 auto">
                     <div class="empty">
                         <div class="ring"><svg width="26" height="26"><use href="#i-alert"/></svg></div>
                         <h3>Không tìm thấy sản phẩm</h3>
@@ -62,59 +62,74 @@
                 <c:set var="activeMenu" value="${product.categoryId == 1 ? 'iphone' : product.categoryId == 2 ? 'ipad' : product.categoryId == 3 ? 'mac' : product.categoryId == 4 ? 'watch' : product.categoryId == 7 ? 'accessory' : ''}" scope="request"/>
                 <jsp:include page="/WEB-INF/views/common/header.jsp"/>
 
-                <nav class="crumb">
+                <nav class="crumb" style="max-width:1280px;margin:0 auto">
                     <a href="${ctx}/home">Trang chủ</a><span>/</span>
                     <a href="${ctx}/products?categoryId=${product.categoryId}"><c:out value="${product.categoryName}"/></a><span>/</span>
                     <span style="color:var(--ink)"><c:out value="${product.name}"/></span>
                 </nav>
 
-                <div style="padding:0 26px">
+                <div style="padding:0 26px;max-width:1280px;margin:0 auto">
                     <jsp:include page="/WEB-INF/views/common/flash.jsp"/>
                 </div>
 
-                <div style="padding:14px 26px 30px;display:grid;grid-template-columns:1fr 1fr;gap:34px">
+                <div style="padding:14px 26px 30px;display:grid;grid-template-columns:1fr 1fr;gap:34px;max-width:1280px;margin:0 auto">
 
                     <div>
-                        <div class="shot dark" style="aspect-ratio:4/3">
-                            <c:choose>
-                                <c:when test="${not empty productImages}">
-                                    <c:set var="firstProductImage" value="${productImages[0]}" />
+                        <div class="gallery-card">
+                            <div class="gallery-frame">
+                                <div class="shot gallery-stage" style="aspect-ratio:4/3">
                                     <c:choose>
-                                        <c:when test="${fn:startsWith(firstProductImage.filePath, '/')}">
-                                            <img data-gallery-main src="${ctx}${firstProductImage.filePath}" alt="<c:out value='${product.name}'/>" />
+                                        <c:when test="${not empty productImages}">
+                                            <c:set var="firstProductImage" value="${productImages[0]}" />
+                                            <c:choose>
+                                                <c:when test="${fn:startsWith(firstProductImage.filePath, '/')}">
+                                                    <img data-gallery-main src="${ctx}${firstProductImage.filePath}" alt="<c:out value='${product.name}'/>" />
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <img data-gallery-main src="${ctx}/${firstProductImage.filePath}" alt="<c:out value='${product.name}'/>" />
+                                                </c:otherwise>
+                                            </c:choose>
                                         </c:when>
-                                        <c:otherwise>
-                                            <img data-gallery-main src="${ctx}/${firstProductImage.filePath}" alt="<c:out value='${product.name}'/>" />
-                                        </c:otherwise>
-                                    </c:choose>
-                                </c:when>
-                                <c:when test="${not empty product.primaryImageUrl}">
-                                    <img data-gallery-main src="${ctx}/${product.primaryImageUrl}" alt="<c:out value='${product.name}'/>" />
-                                </c:when>
-                                <c:otherwise><svg style="color:var(--titan);width:34%"><use href="#${pIcon}"/></svg></c:otherwise>
-                            </c:choose>
-                        </div>
-
-                        <c:if test="${not empty productImages}">
-                            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px" aria-label="Ảnh sản phẩm">
-                                <c:forEach var="image" items="${productImages}" varStatus="status">
-                                    <c:choose>
-                                        <c:when test="${fn:startsWith(image.filePath, '/')}">
-                                            <c:set var="imageUrl" value="${ctx}${image.filePath}" />
+                                        <c:when test="${not empty product.primaryImageUrl}">
+                                            <img data-gallery-main src="${ctx}/${product.primaryImageUrl}" alt="<c:out value='${product.name}'/>" />
                                         </c:when>
-                                        <c:otherwise>
-                                            <c:set var="imageUrl" value="${ctx}/${image.filePath}" />
-                                        </c:otherwise>
+                                        <c:otherwise><svg style="color:var(--titan);width:34%"><use href="#${pIcon}"/></svg></c:otherwise>
                                     </c:choose>
-                                    <button type="button" data-gallery-thumb data-image-src="${imageUrl}"
-                                            data-image-alt="<c:out value='${product.name}'/>"
-                                            class="${status.first ? 'active' : ''}"
-                                            style="width:64px;height:64px;padding:3px;border:1px solid var(--line);background:#fff;cursor:pointer">
-                                        <img src="${imageUrl}" alt="" style="display:block;width:100%;height:100%;object-fit:contain" />
+                                </div>
+                                <c:if test="${fn:length(productImages) > 1}">
+                                    <button type="button" class="gallery-nav prev" data-gallery-prev aria-label="Ảnh trước">
+                                        <svg width="22" height="22"><use href="#i-chevron-left"/></svg>
                                     </button>
-                                </c:forEach>
+                                    <button type="button" class="gallery-nav next" data-gallery-next aria-label="Ảnh sau">
+                                        <svg width="22" height="22"><use href="#i-chevron-right"/></svg>
+                                    </button>
+                                </c:if>
                             </div>
-                        </c:if>
+
+                            <c:if test="${not empty productImages}">
+                                <div class="gallery-thumb-row">
+                                    
+                                    <div class="gallery-thumbs" data-gallery-thumbs aria-label="Ảnh sản phẩm">
+                                        <c:forEach var="image" items="${productImages}" varStatus="status">
+                                            <c:choose>
+                                                <c:when test="${fn:startsWith(image.filePath, '/')}">
+                                                    <c:set var="imageUrl" value="${ctx}${image.filePath}" />
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <c:set var="imageUrl" value="${ctx}/${image.filePath}" />
+                                                </c:otherwise>
+                                            </c:choose>
+                                            <button type="button" data-gallery-thumb data-image-src="${imageUrl}"
+                                                    data-image-alt="<c:out value='${product.name}'/>"
+                                                    class="gallery-thumb ${status.first ? 'active' : ''}">
+                                                <img src="${imageUrl}" alt="" style="display:block;width:100%;height:100%;object-fit:contain" />
+                                            </button>
+                                        </c:forEach>
+                                    </div>
+                 
+                                </div>
+                            </c:if>
+                        </div>
                     </div>
 
                     <div>
@@ -174,7 +189,7 @@
                                         <button type="button" class="btn quiet" style="flex:1" disabled>Hết hàng</button>
                                     </c:otherwise>
                                 </c:choose>
-                                <a class="btn ghost" href="${ctx}/cart">Xem giỏ hàng</a>
+                                <a class="btn ghost" href="${ctx}/cart">Mua ngay</a>
                             </div>
                         </form>
 
@@ -241,7 +256,7 @@
                 </div>
 
                 <!-- ================= KHU VỰC ĐÁNH GIÁ (FEEDBACK) ================= -->
-                <div style="padding: 0 26px 30px;">
+                <div style="padding: 0 26px 30px;max-width:1280px;margin:0 auto">
                     <div class="panel">
                         <div class="panel-head" style="display: flex; align-items: center; justify-content: space-between;">
                             <h3 style="margin: 0;">Khách hàng đánh giá</h3>
@@ -322,19 +337,21 @@
                 
                 <c:if test="${not empty relatedProducts}">
                     <section class="sec" style="border-top:1px solid var(--line)">
-                        <div class="sec-head"><h3>Sản phẩm liên quan</h3><a href="${ctx}/products?categoryId=${product.categoryId}">Xem cả danh mục</a></div>
-                        <div class="p-grid">
-                            <c:forEach var="p" items="${relatedProducts}">
-                                <c:set var="card" value="${p}" scope="request"/>
-                                <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
-                            </c:forEach>
+                        <div class="sec-inner">
+                            <div class="sec-head"><h3>Sản phẩm liên quan</h3><a href="${ctx}/products?categoryId=${product.categoryId}">Xem cả danh mục</a></div>
+                            <div class="p-grid">
+                                <c:forEach var="p" items="${relatedProducts}">
+                                    <c:set var="card" value="${p}" scope="request"/>
+                                    <jsp:include page="/WEB-INF/views/common/product-card.jsp"/>
+                                </c:forEach>
+                            </div>
                         </div>
                     </section>
                 </c:if>
 
                 <jsp:include page="/WEB-INF/views/common/footer.jsp"/>
 
-                <script src="${ctx}/assets/js/main.js"></script>
+                <script src="${ctx}/assets/js/main.js?v=9"></script>
                 <c:if test="${not empty variants}">
                     <script>
                         (function () {
@@ -494,11 +511,21 @@
                                 updateSelectors();
                             }
 
+                            // Đổi màu thì nảy ảnh chính sang ảnh khớp màu đó (xem
+                            // productGallerySelectColor trong main.js - so khớp theo tên
+                            // file ảnh, không cần bảng ánh xạ màu-ảnh riêng trong CSDL).
+                            function syncGalleryToSelectedColor() {
+                                if (selectedValues.color && typeof window.productGallerySelectColor === 'function') {
+                                    window.productGallerySelectColor(selectedValues.color);
+                                }
+                            }
+
                             selectorRoot.addEventListener('click', function (event) {
                                 var button = event.target.closest('.option-chip');
                                 if (!button || button.disabled) { return; }
                                 selectedValues[button.dataset.attributeKey] = button.dataset.attributeValue;
                                 applySelection();
+                                if (button.dataset.attributeKey === 'color') { syncGalleryToSelectedColor(); }
                             });
 
                             var initial = productVariants.find(function (variant) { return variant.id === defaultVariantId; })
@@ -511,6 +538,14 @@
                             renderSelectors();
                             if (initial) { renderVariant(initial); }
                             updateSelectors();
+                            // window.productGallerySelectColor được main.js gắn trong
+                            // handler DOMContentLoaded của chính nó - script này chạy
+                            // trước lúc đó nên đợi cùng sự kiện để chắc chắn đã sẵn sàng.
+                            if (document.readyState === 'loading') {
+                                document.addEventListener('DOMContentLoaded', syncGalleryToSelectedColor);
+                            } else {
+                                syncGalleryToSelectedColor();
+                            }
                         })();
                     </script>
                 </c:if>
@@ -521,9 +556,18 @@
                         // CartServlet trả JSON {success,message,cartItemCount} thay vì PRG -
                         // đứng yên tại trang, chỉ hiện toast + cập nhật badge giỏ hàng trên
                         // header, KHÔNG điều hướng sang /cart (xem CartServlet.doPost).
+                        //
+                        // Nếu chưa đăng nhập: AuthFilter trả JSON 401 {requiresLogin:true}
+                        // (không sendRedirect - tránh trình duyệt tự đổi POST->GET và làm rơi
+                        // mất variantId/quantity khi theo redirect). Ở đây tự dựng URL đăng
+                        // nhập, đính kèm variantId/quantity vào chính URL trang sản phẩm qua
+                        // query "pendingAddVariantId"/"pendingAddQty" rồi điều hướng sang
+                        // /login?redirectTo=... Đăng nhập xong, LoginServlet redirect đúng về
+                        // trang này với 2 param đó vẫn còn -> khối script cuối file phát hiện
+                        // và tự gọi lại API thêm vào giỏ (xem addPendingCartItemAfterLogin()).
+                        var ctxPath = '${ctx}';
                         var form = document.getElementById('add-to-cart-form');
-                        if (!form) { return; }
-                        var submitBtn = document.getElementById('add-to-cart-btn');
+                        var submitBtn = form ? document.getElementById('add-to-cart-btn') : null;
                         var pending = false;
 
                         // Nảy vào từ phải, thu về phải lúc biến mất, có thanh thời gian
@@ -578,37 +622,53 @@
                             badge.textContent = count;
                         }
 
-                        form.addEventListener('submit', function (e) {
-                            e.preventDefault();
-                            if (pending) { return; }
-                            pending = true;
-                            if (submitBtn) { submitBtn.disabled = true; }
+                        // Bỏ context path khỏi window.location.pathname để ra path "thuần" mà
+                        // LoginServlet mong đợi ở redirectTo (nó tự nối lại contextPath).
+                        function pathWithoutCtx() {
+                            var path = window.location.pathname;
+                            if (ctxPath && path.indexOf(ctxPath) === 0) {
+                                path = path.substring(ctxPath.length);
+                            }
+                            return path;
+                        }
 
-                            var variantInput = document.getElementById('selected-variant-id');
-                            var quantityInput = document.getElementById('detail-quantity-input');
-                            var payload = {
-                                action: 'add',
-                                variantId: variantInput ? variantInput.value : '',
-                                quantity: quantityInput ? quantityInput.value : '1'
-                            };
+                        // Dựng URL /login?redirectTo=... trỏ về ĐÚNG trang sản phẩm đang xem,
+                        // kèm variantId/quantity định thêm để sau khi đăng nhập xong tự thêm lại.
+                        function buildLoginRedirectUrl(variantId, quantity) {
+                            var params = new URLSearchParams(window.location.search);
+                            params.set('pendingAddVariantId', variantId);
+                            params.set('pendingAddQty', quantity);
+                            var redirectTarget = pathWithoutCtx() + '?' + params.toString();
+                            return ctxPath + '/login?redirectTo=' + encodeURIComponent(redirectTarget);
+                        }
 
-                            fetch('${ctx}/cart', {
+                        // Dùng chung cho cả submit thủ công lẫn tự thêm lại sau khi đăng nhập.
+                        function submitAddToCart(variantId, quantity) {
+                            return fetch(ctxPath + '/cart', {
                                 method: 'POST',
-                                body: new URLSearchParams(payload),
+                                body: new URLSearchParams({ action: 'add', variantId: variantId, quantity: quantity }),
                                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                                 credentials: 'same-origin'
                             }).then(function (res) {
                                 var contentType = res.headers.get('content-type') || '';
                                 if (contentType.indexOf('application/json') === -1) {
+                                    // Phòng hờ trường hợp bị redirect ngoài dự kiến (vd filter khác).
                                     if (res.redirected && res.url.indexOf('/login') !== -1) {
-                                        window.location.href = res.url;
+                                        window.location.href = buildLoginRedirectUrl(variantId, quantity);
                                         return null;
                                     }
                                     throw new Error('unexpected response ' + res.status);
                                 }
-                                return res.json();
-                            }).then(function (data) {
-                                if (!data) { return; }
+                                return res.json().then(function (data) {
+                                    return { status: res.status, data: data };
+                                });
+                            }).then(function (wrapped) {
+                                if (!wrapped) { return; }
+                                var data = wrapped.data;
+                                if (wrapped.status === 401 || data.requiresLogin) {
+                                    window.location.href = buildLoginRedirectUrl(variantId, quantity);
+                                    return;
+                                }
                                 if (!data.success) {
                                     showToast(data.message || 'Không thể thêm vào giỏ hàng', 'err');
                                     return;
@@ -617,13 +677,66 @@
                                 updateHeaderBadge(data.cartItemCount);
                             }).catch(function () {
                                 showToast('Không thể kết nối máy chủ, vui lòng thử lại', 'err');
-                            }).finally(function () {
-                                pending = false;
-                                if (submitBtn) { submitBtn.disabled = false; }
                             });
-                        });
+                        }
+
+                        if (form) {
+                            form.addEventListener('submit', function (e) {
+                                e.preventDefault();
+                                if (pending) { return; }
+                                pending = true;
+                                if (submitBtn) { submitBtn.disabled = true; }
+
+                                var variantInput = document.getElementById('selected-variant-id');
+                                var quantityInput = document.getElementById('detail-quantity-input');
+                                var variantId = variantInput ? variantInput.value : '';
+                                var quantity = quantityInput ? quantityInput.value : '1';
+
+                                submitAddToCart(variantId, quantity).finally(function () {
+                                    pending = false;
+                                    if (submitBtn) { submitBtn.disabled = false; }
+                                });
+                            });
+                        }
+
+                        // Vừa quay lại từ /login sau khi bị yêu cầu đăng nhập lúc bấm "Thêm vào
+                        // giỏ hàng" -> URL còn 2 param pendingAddVariantId/pendingAddQty, tự gọi
+                        // lại API thêm vào giỏ (KHÔNG cần bấm lại nút). Xoá 2 param khỏi URL
+                        // (history.replaceState) TRƯỚC khi gọi API để F5/Back không lặp lại việc
+                        // thêm vào giỏ.
+                        (function addPendingCartItemAfterLogin() {
+                            var params = new URLSearchParams(window.location.search);
+                            var pendingVariantId = params.get('pendingAddVariantId');
+                            if (!pendingVariantId) { return; }
+                            var pendingQty = params.get('pendingAddQty') || '1';
+
+                            params.delete('pendingAddVariantId');
+                            params.delete('pendingAddQty');
+                            var remaining = params.toString();
+                            var cleanUrl = window.location.pathname + (remaining ? '?' + remaining : '') + window.location.hash;
+                            window.history.replaceState(null, '', cleanUrl);
+
+                            submitAddToCart(pendingVariantId, pendingQty);
+                        })();
                     })();
                 </script>
+
+                <%-- Lightbox phóng to ảnh - bấm vào ảnh chính (data-gallery-main) sẽ mở
+                     lớp phủ toàn màn hình này, hiện đúng ảnh đang xem to hơn, có nút
+                     đóng/chuyển ảnh trước-sau. Nội dung <img> để trống, JS
+                     (initProductGallery trong main.js) tự đổ src khi mở. --%>
+                <div class="lightbox" data-lightbox aria-hidden="true">
+                    <button type="button" class="lightbox-close" data-lightbox-close aria-label="Đóng ảnh phóng to">
+                        <svg width="20" height="20"><use href="#i-x"/></svg>
+                    </button>
+                    <button type="button" class="lightbox-nav prev" data-lightbox-prev aria-label="Ảnh trước">
+                        <svg width="24" height="24"><use href="#i-chevron-left"/></svg>
+                    </button>
+                    <img class="lightbox-image" data-lightbox-image src="" alt="">
+                    <button type="button" class="lightbox-nav next" data-lightbox-next aria-label="Ảnh sau">
+                        <svg width="24" height="24"><use href="#i-chevron-right"/></svg>
+                    </button>
+                </div>
             </c:otherwise>
         </c:choose>
     </body>

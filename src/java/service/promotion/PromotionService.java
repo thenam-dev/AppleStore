@@ -3,6 +3,7 @@ package service.promotion;
 import dao.promtion.PromotionDAO;
 import model.entity.promtion.Promotion;
 import model.entity.cart.CartItem;
+
 import java.sql.Connection;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -14,12 +15,20 @@ public class PromotionService {
 
     private final PromotionDAO promotionDAO = new PromotionDAO();
 
+    /** =======================================================================
+     *  PHẦN 1: CÁC HÀM XỬ LÝ NGHIỆP VỤ CHO ADMIN QUẢN TRỊ MÃ KHUYẾN MÃI
+     *  ======================================================================= */
+
     public List<Promotion> getAllPromotions() throws SQLException {
         return promotionDAO.findAll();
     }
 
     public Promotion getPromotionById(int id) throws SQLException {
-        return promotionDAO.findById(id);
+        Promotion promo = promotionDAO.findById(id);
+        if (promo == null) {
+            throw new IllegalArgumentException("Mã khuyến mãi không tồn tại.");
+        }
+        return promo;
     }
 
     public void createPromotion(Promotion promo, int adminId) throws SQLException {
@@ -33,24 +42,26 @@ public class PromotionService {
     }
 
     public void updatePromotion(Promotion promo) throws SQLException {
+        if (promo == null || promo.getPromoId() <= 0) {
+            throw new IllegalArgumentException("ID khuyến mãi không hợp lệ.");
+        }
         validatePromotion(promo, true);
         Promotion existing = promotionDAO.findByCode(promo.getCode());
         if (existing != null && existing.getPromoId() != promo.getPromoId()) {
-            throw new IllegalArgumentException("Mã khuyến mãi này đang được sử dụng cho một chương trình khác.");
+            throw new IllegalArgumentException("Mã khuyến mãi này đã được sử dụng cho một chương trình khác.");
         }
         promotionDAO.update(promo);
     }
 
-    public void deletePromotion(int id) throws SQLException {
-        promotionDAO.softDelete(id);
-    }
-
     public void toggleStatus(int id, boolean isActive) throws SQLException {
+        if (id <= 0) {
+            throw new IllegalArgumentException("ID mã giảm giá không hợp lệ.");
+        }
         promotionDAO.toggleStatus(id, isActive);
     }
 
     private void validatePromotion(Promotion promo, boolean isEdit) {
-        if (promo.getCode() == null || promo.getCode().trim().isEmpty()) {
+        if (promo.getCode() == null || promo.getCode().isBlank()) {
             throw new IllegalArgumentException("Mã giảm giá không được để trống.");
         }
         promo.setCode(promo.getCode().trim().toUpperCase());
@@ -81,6 +92,7 @@ public class PromotionService {
         if (promo.getMinOrderValue() != null && promo.getMinOrderValue().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Giá trị đơn hàng tối thiểu không được là số âm.");
         }
+        
         if (promo.getMaxUses() != null && promo.getMaxUses() < 0) {
             throw new IllegalArgumentException("Giới hạn số lượt dùng không được là số âm.");
         }
@@ -114,15 +126,32 @@ public class PromotionService {
             throw new IllegalArgumentException("Thời gian hiệu lực không hợp lệ (Ngày kết thúc phải SAU ngày bắt đầu).");
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime nowBuffer = now.minusMinutes(1);
-        if (promo.getValidUntil().isBefore(now)) {
-            throw new IllegalArgumentException("Thời gian kết thúc không được nằm ở quá khứ.");
-        }
-//        if (!isEdit && promo.getValidFrom().isBefore(nowBuffer)) {
-//            throw new IllegalArgumentException("Thời gian bắt đầu chiến dịch không được nằm ở quá khứ.");
+//        LocalDateTime now = LocalDateTime.now();
+//        if (promo.getValidUntil().isBefore(now)) {
+//            throw new IllegalArgumentException("Thời gian kết thúc không được nằm ở quá khứ.");
 //        }
     }
+
+    public long getTotalRedeemedCount() throws SQLException {
+        return promotionDAO.sumTotalRedeemed();
+    }
+
+    public int getExpiringSoonCount() throws SQLException {
+        return promotionDAO.countExpiringSoon();
+    }
+
+    public int countAll(String keyword, String statusFilter) throws SQLException {
+        return promotionDAO.countAll(keyword, statusFilter);
+    }
+
+    public List<Promotion> findAllWithPaging(String keyword, String statusFilter, String sort, int offset, int limit) throws SQLException {
+        return promotionDAO.findAllWithPaging(keyword, statusFilter, sort, offset, limit);
+    }
+
+
+    /** =======================================================================
+     *  PHẦN 2: CÁC HÀM XỬ LÝ NGHIỆP VỤ CHO CUSTOMER / GIỎ HÀNG / CHECKOUT
+     *  ======================================================================= */
 
     public BigDecimal calculateEligibleAmount(List<CartItem> cartItems, Promotion promo) {
         if (cartItems == null || promo == null) {
@@ -153,7 +182,9 @@ public class PromotionService {
         if (promo == null) {
             throw new IllegalArgumentException("Mã khuyến mãi không tồn tại.");
         }
-        if (!promo.IsActive() || promo.IsDeleted()) {
+        
+        // Sử dụng chuẩn hàm Getter/Setter đúng chuẩn (viết thường chữ i)
+        if (!promo.isActive() || promo.isDeleted()) {
             throw new IllegalArgumentException("Mã khuyến mãi đã hết hạn hoặc bị vô hiệu hóa.");
         }
         LocalDateTime now = LocalDateTime.now();
@@ -168,6 +199,7 @@ public class PromotionService {
         if (!"ORDER".equals(promo.getScope()) && eligibleAmount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Mã giảm giá này không áp dụng cho sản phẩm hoặc danh mục trong giỏ hàng.");
         }
+        
         BigDecimal amountToCompare = "ORDER".equals(promo.getScope()) ? cartSubtotal : eligibleAmount;
         if (amountToCompare.compareTo(promo.getMinOrderValue()) < 0) {
             throw new IllegalArgumentException("Đơn hàng chưa đạt giá trị tối thiểu " + promo.getMinOrderValue() + " để áp dụng.");
@@ -213,33 +245,11 @@ public class PromotionService {
         return false;
     }
 
-    /**
-     * Hoàn lại (best-effort) used_count đã tăng nhầm cho 1 mã khi checkout phải
-     * huỷ ngang giữa chừng - ví dụ đã ghi nhận thành công mã MERCHANDISE nhưng
-     * mã SHIPPING đi kèm lại vừa hết lượt dùng.
-     */
     public void voidPromotionUsage(Connection conn, int promoId) throws SQLException {
         promotionDAO.decrementUsedCount(conn, promoId);
     }
 
     public List<Promotion> getAvailableVouchersForCart() throws SQLException {
         return promotionDAO.findAvailableVouchersForCart();
-    }
-
-    // ==================== BỔ SUNG CÁC HÀM THỐNG KÊ (Khắc phục lỗi NoSuchMethodError) ====================
-    public long getTotalRedeemedCount() throws SQLException {
-        return promotionDAO.sumTotalRedeemed();
-    }
-
-    public int getExpiringSoonCount() throws SQLException {
-        return promotionDAO.countExpiringSoon();
-    }
-
-    public int countAll(String keyword, String statusFilter) throws SQLException {
-        return promotionDAO.countAll(keyword, statusFilter);
-    }
-
-    public List<Promotion> findAllWithPaging(String keyword, String statusFilter, String sortCol, String sortDir, int offset, int limit) throws SQLException {
-        return promotionDAO.findAllWithPaging(keyword, statusFilter, sortCol, sortDir, offset, limit);
     }
 }

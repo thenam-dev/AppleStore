@@ -86,25 +86,277 @@ function initQuantityControls() {
     });
 }
 
+// Bỏ dấu tiếng Việt, hạ chữ thường, đổi khoảng trắng/ký tự lạ thành "-".
+// Dùng để so khớp tên màu (vd "Xám Không Gian") với tên file ảnh
+// (vd "airpods-max-xam-khong-gian.png") - kho ảnh hiện đặt tên file theo
+// đúng quy tắc này nên không cần thêm cột ánh xạ màu-ảnh trong CSDL.
+function slugifyForImageMatch(text) {
+    return (text || "")
+        .toString()
+        .normalize("NFD")
+        .replace(new RegExp("[\\u0300-\\u036f]", "g"), "")
+        .replace(/đ/gi, "d")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+}
+
 function initProductGallery() {
     var mainImage = document.querySelector("[data-gallery-main]");
-    var thumbs = document.querySelectorAll("[data-gallery-thumb]");
+    var thumbs = Array.prototype.slice.call(document.querySelectorAll("[data-gallery-thumb]"));
+    var prevButton = document.querySelector("[data-gallery-prev]");
+    var nextButton = document.querySelector("[data-gallery-next]");
+    var thumbTrack = document.querySelector("[data-gallery-thumbs]");
+    var thumbPrevButton = document.querySelector("[data-gallery-thumb-prev]");
+    var thumbNextButton = document.querySelector("[data-gallery-thumb-next]");
 
     if (!mainImage || !thumbs.length) {
         return;
     }
 
-    thumbs.forEach(function (thumb) {
-        thumb.addEventListener("click", function () {
-            thumbs.forEach(function (button) {
-                button.classList.remove("active");
-            });
+    var currentIndex = Math.max(thumbs.findIndex(function (button) {
+        return button.classList.contains("active");
+    }), 0);
 
-            thumb.classList.add("active");
-            mainImage.src = thumb.getAttribute("data-image-src");
-            mainImage.alt = thumb.getAttribute("data-image-alt");
+    function showThumb(index) {
+        var count = thumbs.length;
+        currentIndex = ((index % count) + count) % count;
+        var thumb = thumbs[currentIndex];
+
+        thumbs.forEach(function (button) {
+            button.classList.remove("active");
+        });
+
+        thumb.classList.add("active");
+        mainImage.src = thumb.getAttribute("data-image-src");
+        mainImage.alt = thumb.getAttribute("data-image-alt");
+        // Dải ảnh nhỏ cuộn ngang (xem .gallery-thumbs trong style.css) - kéo ảnh
+        // đang chọn vào giữa khung nhìn cho khỏi bị khuất 2 đầu dải.
+        thumb.scrollIntoView({behavior: "smooth", inline: "center", block: "nearest"});
+    }
+
+    thumbs.forEach(function (thumb, index) {
+        thumb.addEventListener("click", function () {
+            // Bấm vào ảnh nhỏ (productImage) trong dải thumbnail CHỈ đổi ảnh đang
+            // hiện ở gallery-frame - không mở popup phóng to. Popup chỉ mở khi
+            // bấm vào chính ảnh lớn ở gallery-frame (xem mainImage click bên dưới).
+            showThumb(index);
         });
     });
+
+    if (prevButton) {
+        prevButton.addEventListener("click", function () {
+            showThumb(currentIndex - 1);
+        });
+    }
+
+    if (nextButton) {
+        nextButton.addEventListener("click", function () {
+            showThumb(currentIndex + 1);
+        });
+    }
+
+    // Kéo/vuốt ngang trên ảnh chính cũng chuyển ảnh trước/sau y hệt 2 nút
+    // prev/next - dùng Pointer Events (gộp chung chuột/touch/bút cảm ứng vào
+    // 1 API) nên vừa vuốt được trên điện thoại, vừa KÉO được bằng chuột trên
+    // laptop, không cần viết 2 bộ handler riêng cho touch và mouse.
+    // Chỉ tính là "kéo/vuốt" khi độ dịch ngang đủ lớn (ngưỡng SWIPE_THRESHOLD)
+    // VÀ trội hơn hẳn độ dịch dọc, tránh nhầm với cuộn trang dọc / click chọn
+    // ảnh (thumbnail) thông thường.
+    var gallerySwipeStage = mainImage.closest(".gallery-stage") || mainImage.parentElement;
+
+    // Bấm vào ẢNH CHÍNH ở gallery-frame -> mở lightbox phóng to đúng ảnh đang
+    // hiển thị (xem markup <div data-lightbox> ở product-detail.jsp). Bấm vào
+    // ảnh nhỏ/productImage trong dải thumbnail thì KHÔNG mở popup - chỉ đổi
+    // ảnh đang hiện ở gallery-frame (xem thumbs.forEach phía trên).
+    //
+    // openLightbox khai báo TRƯỚC khối kéo/vuốt bên dưới (dù chỉ dùng trong đó)
+    // vì đây là function declaration, được hoist lên đầu scope nên thứ tự đứng
+    // trước/sau không quan trọng - đặt trước cho dễ đọc theo mạch "định nghĩa
+    // trước, dùng sau".
+    var lightbox = document.querySelector("[data-lightbox]");
+    var lightboxImage = lightbox ? lightbox.querySelector("[data-lightbox-image]") : null;
+    var lightboxClose = lightbox ? lightbox.querySelector("[data-lightbox-close]") : null;
+    var lightboxPrev = lightbox ? lightbox.querySelector("[data-lightbox-prev]") : null;
+    var lightboxNext = lightbox ? lightbox.querySelector("[data-lightbox-next]") : null;
+
+    function syncLightboxImage() {
+        if (!lightboxImage) { return; }
+        lightboxImage.src = mainImage.src;
+        lightboxImage.alt = mainImage.alt;
+    }
+
+    function openLightbox() {
+        if (!lightbox || !lightboxImage) { return; }
+        syncLightboxImage();
+        lightbox.classList.add("open");
+        lightbox.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden"; // khoá cuộn nền trong lúc xem ảnh to
+    }
+
+    function closeLightbox() {
+        if (!lightbox) { return; }
+        lightbox.classList.remove("open");
+        lightbox.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+    }
+
+    if (lightbox && lightboxImage) {
+        // KHÔNG gắn listener "click" riêng lên mainImage để mở lightbox - khối
+        // kéo/vuốt bên dưới (gallerySwipeStage) gọi setPointerCapture() trên
+        // pointerdown, khiến MỌI pointer event tiếp theo (kể cả click phái sinh
+        // từ chuột) bị route thẳng về gallerySwipeStage thay vì mainImage, nên
+        // 1 listener "click" gắn riêng trên mainImage sẽ KHÔNG BAO GIỜ được gọi
+        // với thao tác chuột/tay thật (chỉ chạy được nếu tự bắn .click() bằng
+        // JS, che giấu mất bug này lúc test). Việc "bấm = mở lightbox" được xử
+        // lý gộp chung trong endSwipe() (chính là pointerup của gallerySwipeStage)
+        // ở khối bên dưới thay vào đó.
+
+        if (lightboxClose) {
+            lightboxClose.addEventListener("click", closeLightbox);
+        }
+
+        // Bấm trúng nền tối (không phải ảnh/nút bên trong) cũng đóng.
+        lightbox.addEventListener("click", function (event) {
+            if (event.target === lightbox) {
+                closeLightbox();
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (!lightbox.classList.contains("open")) {
+                return;
+            }
+            if (event.key === "Escape") {
+                closeLightbox();
+            } else if (event.key === "ArrowLeft") {
+                showThumb(currentIndex - 1);
+                syncLightboxImage();
+            } else if (event.key === "ArrowRight") {
+                showThumb(currentIndex + 1);
+                syncLightboxImage();
+            }
+        });
+
+        if (thumbs.length > 1) {
+            if (lightboxPrev) {
+                lightboxPrev.addEventListener("click", function () {
+                    showThumb(currentIndex - 1);
+                    syncLightboxImage();
+                });
+            }
+            if (lightboxNext) {
+                lightboxNext.addEventListener("click", function () {
+                    showThumb(currentIndex + 1);
+                    syncLightboxImage();
+                });
+            }
+        } else {
+            // Chỉ 1 ảnh - không có gì để chuyển, ẩn luôn 2 nút prev/next.
+            if (lightboxPrev) { lightboxPrev.style.display = "none"; }
+            if (lightboxNext) { lightboxNext.style.display = "none"; }
+        }
+    }
+
+    // Kéo/vuốt ngang trên ảnh chính chuyển ảnh trước/sau (giống 2 nút prev/next),
+    // bấm bình thường (không kéo đủ xa) thì mở lightbox - GỘP CHUNG cả 2 hành vi
+    // vào đúng 1 pointerup (endSwipe) thay vì tách click riêng, vì
+    // setPointerCapture() ở pointerdown khiến "click" gốc không còn đáng tin cậy
+    // (xem giải thích ở khối "if (lightbox && lightboxImage)" phía trên).
+    // Dùng Pointer Events (gộp chung chuột/touch/bút cảm ứng vào 1 API) nên vừa
+    // vuốt được trên điện thoại, vừa kéo được bằng chuột trên laptop.
+    if (gallerySwipeStage) {
+        var swipeStartX = 0;
+        var swipeStartY = 0;
+        var swipePointerId = null;
+        var SWIPE_THRESHOLD = 40; // px
+
+        // Chặn hành vi kéo-thả ảnh mặc định của trình duyệt (ghost image) - nếu
+        // không chặn, giữ chuột kéo trên <img> sẽ kích hoạt native drag thay vì
+        // pointermove/pointerup của mình, khiến thao tác kéo không nhận được.
+        gallerySwipeStage.addEventListener("dragstart", function (event) {
+            event.preventDefault();
+        });
+
+        gallerySwipeStage.addEventListener("pointerdown", function (event) {
+            // Chuột: chỉ bắt nút trái (button 0). Touch/bút không có "button"
+            // phân biệt nên coi như hợp lệ luôn (button === 0 hoặc -1 tuỳ trình duyệt).
+            if (event.pointerType === "mouse" && event.button !== 0) {
+                return;
+            }
+            swipeStartX = event.clientX;
+            swipeStartY = event.clientY;
+            swipePointerId = event.pointerId;
+            // Giữ pointer capture trên chính phần tử này để vẫn nhận được
+            // pointerup dù chuột đã kéo ra ngoài vùng ảnh trước khi thả.
+            gallerySwipeStage.setPointerCapture(event.pointerId);
+            gallerySwipeStage.classList.add("gallery-stage-dragging");
+        });
+
+        function endSwipe(event) {
+            if (swipePointerId === null || event.pointerId !== swipePointerId) {
+                return;
+            }
+            swipePointerId = null;
+            gallerySwipeStage.classList.remove("gallery-stage-dragging");
+
+            var deltaX = event.clientX - swipeStartX;
+            var deltaY = event.clientY - swipeStartY;
+            var isSwipe = thumbs.length > 1
+                && Math.abs(deltaX) >= SWIPE_THRESHOLD
+                && Math.abs(deltaX) > Math.abs(deltaY);
+
+            if (isSwipe) {
+                if (deltaX < 0) {
+                    showThumb(currentIndex + 1); // kéo/vuốt sang trái -> ảnh sau
+                } else {
+                    showThumb(currentIndex - 1); // kéo/vuốt sang phải -> ảnh trước
+                }
+                return;
+            }
+
+            // Không kéo đủ xa để tính là vuốt -> coi như 1 cú bấm bình thường.
+            openLightbox();
+        }
+
+        gallerySwipeStage.addEventListener("pointerup", endSwipe);
+        gallerySwipeStage.addEventListener("pointercancel", function () {
+            swipePointerId = null;
+            gallerySwipeStage.classList.remove("gallery-stage-dragging");
+        });
+    }
+
+    // 2 nút nhỏ cạnh dải ảnh chỉ cuộn dải thumbnail, KHÔNG đổi ảnh chính -
+    // đổi ảnh chính vẫn phải bấm đúng thumbnail hoặc dùng 2 nút to ở ảnh lớn.
+    if (thumbTrack && thumbPrevButton) {
+        thumbPrevButton.addEventListener("click", function () {
+            thumbTrack.scrollBy({left: -thumbTrack.clientWidth * 0.8, behavior: "smooth"});
+        });
+    }
+
+    if (thumbTrack && thumbNextButton) {
+        thumbNextButton.addEventListener("click", function () {
+            thumbTrack.scrollBy({left: thumbTrack.clientWidth * 0.8, behavior: "smooth"});
+        });
+    }
+
+    // Gọi từ product-detail.jsp mỗi khi người dùng bấm chọn màu variant, để
+    // ảnh chính nảy sang đúng ảnh của màu đó. Không tìm thấy ảnh khớp thì
+    // giữ nguyên ảnh đang hiển thị (không có bảng ánh xạ màu-ảnh nào khác).
+    window.productGallerySelectColor = function (colorName) {
+        var slug = slugifyForImageMatch(colorName);
+        if (!slug) {
+            return;
+        }
+        var matchIndex = thumbs.findIndex(function (thumb) {
+            var src = (thumb.getAttribute("data-image-src") || "").toLowerCase();
+            return src.indexOf(slug) !== -1;
+        });
+        if (matchIndex !== -1) {
+            showThumb(matchIndex);
+        }
+    };
 }
 
 function initProductCatalog() {

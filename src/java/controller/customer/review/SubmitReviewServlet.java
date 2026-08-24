@@ -19,7 +19,7 @@ public class SubmitReviewServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
+        req.setCharacterEncoding("UTF-8"); // BẮT BUỘC THEO RULE 3
         HttpSession session = req.getSession(false);
         User user = (session != null) ? (User) session.getAttribute(AppConfig.SESSION_USER) : null;
 
@@ -28,8 +28,9 @@ public class SubmitReviewServlet extends HttpServlet {
             return;
         }
 
-        int orderId = Integer.parseInt(req.getParameter("orderId"));
+        int orderId = 0;
         try {
+            orderId = Integer.parseInt(req.getParameter("orderId"));
             int orderItemId = Integer.parseInt(req.getParameter("orderItemId"));
             int rating = Integer.parseInt(req.getParameter("rating"));
             String text = req.getParameter("reviewText");
@@ -37,15 +38,16 @@ public class SubmitReviewServlet extends HttpServlet {
             boolean success = reviewService.submitReview(user.getUserId(), orderId, orderItemId, rating, text);
 
             if (success) {
-                session.setAttribute("successMsg", "Cảm ơn bạn đã gửi đánh giá!");
+                session.setAttribute("successMsg", "Cảm ơn bạn đã gửi đánh giá sản phẩm thành công!");
             } else {
-                session.setAttribute("errorMsg", "Bạn đã đánh giá sản phẩm này rồi.");
+                session.setAttribute("errorMsg", "Gửi đánh giá thất bại. Bạn đã đánh giá sản phẩm này hoặc đơn hàng không hợp lệ.");
             }
         } catch (Exception e) {
+            getServletContext().log("Lỗi tại SubmitReviewServlet", e);
             session.setAttribute("errorMsg", "Dữ liệu đánh giá không hợp lệ.");
         }
         
-        // Quay lại đúng trang chi tiết đơn hàng (PRG Pattern)
+        // Điều hướng PRG Pattern về lại trang chi tiết đơn hàng (Rule 10)
         resp.sendRedirect(req.getContextPath() + "/account/order-detail?id=" + orderId);
     }
 }

@@ -61,7 +61,7 @@ public class ProfileServlet extends HttpServlet {
             session.setAttribute("user", currentUser);
             request.setAttribute("message", "Cập nhật hồ sơ thành công!");
         } else {
-            request.setAttribute("error", resultMessage);
+            request.setAttribute("errorMsg", resultMessage);
         }
         
         // 4. Trả về lại trang profile kèm thông báo

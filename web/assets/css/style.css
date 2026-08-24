@@ -249,6 +249,79 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .shot.thumb{width:42px;height:42px;aspect-ratio:auto;border-radius:var(--r-sm)}
 .shot.thumb-lg{width:64px;height:64px;aspect-ratio:auto;border-radius:var(--r-sm)}
 
+/* ảnh chính ở trang chi tiết sản phẩm: lấp gần hết khung để không lộ viền nền quanh ảnh */
+.shot.gallery-stage img{width:96%;height:96%}
+/* Con trỏ "grab" gợi ý kéo được ảnh bằng chuột (xem pointerdown/pointerup ở
+   main.js - initProductGallery) - đổi thành "grabbing" trong lúc đang kéo,
+   touch-action:pan-y để trình duyệt không tự cuộn/zoom ngang khi vuốt ảnh
+   trên thiết bị cảm ứng (vẫn cuộn dọc trang bình thường). */
+.gallery-stage{cursor:grab;touch-action:pan-y;user-select:none}
+.gallery-stage.gallery-stage-dragging{cursor:grabbing}
+
+/* thẻ trắng bọc cả ảnh lớn + dải ảnh nhỏ */
+.gallery-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);
+  box-shadow:var(--sh-2);padding:20px 20px 16px}
+.gallery-frame{position:relative}
+.gallery-nav{position:absolute;top:50%;width:52px;height:52px;border-radius:50%;
+  border:none;background:rgba(17,20,24,.14);color:#3A3D42;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s,color .15s,box-shadow .15s,opacity .15s;z-index:3;
+  box-shadow:0 2px 10px -4px rgba(14,17,22,.25);
+  opacity:0} /* ẩn mặc định - giữ pointer-events:auto (không đặt none) để chính
+  nút vẫn bắt được :hover, tự hiện ra khi trỏ chuột trúng nó */
+.gallery-nav:hover,
+.gallery-nav:focus-visible{opacity:1;background:rgba(17,20,24,.26);color:var(--ink)}
+/* Thiết bị cảm ứng không có trạng thái hover - luôn hiện nút để còn bấm được */
+@media (hover:none){
+  .gallery-nav{opacity:1}
+}
+.gallery-nav svg{width:22px;height:22px}
+/* Nằm hẳn trong ảnh/thẻ (không tràn ra ngoài viền .gallery-card như trước -
+   phần tràn ra bị cắt mất do card không có overflow để lộ nửa ngoài) */
+.gallery-nav.prev{left:16px;transform:translateY(-50%)}
+.gallery-nav.next{right:16px;transform:translateY(-50%)}
+
+/* ---------- Lightbox phóng to ảnh (bấm vào ảnh chính để mở) ----------
+   Mở/đóng bằng JS thêm/bớt class .open (xem initProductGallery trong
+   main.js) - opacity+visibility thay vì display:none để có transition mượt
+   lúc mở/đóng, không "giật" hiện/ẩn tức thì. */
+.lightbox{position:fixed;inset:0;z-index:1000;background:rgba(10,12,16,.92);
+  display:flex;align-items:center;justify-content:center;padding:48px;
+  opacity:0;visibility:hidden;transition:opacity .2s,visibility 0s .2s}
+.lightbox.open{opacity:1;visibility:visible;transition:opacity .2s}
+.lightbox-image{max-width:min(90vw,1100px);max-height:86vh;object-fit:contain;
+  border-radius:var(--r-md);background:#fff;box-shadow:0 20px 60px -20px rgba(0,0,0,.6);
+  transform:scale(.96);transition:transform .2s}
+.lightbox.open .lightbox-image{transform:scale(1)}
+.lightbox-close{position:absolute;top:20px;right:20px;width:44px;height:44px;border-radius:50%;
+  border:none;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s;z-index:2}
+.lightbox-close:hover{background:rgba(255,255,255,.22)}
+.lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;
+  border:none;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s;z-index:2}
+.lightbox-nav:hover{background:rgba(255,255,255,.22)}
+.lightbox-nav.prev{left:20px}
+.lightbox-nav.next{right:20px}
+@media (max-width:640px){
+  .lightbox{padding:16px}
+  .lightbox-nav{width:40px;height:40px}
+  .lightbox-nav.prev{left:8px}
+  .lightbox-nav.next{right:8px}
+}
+
+/* dải ảnh nhỏ: cuộn ngang 1 hàng thay vì xuống dòng, 2 nút nhỏ 2 đầu cuộn dải
+   (không đổi ảnh chính - đổi ảnh chính phải bấm đúng thumbnail) */
+.gallery-thumb-row{position:relative;margin-top:14px}
+.gallery-thumbs{display:flex;gap:8px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;padding:2px 1px}
+.gallery-thumbs::-webkit-scrollbar{display:none}
+.gallery-thumb{flex:0 0 auto;width:64px;height:64px;padding:3px;border:1px solid var(--line);
+  border-radius:var(--r-sm);background:#fff;cursor:pointer;transition:border-color .15s}
+.gallery-thumb.active{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.gallery-nav.sm{width:34px;height:34px;box-shadow:var(--sh-2)}
+.gallery-nav.sm svg{width:15px;height:15px}
+.gallery-nav.sm.prev{left:-20px;transform:translate(-50%,-50%)}
+.gallery-nav.sm.next{right:-20px;transform:translate(50%,-50%)}
+
 /* ---------- 9. GIAO DIỆN CỬA HÀNG ---------- */
 
 .sf-top{background:var(--ink);color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(255,255,255,.06)}
@@ -330,12 +403,24 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .spec-col dt{color:#616A76}
 .spec-col dd{margin:0;color:var(--titan)}
 
-.strip{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff}
+/* .strip chỉ dùng ở home.jsp (không dùng chung trang khác) nên canh max-width
+   thẳng trên chính class này luôn, không cần bọc thêm div - dải viền
+   trên/dưới vẫn kẻ hết chiều rộng nhờ đặt trên phần tử grid, còn nội dung 4
+   cột bên trong bị max-width kẹp lại, canh giữa. */
+.strip{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff;
+  max-width:1280px;margin:0 auto}
 .strip div{padding:18px 22px;border-right:1px solid var(--line)}
 .strip div:last-child{border-right:0}
 .strip b{display:block;font-size:13.5px;margin-bottom:2px}
 .strip span{font-size:12px;color:var(--ash)}
 
+/* .sec dùng chung ở cả những trang khác (profile/addresses/change-password)
+   ngoài phạm vi lần canh lề này, nên KHÔNG thêm max-width thẳng vào .sec (sẽ
+   ảnh hưởng lây qua các trang đó) - .sec vẫn giữ nguyên full-bleed để dải nền
+   màu (vd style="background:#FAFBFC") tràn hết chiều rộng như cũ. Thay vào đó
+   bọc riêng nội dung bên trong mỗi .sec ở home.jsp/product-detail.jsp bằng
+   .sec-inner để CHỈ nội dung bị kẹp max-width, canh giữa. */
+.sec-inner{max-width:1280px;margin:0 auto}
 .sec{padding:34px 26px}
 .sec-head{display:flex;align-items:flex-end;gap:14px;margin-bottom:20px}
 .sec-head h3{font-size:24px;text-transform:uppercase;font-stretch:116%}
@@ -348,7 +433,8 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .cat span{font-size:11px;color:var(--ash);font-family:var(--mono)}
 
 /* giỏ hàng · thanh toán · đơn hàng */
-.steps{display:flex;align-items:center;padding:16px 26px;border-bottom:1px solid var(--line);background:#fff}
+.steps{padding:16px 26px;border-bottom:1px solid var(--line);background:#fff}
+.steps-inner{display:flex;align-items:center;max-width:1280px;margin:0 auto}
 .steps .st{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ash)}
 .steps .st b{width:24px;height:24px;border-radius:50%;background:#EEF0F3;display:flex;align-items:center;
   justify-content:center;font-family:var(--mono);font-size:11px}

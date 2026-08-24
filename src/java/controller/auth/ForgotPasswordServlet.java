@@ -92,6 +92,8 @@ public class ForgotPasswordServlet extends HttpServlet {
                     // 2. Lưu vào Session
                     session.setAttribute("resetOtp", otp);
                     session.setAttribute("resetEmail", email);
+                    session.removeAttribute("otpVerified");
+                    session.setAttribute("otpAttempts", 0);
                     // 3. Gửi Email
                     try {
                         util.EmailUtil.sendOtpEmail(email, otp);
@@ -110,14 +112,35 @@ public class ForgotPasswordServlet extends HttpServlet {
             } else if ("verifyOtp".equals(action)) {
                 String userOtp = request.getParameter("otp");
                 String sessionOtp = (String) session.getAttribute("resetOtp");
+                
+                Integer attempts = (Integer) session.getAttribute("otpAttempts");
+                if (attempts == null) attempts = 0;
+                
+                if (attempts >= 5) {
+                    request.setAttribute("errorMsg", "Bạn đã nhập sai OTP quá nhiều lần. Vui lòng gửi lại yêu cầu!");
+                    session.removeAttribute("resetOtp");
+                    session.removeAttribute("resetEmail");
+                    session.removeAttribute("otpAttempts");
+                    request.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(request, response);
+                    return;
+                }
 
                 if (sessionOtp != null && sessionOtp.equals(userOtp)) { // Khớp OTP
+                    session.setAttribute("otpVerified", true);
                     response.sendRedirect(request.getContextPath() + "/forgot-password?step=reset");
                 } else {
+                    session.setAttribute("otpAttempts", attempts + 1);
                     request.setAttribute("errorMsg", "Mã OTP không đúng hoặc đã hết hạn!");
                     request.getRequestDispatcher("/WEB-INF/views/auth/verify-otp.jsp").forward(request, response);
                 }
             } else if ("resetPassword".equals(action)) {
+                Boolean isVerified = (Boolean) session.getAttribute("otpVerified");
+                if (isVerified == null || !isVerified) {
+                    request.setAttribute("errorMsg", "Vui lòng xác minh OTP trước khi đổi mật khẩu!");
+                    request.getRequestDispatcher("/WEB-INF/views/auth/verify-otp.jsp").forward(request, response);
+                    return;
+                }
+
                 String newPass = request.getParameter("newPassword");
                 String confPass = request.getParameter("confirmPassword");
 
@@ -130,6 +153,8 @@ public class ForgotPasswordServlet extends HttpServlet {
                     // Dọn dẹp Session
                     session.removeAttribute("resetOtp");
                     session.removeAttribute("resetEmail");
+                    session.removeAttribute("otpVerified");
+                    session.removeAttribute("otpAttempts");
 
                     request.getSession().setAttribute("successMsg", "Đổi mật khẩu thành công!");
                     response.sendRedirect(request.getContextPath() + "/login");

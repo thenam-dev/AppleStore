@@ -99,7 +99,6 @@ public class Promotion {
         this.benefitTarget = benefitTarget;
     }
 
-    // ĐÃ THAY ĐỔI: Get/Set cho Mảng ID
     public List<Integer> getProductIds() {
         return productIds;
     }
@@ -180,7 +179,8 @@ public class Promotion {
         this.updatedAt = updatedAt;
     }
 
-    public boolean IsDeleted() {
+    // ĐÃ SỬA LỖI Ở ĐÂY: isDeleted() và isActive() viết thường chữ "i"
+    public boolean isDeleted() {
         return isDeleted;
     }
 
@@ -188,11 +188,20 @@ public class Promotion {
         this.isDeleted = isDeleted;
     }
 
-    public boolean IsActive() {
+    public boolean isActive() {
         return isActive;
     }
 
     public void setIsActive(boolean isActive) {
         this.isActive = isActive;
+    }
+    
+    // Thêm 2 hàm này để JSP EL có thể đọc được ${promo.isActive} và ${promo.isDeleted}
+    public boolean getIsActive() {
+        return this.isActive;
+    }
+
+    public boolean getIsDeleted() {
+        return this.isDeleted;
     }
 }

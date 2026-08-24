@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=2">
+  <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=3">
 </head>
 <body>
 
@@ -40,7 +40,7 @@
 <c:set var="activeStep" value="1" scope="request"/>
 <jsp:include page="/WEB-INF/views/common/checkout-steps.jsp"/>
 
-<div style="padding:22px 26px">
+<div style="padding:22px 26px;max-width:1280px;margin:0 auto">
   <jsp:include page="/WEB-INF/views/common/flash.jsp"/>
 
   <c:if test="${hasOverStockItem}">
@@ -56,6 +56,68 @@
   <form id="cart-selection-form" method="get" action="${ctx}/checkout">
     <input type="hidden" name="fromCart" value="1">
   </form>
+
+  <script>
+    // Toast dùng chung cho CẢ 2 nhánh bên dưới (giỏ có sản phẩm / giỏ trống) -
+    // đặt ngoài khối c:choose bên dưới nên luôn render dù giỏ hàng còn hay hết sản phẩm.
+    //
+    // showToast() ở đây là hàm global (không bọc IIFE) để nhánh "có sản phẩm"
+    // phía dưới gọi lại được, không cần định nghĩa trùng lần 2.
+    //
+    // Khi xoá hết sản phẩm cuối cùng: nhánh "có sản phẩm" reload trang để
+    // chuyển sang hiện đúng trạng thái rỗng - nhưng gọi showToast() TRƯỚC khi
+    // reload() thì DOM/toast cũng biến mất theo ngay khi trang bắt đầu tải
+    // lại, không hiện được. Giải pháp: lưu message vào sessionStorage rồi mới
+    // reload() (xem stashToastForReload trong nhánh "có sản phẩm"); khối
+    // script này tự đọc lại + hiện toast SAU KHI trang đã tải lại xong.
+    function showToast(message, variant) {
+      var stack = document.getElementById('toast-stack');
+      if (!stack) {
+        stack = document.createElement('div');
+        stack.id = 'toast-stack';
+        stack.className = 'toast-stack';
+        document.body.appendChild(stack);
+      }
+      var DURATION = 2600;
+      var ENTER_MS = 320; // khớp thời gian transition transform lúc .toast.show (style.css)
+      var toast = document.createElement('div');
+      toast.className = 'toast ' + (variant === 'err' ? 'err' : 'ok');
+      toast.innerHTML = '<svg width="16" height="16"><use href="#' + (variant === 'err' ? 'i-alert' : 'i-check') + '"/></svg>' +
+        '<span></span><i class="toast-timer"></i>';
+      toast.querySelector('span').textContent = message;
+      stack.appendChild(toast);
+      var timer = toast.querySelector('.toast-timer');
+      timer.style.transitionDuration = Math.max(DURATION - ENTER_MS, 0) + 'ms';
+      requestAnimationFrame(function () { toast.classList.add('show'); });
+      setTimeout(function () { timer.style.transform = 'scaleX(0)'; }, ENTER_MS);
+      setTimeout(function () {
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+        setTimeout(function () { toast.remove(); }, 220);
+      }, DURATION);
+    }
+
+    var CART_FLASH_TOAST_KEY = 'cartFlashToast';
+
+    function stashToastForReload(message, variant) {
+      try {
+        sessionStorage.setItem(CART_FLASH_TOAST_KEY, JSON.stringify({ message: message, variant: variant }));
+      } catch (e) { /* sessionStorage có thể bị chặn (chế độ ẩn danh nghiêm ngặt) - bỏ qua, không hiện được toast sau reload thì thôi */ }
+    }
+
+    (function showPendingToastAfterReload() {
+      var raw;
+      try {
+        raw = sessionStorage.getItem(CART_FLASH_TOAST_KEY);
+        sessionStorage.removeItem(CART_FLASH_TOAST_KEY);
+      } catch (e) { return; }
+      if (!raw) { return; }
+      try {
+        var payload = JSON.parse(raw);
+        showToast(payload.message, payload.variant);
+      } catch (e) { /* dữ liệu hỏng - bỏ qua */ }
+    })();
+  </script>
 
   <c:choose>
     <%-- ================= GIỎ HÀNG CÓ SẢN PHẨM ================= --%>
@@ -183,39 +245,8 @@
           }
           recalc();
 
-          // ---------- Toast dùng chung cho cập nhật số lượng / xoá sản phẩm ----------
-          // Nảy vào từ phải, thu về phải lúc biến mất, có thanh thời gian
-          // (.toast-timer) co dần theo DURATION (xem style.css .toast/.toast-timer).
-          function showToast(message, variant) {
-            var stack = document.getElementById('toast-stack');
-            if (!stack) {
-              stack = document.createElement('div');
-              stack.id = 'toast-stack';
-              stack.className = 'toast-stack';
-              document.body.appendChild(stack);
-            }
-            var DURATION = 2600;
-            var ENTER_MS = 320; // khớp thời gian transition transform lúc .toast.show (style.css)
-            var toast = document.createElement('div');
-            toast.className = 'toast ' + (variant === 'err' ? 'err' : 'ok');
-            toast.innerHTML = '<svg width="16" height="16"><use href="#' + (variant === 'err' ? 'i-alert' : 'i-check') + '"/></svg>' +
-              '<span></span><i class="toast-timer"></i>';
-            toast.querySelector('span').textContent = message;
-            stack.appendChild(toast);
-            var timer = toast.querySelector('.toast-timer');
-            timer.style.transitionDuration = Math.max(DURATION - ENTER_MS, 0) + 'ms';
-            requestAnimationFrame(function () { toast.classList.add('show'); });
-            // Chỉ bắt đầu co thanh thời gian SAU KHI toast nảy vào xong hẳn
-            // (ENTER_MS) - kích cùng lúc với lúc chèn vào DOM (chung 1 rAF
-            // với .show) khiến trình duyệt gộp 2 thay đổi transform lại,
-            // thanh co gần như tức thì (nhìn như biến mất luôn, không co dần).
-            setTimeout(function () { timer.style.transform = 'scaleX(0)'; }, ENTER_MS);
-            setTimeout(function () {
-              toast.classList.remove('show');
-              toast.classList.add('hide');
-              setTimeout(function () { toast.remove(); }, 220);
-            }, DURATION);
-          }
+          // showToast() dùng chung, đã định nghĩa global ở script phía trên
+          // (ngoài nhánh này, phía trước khối c:choose) - không định nghĩa lại ở đây nữa.
 
           function updateHeaderBadge(count) {
             var link = document.querySelector('.ic[href$="/cart"]');
@@ -250,12 +281,21 @@
               var contentType = res.headers.get('content-type') || '';
               if (contentType.indexOf('application/json') === -1) {
                 if (res.redirected && res.url.indexOf('/login') !== -1) {
-                  window.location.href = '${ctx}/login';
+                  window.location.href = '${ctx}/login?redirectTo=' + encodeURIComponent('/cart');
                   return null;
                 }
                 throw new Error('unexpected response ' + res.status);
               }
-              return res.json();
+              return res.json().then(function (data) {
+                // Phiên đăng nhập hết hạn giữa lúc sửa giỏ hàng - AuthFilter trả JSON 401
+                // {requiresLogin:true} (xem AuthFilter.java) thay vì redirect (redirect sẽ
+                // làm POST bị đổi thành GET, mất luôn cartItemId/quantity định gửi).
+                if (res.status === 401 || data.requiresLogin) {
+                  window.location.href = '${ctx}/login?redirectTo=' + encodeURIComponent('/cart');
+                  return null;
+                }
+                return data;
+              });
             });
           }
 
@@ -336,6 +376,7 @@
               pending = true;
               if (removeBtn) { removeBtn.disabled = true; }
               qtyInput.disabled = true;
+              var reloading = false;
 
               postCart({ action: 'remove', cartItemId: cartItemId })
                 .then(function (data) {
@@ -344,13 +385,20 @@
                     showToast(data.message || 'Không thể xoá sản phẩm', 'err');
                     return;
                   }
-                  showToast(data.message || 'Đã xoá sản phẩm khỏi giỏ hàng', 'ok');
-                  updateHeaderBadge(data.cartItemCount);
                   if (!data.cartItemCount) {
-                    // Giỏ hàng trống hẳn - tải lại trang để hiện đúng trạng thái rỗng
+                    // Giỏ hàng trống hẳn - reload TRƯỚC, không showToast() ở đây (trang
+                    // chuẩn bị điều hướng thì toast cũng biến mất theo ngay lập tức).
+                    // Lưu message vào sessionStorage rồi reload() ngay; script dùng
+                    // chung ở đầu trang (ngoài khối c:choose, luôn render dù giỏ hàng còn
+                    // hay hết sản phẩm) đọc lại và hiện toast đó SAU KHI trang đã tải
+                    // lại xong.
+                    reloading = true;
+                    stashToastForReload(data.message || 'Đã xoá sản phẩm khỏi giỏ hàng', 'ok');
                     window.location.reload();
                     return;
                   }
+                  showToast(data.message || 'Đã xoá sản phẩm khỏi giỏ hàng', 'ok');
+                  updateHeaderBadge(data.cartItemCount);
                   row.remove();
                   boxes = boxes.filter(function (box) { return box !== checkbox; });
                   if (cartCountLabel) { cartCountLabel.textContent = data.cartItemCount + ' món'; }
@@ -360,6 +408,7 @@
                   showToast('Không thể kết nối máy chủ, vui lòng thử lại', 'err');
                 })
                 .finally(function () {
+                  if (reloading) { return; }
                   pending = false;
                   if (removeBtn) { removeBtn.disabled = false; }
                   qtyInput.disabled = false;

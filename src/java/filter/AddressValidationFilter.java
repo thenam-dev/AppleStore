@@ -25,7 +25,10 @@ public class AddressValidationFilter implements Filter {
             if (rName == null || rName.trim().isEmpty() || rName.length() > 100 ||
                 rPhone == null || !rPhone.matches("^[0-9]{9,15}$") ||
                 aDetail == null || aDetail.trim().isEmpty() || aDetail.length() > 500) {
-                req.getSession().setAttribute("error", "Dữ liệu địa chỉ không hợp lệ. Vui lòng kiểm tra lại họ tên, SĐT và địa chỉ.");
+                req.getSession().setAttribute("errorMsg", "Dữ liệu địa chỉ không hợp lệ. Vui lòng kiểm tra lại họ tên, SĐT và địa chỉ.");
+                req.getSession().setAttribute("form_recipientName", rName);
+                req.getSession().setAttribute("form_recipientPhone", rPhone);
+                req.getSession().setAttribute("form_addressDetail", aDetail);
                 res.sendRedirect(req.getContextPath() + "/addresses");
                 return;
             }

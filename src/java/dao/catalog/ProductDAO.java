@@ -20,7 +20,7 @@ public class ProductDAO {
             "p.product_id, p.created_by, p.category_id, c.name AS category_name, " +
             "p.name, p.description, p.brand, p.model_code, p.release_year, p.product_condition, " +
             "p.import_type, p.origin_country, p.warranty_months, p.warranty_provider, " +
-            "p.status, p.view_count, p.rating, p.sold_quantity, p.is_featured, " +
+            "p.status, p.view_count, p.rating, COALESCE(sq.sold_quantity, 0) AS sold_quantity, p.is_featured, " +
             "p.created_at, p.updated_at, vs.min_price, COALESCE(vs.total_stock, 0) AS total_stock, " +
             "COALESCE(vs.variant_count, 0) AS variant_count, " +
             "pi.file_path AS primary_image_url";
@@ -36,6 +36,18 @@ public class ProductDAO {
             "    FROM product_variants " +
             "    GROUP BY product_id " +
             ") vs ON vs.product_id = p.product_id " +
+            // "Đã bán" tính động từ order_items của các đơn đã DELIVERED (giao thành
+            // công), không còn lấy từ cột products.sold_quantity (cột này chỉ là số
+            // hardcode lúc seed, không được cộng dồn khi có đơn mới) - cùng quy ước
+            // "đơn thành công = DELIVERED" như DashboardDAO đang dùng để tính doanh thu.
+            "LEFT JOIN ( " +
+            "    SELECT pv.product_id, SUM(oi.quantity) AS sold_quantity " +
+            "    FROM order_items oi " +
+            "    JOIN product_variants pv ON pv.variant_id = oi.variant_id " +
+            "    JOIN orders o ON o.order_id = oi.order_id " +
+            "    WHERE o.status = 'DELIVERED' " +
+            "    GROUP BY pv.product_id " +
+            ") sq ON sq.product_id = p.product_id " +
             "LEFT JOIN product_images pi ON pi.product_id = p.product_id AND pi.is_primary = 1 " +
             "WHERE 1 = 1 ";
 
@@ -237,7 +249,7 @@ public class ProductDAO {
         // ProductListServlet.mapToDaoSort(). Sản phẩm nổi bật (is_featured=1)
         // lên đầu; bán chạy xếp theo số lượng đã bán giảm dần.
         if ("featured_desc".equals(sort)) return "p.is_featured DESC, p.product_id DESC";
-        if ("sold_desc".equals(sort)) return "p.sold_quantity DESC, p.product_id DESC";
+        if ("sold_desc".equals(sort)) return "COALESCE(sq.sold_quantity, 0) DESC, p.product_id DESC";
         return "p.product_id DESC";
     }
 
@@ -348,7 +360,7 @@ public class ProductDAO {
     }
 
     public List<Product> findBestSellerProducts(int limit) throws SQLException {
-        String sql = "SELECT " + PRODUCT_COLUMNS + " " + PRODUCT_FROM + " AND p.status = 'ACTIVE' ORDER BY p.sold_quantity DESC, p.product_id DESC LIMIT ?";
+        String sql = "SELECT " + PRODUCT_COLUMNS + " " + PRODUCT_FROM + " AND p.status = 'ACTIVE' ORDER BY COALESCE(sq.sold_quantity, 0) DESC, p.product_id DESC LIMIT ?";
         List<Product> products = new ArrayList<>();
         try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, limit);

@@ -67,6 +67,11 @@ public class CartServlet extends HttpServlet {
 
         Integer customerId = getCustomerId(request);
         if (customerId == null) {
+            // Phòng thủ thêm: bình thường AuthFilter (chặn "/cart") đã tự trả JSON 401
+            // {requiresLogin:true} cho request AJAX và redirect cho request thường
+            // trước khi tới được đây (xem AuthFilter.java) - 2 nhánh dưới gần như
+            // không bao giờ chạy tới, chỉ giữ lại phòng khi có ai gọi thẳng servlet
+            // này mà bỏ qua filter.
             if (isAjax(request)) {
                 writeJson(response, false, "Vui lòng đăng nhập để thêm vào giỏ hàng", null);
                 return;

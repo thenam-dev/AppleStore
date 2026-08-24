@@ -25,6 +25,7 @@ public class OrderService {
             o.put("statusLabel", mapStatusLabel(dbStatus));
             o.put("createdAt", ro.get("createdAt"));
             o.put("total", ro.get("finalAmount"));
+            o.put("rawStatus", dbStatus);
             
             String payMethod = (String) ro.get("paymentMethod");
             o.put("paymentMethodLabel", "CK".equals(payMethod) ? "Chuyển khoản QR" : "Thanh toán khi nhận hàng (COD)");
@@ -139,8 +140,11 @@ public class OrderService {
     }
 
     private String mapUiStatus(String dbStatus) {
-        if ("PENDING_PAYMENT".equals(dbStatus) || "CONFIRMED".equals(dbStatus) || "PREPARING".equals(dbStatus)) {
-            return "PENDING";
+        if ("PENDING_PAYMENT".equals(dbStatus) || "CONFIRMED".equals(dbStatus)) {
+            return "PENDING"; // Chỉ các trạng thái này mới được hiển thị nút Hủy trên FE
+        }
+        if ("PREPARING".equals(dbStatus)) {
+            return "PROCESSING"; // Trạng thái đang chuẩn bị đóng gói (không cho phép hủy nữa)
         }
         if ("DISPATCHED".equals(dbStatus) || "SHIPPING".equals(dbStatus)) {
             return "SHIPPING";
