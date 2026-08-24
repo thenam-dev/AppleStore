@@ -3,6 +3,7 @@ package controller.admin.customer;
 import config.AppConfig;
 import model.entity.user.User;
 import service.user.UserService;
+import util.FlashMessageUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -59,6 +60,7 @@ public class CustomerListServlet extends HttpServlet {
         request.setAttribute("selectedStatus", status);
         request.setAttribute("selectedSort", sort);
         request.setAttribute("currentPage", currentPage);
+        FlashMessageUtil.moveToRequest(request);
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 

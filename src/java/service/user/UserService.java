@@ -277,6 +277,12 @@ public class UserService {
             throw new IllegalArgumentException("Trạng thái không hợp lệ.");
         }
 
+        boolean locking = !isActiveStatus(normalizedStatus);
+        if (locking && userDAO.countUnfinishedCustomerOrders(customer.getUserId()) > 0) {
+            throw new IllegalArgumentException(
+                    "Không thể khóa tài khoản vì khách hàng còn đơn hàng chưa giao, hủy hoặc hoàn tiền xong.");
+        }
+
         if (!userDAO.updateStatus(customer.getUserId(), normalizedStatus)) {
             throw new IllegalArgumentException("Người dùng không tồn tại.");
         }
