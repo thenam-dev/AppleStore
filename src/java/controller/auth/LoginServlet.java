@@ -34,7 +34,7 @@ public class LoginServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/admin/dashboard");
             } else if (AppConfig.ROLE_SALE_STAFF.equals(role)) {
                 response.sendRedirect(request.getContextPath() + "/staff/dashboard");
-            } else if ("DELIVERY".equals(role)) {
+            } else if (AppConfig.ROLE_DELIVERY.equals(role)) {
                 response.sendRedirect(request.getContextPath() + "/delivery/dashboard");
             } else {
                 response.sendRedirect(request.getContextPath() + "/home");
@@ -80,7 +80,7 @@ public class LoginServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/admin/dashboard");
             } else if (AppConfig.ROLE_SALE_STAFF.equals(role)) {
                 response.sendRedirect(request.getContextPath() + "/staff/dashboard");
-            } else if ("DELIVERY".equals(role)) {
+            } else if (AppConfig.ROLE_DELIVERY.equals(role)) {
                 response.sendRedirect(request.getContextPath() + "/delivery/dashboard");
             } else {
                 // Mặc định là CUSTOMER
