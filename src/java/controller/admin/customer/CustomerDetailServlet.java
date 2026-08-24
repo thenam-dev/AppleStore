@@ -2,6 +2,7 @@ package controller.admin.customer;
 
 import model.entity.user.User;
 import service.user.UserService;
+import util.FlashMessageUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -25,6 +26,7 @@ public class CustomerDetailServlet extends HttpServlet {
             User customer = userService.getCustomerById(customerId);
             request.setAttribute("customer", customer);
             request.setAttribute("statuses", userService.getAllowedStatuses());
+            FlashMessageUtil.moveToRequest(request);
             request.getRequestDispatcher(VIEW).forward(request, response);
         } catch (SQLException | IllegalArgumentException ex) {
             request.getSession().setAttribute("errorMsg", ex.getMessage());
