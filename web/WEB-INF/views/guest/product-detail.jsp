@@ -184,12 +184,20 @@
                                 <c:choose>
                                     <c:when test="${not empty defaultVariant}">
                                         <button type="submit" id="add-to-cart-btn" class="btn titan" style="flex:1">Thêm vào giỏ hàng</button>
+                                        <%-- "Mua ngay" = thêm vào giỏ RỒI nhảy thẳng sang bước điền địa chỉ
+                                             (/checkout), CHỈ đúng 1 sản phẩm/variant/số lượng đang chọn ở
+                                             trang này - không phải toàn bộ giỏ hàng hiện có (nếu khách đã có
+                                             sẵn sản phẩm khác trong giỏ). Không dùng <a href="${ctx}/cart">
+                                             tĩnh như cũ nữa vì như vậy chỉ đưa khách tới giỏ hàng, không tự
+                                             thêm sản phẩm này vào giỏ. Xử lý bằng JS (buyNow(), xem script
+                                             cuối file JSP này, cùng chỗ với submitAddToCart()). --%>
+                                        <button type="button" id="buy-now-btn" class="btn ghost">Mua ngay</button>
                                     </c:when>
                                     <c:otherwise>
                                         <button type="button" class="btn quiet" style="flex:1" disabled>Hết hàng</button>
+                                        <button type="button" class="btn ghost" disabled>Mua ngay</button>
                                     </c:otherwise>
                                 </c:choose>
-                                <a class="btn ghost" href="${ctx}/cart">Mua ngay</a>
                             </div>
                         </form>
 
@@ -480,6 +488,7 @@
                                 }
                                 var stockBadge = document.getElementById('detail-stock-badge');
                                 var addButton = document.getElementById('add-to-cart-btn');
+                                var buyButton = document.getElementById('buy-now-btn');
                                 var quantity = document.getElementById('detail-quantity-input');
                                 var unavailable = variant.stock <= 0 || !variant.active;
                                 if (stockBadge) {
@@ -489,6 +498,9 @@
                                         : (variant.stock < lowStockThreshold ? 'badge warn' : 'badge ok');
                                 }
                                 if (addButton) { addButton.disabled = unavailable; }
+                                // "Mua ngay" đi chung số phận với "Thêm vào giỏ hàng" - đổi sang
+                                // variant hết hàng thì khoá luôn cả 2, không riêng gì nút kia.
+                                if (buyButton) { buyButton.disabled = unavailable; }
                                 quantity.max = unavailable ? 1 : variant.stock;
                                 if (Number(quantity.value) > Number(quantity.max)) { quantity.value = quantity.max; }
                             }
@@ -499,9 +511,11 @@
                                 document.getElementById('detail-original-price').style.display = 'none';
                                 document.getElementById('detail-save-badge').style.display = 'none';
                                 var stockBadge = document.getElementById('detail-stock-badge');
-                                if (stockBadge) { stockBadge.textContent = 'Tổ hợp này không tồn tại'; stockBadge.className = 'badge off'; }
+                                if (stockBadge) { stockBadge.textContent = 'Hết hàng'; stockBadge.className = 'badge off'; }
                                 var addButton = document.getElementById('add-to-cart-btn');
                                 if (addButton) { addButton.disabled = true; }
+                                var buyButton = document.getElementById('buy-now-btn');
+                                if (buyButton) { buyButton.disabled = true; }
                                 document.getElementById('detail-quantity-input').max = 1;
                             }
 
@@ -633,17 +647,31 @@
                         }
 
                         // Dựng URL /login?redirectTo=... trỏ về ĐÚNG trang sản phẩm đang xem,
-                        // kèm variantId/quantity định thêm để sau khi đăng nhập xong tự thêm lại.
-                        function buildLoginRedirectUrl(variantId, quantity) {
+                        // kèm variantId/quantity định thêm để sau khi đăng nhập xong tự làm lại
+                        // đúng thao tác khách vừa định làm. mode phân biệt 2 luồng khác nhau:
+                        //   'add'    - bấm "Thêm vào giỏ hàng" -> chỉ thêm + hiện toast (submitAddToCart)
+                        //   'buyNow' - bấm "Mua ngay" -> thêm XONG rồi nhảy thẳng sang /checkout (buyNow)
+                        // dùng 2 cặp tên param riêng (pendingAdd.../pendingBuy...) để không lẫn
+                        // lộn 2 luồng nếu khách đổi ý giữa chừng lúc đang ở trang login.
+                        function buildLoginRedirectUrl(variantId, quantity, mode) {
                             var params = new URLSearchParams(window.location.search);
-                            params.set('pendingAddVariantId', variantId);
-                            params.set('pendingAddQty', quantity);
+                            if (mode === 'buyNow') {
+                                params.set('pendingBuyVariantId', variantId);
+                                params.set('pendingBuyQty', quantity);
+                            } else {
+                                params.set('pendingAddVariantId', variantId);
+                                params.set('pendingAddQty', quantity);
+                            }
                             var redirectTarget = pathWithoutCtx() + '?' + params.toString();
                             return ctxPath + '/login?redirectTo=' + encodeURIComponent(redirectTarget);
                         }
 
-                        // Dùng chung cho cả submit thủ công lẫn tự thêm lại sau khi đăng nhập.
-                        function submitAddToCart(variantId, quantity) {
+                        // Gọi API thêm vào giỏ - KHÔNG tự quyết định làm gì tiếp theo (không tự
+                        // showToast/redirect ở đây) để submitAddToCart() và buyNow() bên dưới mỗi
+                        // hàm tự xử lý phần "sau khi thêm thành công" khác nhau. Trả về Promise
+                        // resolve ra data JSON, hoặc null nếu đã tự điều hướng sang trang login rồi
+                        // (không cần làm gì thêm ở nơi gọi).
+                        function postAddToCart(variantId, quantity, mode) {
                             return fetch(ctxPath + '/cart', {
                                 method: 'POST',
                                 body: new URLSearchParams({ action: 'add', variantId: variantId, quantity: quantity }),
@@ -654,7 +682,7 @@
                                 if (contentType.indexOf('application/json') === -1) {
                                     // Phòng hờ trường hợp bị redirect ngoài dự kiến (vd filter khác).
                                     if (res.redirected && res.url.indexOf('/login') !== -1) {
-                                        window.location.href = buildLoginRedirectUrl(variantId, quantity);
+                                        window.location.href = buildLoginRedirectUrl(variantId, quantity, mode);
                                         return null;
                                     }
                                     throw new Error('unexpected response ' + res.status);
@@ -663,18 +691,50 @@
                                     return { status: res.status, data: data };
                                 });
                             }).then(function (wrapped) {
-                                if (!wrapped) { return; }
+                                if (!wrapped) { return null; }
                                 var data = wrapped.data;
                                 if (wrapped.status === 401 || data.requiresLogin) {
-                                    window.location.href = buildLoginRedirectUrl(variantId, quantity);
-                                    return;
+                                    window.location.href = buildLoginRedirectUrl(variantId, quantity, mode);
+                                    return null;
                                 }
+                                return data;
+                            });
+                        }
+
+                        // Dùng chung cho cả submit thủ công lẫn tự thêm lại sau khi đăng nhập.
+                        function submitAddToCart(variantId, quantity) {
+                            return postAddToCart(variantId, quantity, 'add').then(function (data) {
+                                if (!data) { return; }
                                 if (!data.success) {
                                     showToast(data.message || 'Không thể thêm vào giỏ hàng', 'err');
                                     return;
                                 }
                                 showToast(data.message || 'Đã thêm vào giỏ hàng', 'ok');
                                 updateHeaderBadge(data.cartItemCount);
+                            }).catch(function () {
+                                showToast('Không thể kết nối máy chủ, vui lòng thử lại', 'err');
+                            });
+                        }
+
+                        // "Mua ngay" - thêm vào giỏ XONG RỒI nhảy thẳng sang /checkout, CHỈ đúng
+                        // đúng 1 sản phẩm/variant/số lượng đang chọn ở trang này (không phải toàn
+                        // bộ giỏ hàng khách có sẵn) - gửi fromCart=1&cartItemId=<vừa thêm>, giống
+                        // hệt cách cart.jsp gửi khi khách tick chọn sản phẩm rồi bấm "Tiến hành
+                        // thanh toán" (xem CheckoutServlet.resolveSelectedIds()).
+                        function buyNow(variantId, quantity) {
+                            return postAddToCart(variantId, quantity, 'buyNow').then(function (data) {
+                                if (!data) { return; }
+                                if (!data.success) {
+                                    showToast(data.message || 'Không thể thêm vào giỏ hàng', 'err');
+                                    return;
+                                }
+                                if (!data.cartItemId) {
+                                    // Phòng hờ - không có cartItemId (không nên xảy ra) thì về giỏ
+                                    // hàng để khách tự bấm thanh toán, còn hơn văng lỗi giữa chừng.
+                                    window.location.href = ctxPath + '/cart';
+                                    return;
+                                }
+                                window.location.href = ctxPath + '/checkout?fromCart=1&cartItemId=' + encodeURIComponent(data.cartItemId);
                             }).catch(function () {
                                 showToast('Không thể kết nối máy chủ, vui lòng thử lại', 'err');
                             });
@@ -699,24 +759,55 @@
                             });
                         }
 
+                        // "Mua ngay" - KHÔNG nằm trong <form> add-to-cart-form (type="button",
+                        // không submit form) để không đụng vào luồng "Thêm vào giỏ hàng" ở trên -
+                        // 2 nút dùng chung ô số lượng/variant đang chọn nhưng có pending cờ riêng.
+                        var buyNowBtn = document.getElementById('buy-now-btn');
+                        var buyNowPending = false;
+                        if (buyNowBtn) {
+                            buyNowBtn.addEventListener('click', function () {
+                                if (buyNowPending) { return; }
+                                buyNowPending = true;
+                                buyNowBtn.disabled = true;
+
+                                var variantInput = document.getElementById('selected-variant-id');
+                                var quantityInput = document.getElementById('detail-quantity-input');
+                                var variantId = variantInput ? variantInput.value : '';
+                                var quantity = quantityInput ? quantityInput.value : '1';
+
+                                buyNow(variantId, quantity).finally(function () {
+                                    buyNowPending = false;
+                                    buyNowBtn.disabled = false;
+                                });
+                            });
+                        }
+
                         // Vừa quay lại từ /login sau khi bị yêu cầu đăng nhập lúc bấm "Thêm vào
-                        // giỏ hàng" -> URL còn 2 param pendingAddVariantId/pendingAddQty, tự gọi
-                        // lại API thêm vào giỏ (KHÔNG cần bấm lại nút). Xoá 2 param khỏi URL
-                        // (history.replaceState) TRƯỚC khi gọi API để F5/Back không lặp lại việc
-                        // thêm vào giỏ.
-                        (function addPendingCartItemAfterLogin() {
+                        // giỏ hàng" HOẶC "Mua ngay" -> URL còn param pending.../pendingBuy... (xem
+                        // buildLoginRedirectUrl), tự làm lại đúng thao tác khách vừa định làm
+                        // (KHÔNG cần bấm lại nút). Xoá param khỏi URL (history.replaceState) TRƯỚC
+                        // khi gọi API để F5/Back không lặp lại việc thêm vào giỏ.
+                        (function resumePendingCartActionAfterLogin() {
                             var params = new URLSearchParams(window.location.search);
-                            var pendingVariantId = params.get('pendingAddVariantId');
-                            if (!pendingVariantId) { return; }
-                            var pendingQty = params.get('pendingAddQty') || '1';
+                            var pendingAddVariantId = params.get('pendingAddVariantId');
+                            var pendingBuyVariantId = params.get('pendingBuyVariantId');
+                            if (!pendingAddVariantId && !pendingBuyVariantId) { return; }
+
+                            var pendingQty = params.get(pendingBuyVariantId ? 'pendingBuyQty' : 'pendingAddQty') || '1';
 
                             params.delete('pendingAddVariantId');
                             params.delete('pendingAddQty');
+                            params.delete('pendingBuyVariantId');
+                            params.delete('pendingBuyQty');
                             var remaining = params.toString();
                             var cleanUrl = window.location.pathname + (remaining ? '?' + remaining : '') + window.location.hash;
                             window.history.replaceState(null, '', cleanUrl);
 
-                            submitAddToCart(pendingVariantId, pendingQty);
+                            if (pendingBuyVariantId) {
+                                buyNow(pendingBuyVariantId, pendingQty);
+                            } else {
+                                submitAddToCart(pendingAddVariantId, pendingQty);
+                            }
                         })();
                     })();
                 </script>

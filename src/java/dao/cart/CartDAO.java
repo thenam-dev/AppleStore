@@ -98,6 +98,33 @@ public class CartDAO {
         }
     }
 
+    /**
+     * Tìm cart_item_id của đúng dòng (cartId, variantId, addonId) - dùng sau
+     * khi upsertCartItem() để biết chính xác vừa thêm/cộng dồn vào dòng nào
+     * (vd. nút "Mua ngay" ở product-detail cần cartItemId này để nhảy thẳng
+     * sang /checkout?fromCart=1&cartItemId=... chỉ đúng 1 sản phẩm vừa thêm,
+     * không phải toàn bộ giỏ hàng).
+     */
+    public Optional<Integer> findCartItemId(int cartId, int variantId, Integer addonId) throws SQLException {
+        String sql = """
+                SELECT cart_item_id FROM cart_items
+                WHERE cart_id = ? AND variant_id = ? AND IFNULL(addon_id, 0) = IFNULL(?, 0)
+                """;
+
+        try (Connection connection = DBConnection.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, cartId);
+            statement.setInt(2, variantId);
+            if (addonId == null) {
+                statement.setNull(3, Types.INTEGER);
+            } else {
+                statement.setInt(3, addonId);
+            }
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? Optional.of(resultSet.getInt("cart_item_id")) : Optional.empty();
+            }
+        }
+    }
+
     public int findExistingQuantity(int cartId, int variantId, Integer addonId) throws SQLException {
         String sql = """
                 SELECT quantity FROM cart_items

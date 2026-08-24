@@ -126,3 +126,15 @@
     </c:otherwise>
   </c:choose>
 </c:if>
+
+<%-- Tự "tiêu thụ" flash message ngay sau khi hiện xong - BẮT BUỘC, không được
+     bỏ. errorMsg/successMsg đọc qua EL ở trên tự tìm cả session scope, nhưng
+     nếu servlet nào chỉ session.setAttribute(...) rồi redirect mà quên tự xoá
+     (nhiều servlet đang làm vậy), thông báo sẽ dính lại session VĨNH VIỄN và
+     hiện lặp lại ở MỌI trang sau đó (kể cả bấm link/nav không liên quan) - vì
+     trang nào cũng include flash.jsp và EL tự đọc lại session mỗi lần render.
+     <c:remove> không lỗi nếu attribute không tồn tại nên gọi vô điều kiện ở
+     đây là an toàn, không cần biết servlet nào đã set hay chưa set. --%>
+<c:remove var="errorMsg" scope="session"/>
+<c:remove var="successMsg" scope="session"/>
+<c:remove var="fieldErrors" scope="session"/>
