@@ -168,6 +168,31 @@ public class UserDAO {
     }
 
     /**
+     * Đếm các đơn của khách chưa hoàn tất xử lý.
+     * Đơn giao thành công/hủy/hết hạn/thanh toán thất bại được xem là kết thúc;
+     * các yêu cầu hoàn tiền đang chờ xử lý vẫn giữ tài khoản ở trạng thái chưa thể khóa.
+     */
+    public int countUnfinishedCustomerOrders(int customerId) throws SQLException {
+        String sql = """
+                SELECT COUNT(*)
+                FROM orders
+                WHERE customer_id = ?
+                  AND (
+                      status NOT IN ('DELIVERED', 'CANCELLED', 'EXPIRED', 'PAYMENT_FAILED')
+                      OR refund_status IN ('PENDING', 'APPROVED', 'PROCESSING')
+                  )
+                """;
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, customerId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? resultSet.getInt(1) : 0;
+            }
+        }
+    }
+
+    /**
      * Đếm admin ACTIVE để không vô hiệu hóa quản trị viên cuối cùng.
      */
     public int countActiveAdmins() throws SQLException {
