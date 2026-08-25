@@ -10,11 +10,8 @@ import java.sql.*;
 import java.util.*;
 
 public class OrderDAO {
-
-    // =========================================================================
-    // PHẦN 1: LOGIC CỦA NHÂN VIÊN / HỆ THỐNG QUẢN TRỊ
-    // =========================================================================
-
+    
+    //Thêm một đơn hàng mới vào bảng orders và trả về order_id vừa được database tạo.
     public int insert(Order order) throws SQLException {
         String sql = """
                 INSERT INTO orders (customer_id, assigned_sale_staff_id, delivery_address, recipient_name, recipient_phone,
@@ -55,6 +52,7 @@ public class OrderDAO {
         }
     }
 
+    //Thêm một sản phẩm từ giỏ hàng vào bảng
     public int insertOrderItem(int orderId, CartItem cartItem) throws SQLException {
         String sql = """
                 INSERT INTO order_items (order_id, variant_id, product_name_snapshot, variant_label_snapshot,
@@ -88,6 +86,7 @@ public class OrderDAO {
         }
     }
 
+    //Lấy tất cả sản phẩm thuộc một đơn hàng.
     public List<OrderItem> findItemsByOrderId(int orderId) throws SQLException {
         List<OrderItem> items = new ArrayList<>();
         String sql = "SELECT * FROM order_items WHERE order_id = ? ORDER BY order_item_id ASC";
@@ -104,6 +103,7 @@ public class OrderDAO {
         return items;
     }
 
+    //Xóa một sản phẩm trong đơn_không sử dụng
     public void deleteOrderItem(int orderItemId) throws SQLException {
         String sql = "DELETE FROM order_items WHERE order_item_id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -113,6 +113,7 @@ public class OrderDAO {
         }
     }
 
+    //Xóa đơn hàng_
     public void deleteOrder(int orderId) throws SQLException {
         String sql = "DELETE FROM orders WHERE order_id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -144,6 +145,7 @@ public class OrderDAO {
         }
     }
 
+    
     public void insertStatusHistory(int orderId, String status, Integer changedBy, String note) throws SQLException {
         String sql = "INSERT INTO order_status_history (order_id, status, changed_by, note) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
@@ -156,6 +158,7 @@ public class OrderDAO {
         }
     }
 
+    //tìm nhân viên sale phù hợp nhất_đếm số đơn đang xử lý của từng nhân viên_tìm ít việc nhất_ngẫu nhiên nếu cùng khối lượng
     public Integer findBestSaleStaffId() throws SQLException {
         String sql = """
             SELECT u.user_id, COUNT(o.order_id) AS active_tasks
@@ -177,6 +180,7 @@ public class OrderDAO {
         return null;
     }
 
+    //Gán nhân viên bán hàng vào đơn hàng.
     public void assignSaleStaff(int orderId, int staffId) throws SQLException {
         String sql = "UPDATE orders SET assigned_sale_staff_id = ? WHERE order_id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -187,6 +191,7 @@ public class OrderDAO {
         }
     }
 
+    //Cập nhật trạng thái mới cho đơn hàng.
     public boolean updateStatus(int orderId, String newStatus) throws SQLException {
         String sql = "UPDATE orders SET status = ? WHERE order_id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -197,6 +202,7 @@ public class OrderDAO {
         }
     }
 
+    //Chuyển trạng thái đơn sang EXPIRED nếu đơn vẫn đang ở trạng thái chờ thanh toán PENDING_PAYMENT
     public boolean expireIfStillPending(int orderId) throws SQLException {
         String sql = "UPDATE orders SET status = 'EXPIRED' WHERE order_id = ? AND status = 'PENDING_PAYMENT'";
         try (Connection conn = DBConnection.getConnection();
@@ -245,11 +251,6 @@ public class OrderDAO {
         }
         return list;
     }
-
-
-    // =========================================================================
-    // PHẦN 2: LOGIC CỦA KHÁCH HÀNG (CUSTOMER)
-    // =========================================================================
 
     public List<Map<String, Object>> findOrdersByCustomer(int customerId, String tab) throws SQLException {
         StringBuilder sql = new StringBuilder("""
@@ -389,8 +390,6 @@ public class OrderDAO {
     public boolean cancelOrderByCustomer(int orderId, int customerId) throws SQLException {
         String updateOrderSql = "UPDATE orders SET status = 'CANCELLED', cancelled_at = NOW(), cancelled_by = ? WHERE order_id = ? AND customer_id = ? AND status IN ('PENDING_PAYMENT', 'CONFIRMED')";
         String selectItemsSql = "SELECT order_item_id, variant_id, quantity FROM order_items WHERE order_id = ?";
-        // Sửa câu lệnh UPDATE stock để trả về luôn lượng tồn kho mới trong một câu thực thi nếu cần, 
-        // hoặc kết hợp SELECT lấy stock ngay trong transaction khép kín chống race condition.
         String updateStockSql = "UPDATE product_variants SET stock_quantity = stock_quantity + ? WHERE variant_id = ?";
         String getStockSql = "SELECT stock_quantity FROM product_variants WHERE variant_id = ?";
         String insertLogSql = "INSERT INTO inventory_logs (variant_id, changed_by, order_id, order_item_id, change_type, quantity_delta, quantity_after, note) VALUES (?, ?, ?, ?, 'ORDER_RELEASE', ?, ?, 'Hoàn lại tồn kho do khách hàng huỷ đơn')";

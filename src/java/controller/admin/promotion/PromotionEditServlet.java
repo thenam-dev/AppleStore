@@ -23,7 +23,6 @@ public class PromotionEditServlet extends HttpServlet {
 
     private final PromotionService promotionService = new PromotionService();
     
-    // Khởi tạo tầng Service thay vì DAO
     private final CategoryService categoryService = new CategoryService();
     private final ProductService productService = new ProductService();
 
