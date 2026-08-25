@@ -225,9 +225,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const labels = ${chartLabels != null ? chartLabels : '[]'};
-    const dataValues = ${chartData != null ? chartData : '[]'};
+    const labels = ${empty chartLabels or chartLabels eq "[]" ? "['']" : chartLabels};
+    const dataValues = ${empty chartData or chartData eq "[]" ? "[0]" : chartData};
     const statusStatsData = ${orderStatusStatsJson != null ? orderStatusStatsJson : '[]'};
+                            
 
     // Revenue Chart
     if (labels.length > 0) {
