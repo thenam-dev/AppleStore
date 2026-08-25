@@ -269,13 +269,13 @@
                                                             <c:choose>
                                                                 <%-- CHỈ KHI ĐƠN ĐÃ CONFIRMED MỚI ĐƯỢC PHÉP ĐÓNG GÓI --%>
                                                                 <c:when test="${selectedOrder.status eq 'CONFIRMED'}">
-                                                                    <input type="hidden" name="status" value="PREPARING">
-                                                                    <button type="submit" class="btn block">📦 Xác nhận đóng gói (Chuyển sang Đang chuẩn bị)</button>
+                                                                    <!-- Gắn thẳng name và value vào thẻ button, bỏ input hidden -->
+                                                                    <button type="submit" name="status" value="PREPARING" class="btn block">📦 Xác nhận đóng gói (Chuyển sang Đang chuẩn bị)</button>
                                                                 </c:when>
 
                                                                 <c:when test="${selectedOrder.status eq 'PREPARING'}">
-                                                                    <input type="hidden" name="status" value="DISPATCHED">
-                                                                    <button type="submit" class="btn block">🚀 Giao vận chuyển (Tự động gán Shipper)</button>
+                                                                    <!-- Gắn thẳng name và value vào thẻ button, bỏ input hidden -->
+                                                                    <button type="submit" name="status" value="DISPATCHED" class="btn block">🚀 Giao vận chuyển (Tự động gán Shipper)</button>
                                                                 </c:when>
 
                                                                 <c:when test="${selectedOrder.status eq 'DISPATCHED'}">
