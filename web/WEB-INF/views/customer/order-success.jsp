@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=2">
+  <link rel="stylesheet" href="${ctx}/assets/css/style.css?v=3">
   <style>
     /* Xuất hóa đơn: khối invoice-print chỉ hiện khi in (Ctrl+P / Save as PDF),
        ẩn trên màn hình bình thường. Khi in thì ẩn hẳn (display:none - không
@@ -43,7 +43,7 @@
 <c:set var="activeStep" value="4" scope="request"/>
 <jsp:include page="/WEB-INF/views/common/checkout-steps.jsp"/>
 
-<div style="padding:44px 26px;text-align:center">
+<div style="padding:44px 26px;text-align:center;max-width:1280px;margin:0 auto">
   <div style="width:76px;height:76px;border-radius:50%;background:var(--ok-bg);color:var(--ok);
        display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
     <svg width="34" height="34"><use href="#i-check"/></svg>

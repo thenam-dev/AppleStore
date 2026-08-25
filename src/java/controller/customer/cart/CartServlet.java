@@ -103,7 +103,10 @@ public class CartServlet extends HttpServlet {
             // thay vì PRG (không cần flash message qua session vì không có trang
             // nào forward/redirect tới để đọc lại).
             Integer cartItemCount = result.isSuccess() ? cartService.getCartItemCount(customerId) : null;
-            writeJson(response, result.isSuccess(), result.getMessage(), cartItemCount);
+            // cartItemId chỉ có giá trị khi action=add (xem CartService.Result) -
+            // nút "Mua ngay" ở product-detail.jsp cần giá trị này để nhảy thẳng
+            // sang /checkout?fromCart=1&cartItemId=... đúng 1 sản phẩm vừa thêm.
+            writeJson(response, result.isSuccess(), result.getMessage(), cartItemCount, result.getCartItemId());
             return;
         }
 
@@ -124,12 +127,20 @@ public class CartServlet extends HttpServlet {
 
     private void writeJson(HttpServletResponse response, boolean success, String message, Integer cartItemCount)
             throws IOException {
+        writeJson(response, success, message, cartItemCount, null);
+    }
+
+    private void writeJson(HttpServletResponse response, boolean success, String message, Integer cartItemCount, Integer cartItemId)
+            throws IOException {
         response.setContentType("application/json;charset=UTF-8");
         StringBuilder json = new StringBuilder();
         json.append("{\"success\":").append(success);
         json.append(",\"message\":\"").append(escapeJson(message)).append('"');
         if (cartItemCount != null) {
             json.append(",\"cartItemCount\":").append(cartItemCount);
+        }
+        if (cartItemId != null) {
+            json.append(",\"cartItemId\":").append(cartItemId);
         }
         json.append('}');
         response.getWriter().write(json.toString());

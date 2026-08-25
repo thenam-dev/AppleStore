@@ -30,6 +30,7 @@
   <symbol id="i-swap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 8h13M13 4l4 4-4 4"/><path d="M20 16H7M11 12l-4 4 4 4"/></symbol>
   <symbol id="i-percent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M19 5 5 19"/><circle cx="7.5" cy="7.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6.6 3h3l1.4 4-2 1.6a13 13 0 0 0 6.4 6.4l1.6-2 4 1.4v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.6 5.2 2 2 0 0 1 6.6 3Z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M18 6 6 18"/></symbol>
   <%-- logo dùng trong header/footer/admin-sidebar (nền tối) - tô màu bằng CSS color trên thẻ <svg> bọc
        ngoài. "logo-mark" và "logo-halo" là cùng một hình, giữ cả 2 id vì 2 nhóm trang khách/quản trị
        đang trỏ tới tên khác nhau; khác với web/assets/images/logo-mark.svg (file tĩnh dùng làm favicon,

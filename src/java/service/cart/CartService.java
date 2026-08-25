@@ -36,10 +36,21 @@ public class CartService {
     public static class Result {
         private final boolean success;
         private final String message;
+        // Chỉ addToCart() điền giá trị này (dùng cho nút "Mua ngay" ở
+        // product-detail - cần biết đúng cartItemId vừa thêm/cộng dồn để nhảy
+        // thẳng sang /checkout?fromCart=1&cartItemId=... đúng 1 sản phẩm này,
+        // không phải toàn bộ giỏ hàng). updateQuantity()/removeItem() không
+        // cần nên để null.
+        private final Integer cartItemId;
 
         public Result(boolean success, String message) {
+            this(success, message, null);
+        }
+
+        public Result(boolean success, String message, Integer cartItemId) {
             this.success = success;
             this.message = message;
+            this.cartItemId = cartItemId;
         }
 
         public boolean isSuccess() {
@@ -48,6 +59,10 @@ public class CartService {
 
         public String getMessage() {
             return message;
+        }
+
+        public Integer getCartItemId() {
+            return cartItemId;
         }
     }
 
@@ -79,7 +94,10 @@ public class CartService {
             }
 
             cartDAO.upsertCartItem(cartId, variantId, quantity, addonId);
-            return new Result(true, "Đã thêm vào giỏ hàng");
+            // Đọc lại đúng cartItemId của dòng vừa upsert (thêm mới hoặc cộng dồn
+            // vào dòng có sẵn) - cho nút "Mua ngay" cần biết chính xác dòng nào.
+            Integer cartItemId = cartDAO.findCartItemId(cartId, variantId, addonId).orElse(null);
+            return new Result(true, "Đã thêm vào giỏ hàng", cartItemId);
         } catch (SQLException e) {
             return new Result(false, "Lỗi hệ thống: " + e.getMessage());
         }
