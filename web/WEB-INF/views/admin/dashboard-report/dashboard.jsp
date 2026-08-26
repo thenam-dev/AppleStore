@@ -90,8 +90,17 @@
             <h3>Tỉ lệ trạng thái</h3>
           </div>
           <div class="panel-pad" style="display: flex; justify-content: center; align-items: center;">
-            <div style="height:350px; width:100%;">
-              <canvas id="orderStatusChart" style="width: 100%; height: 100%;"></canvas>
+            <div style="height:350px; width:100%; display: flex; justify-content: center; align-items: center;">
+              <c:choose>
+                <c:when test="${empty orderStatusStatsJson or orderStatusStatsJson eq '[]'}">
+                  <div style="color:var(--ash); font-size:14px; text-align:center;">
+                    Chưa có dữ liệu trạng thái
+                  </div>
+                </c:when>
+                <c:otherwise>
+                  <canvas id="orderStatusChart" style="width: 100%; height: 100%;"></canvas>
+                </c:otherwise>
+              </c:choose>
             </div>
           </div>
         </div>
