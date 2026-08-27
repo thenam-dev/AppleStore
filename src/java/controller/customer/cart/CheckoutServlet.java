@@ -16,8 +16,10 @@ import model.entity.promtion.Promotion;
 import util.CheckoutSelectionUtil;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -55,6 +57,13 @@ public class CheckoutServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/cart");
             return;
         }
+
+        // "Mua ngay" chỉ muốn đặt đúng số lượng vừa chọn ở trang sản phẩm, KHÔNG
+        // phải toàn bộ số lượng đang có sẵn trong dòng giỏ hàng (dòng này có thể
+        // đã bị addToCart() cộng dồn thêm số cũ - xem CartService.addToCart()).
+        // Áp override ngay khi hiển thị để khách thấy đúng số lượng/thành tiền sẽ
+        // đặt trước khi bấm "Đặt hàng".
+        applyQuantityOverrides(items, CheckoutSelectionUtil.loadQuantityOverride(request));
 
         BigDecimal cartTotal = items.stream()
                 .map(CartItem::getLineTotal)
@@ -140,7 +149,8 @@ public class CheckoutServlet extends HttpServlet {
 
         Set<Integer> selectedIds = CheckoutSelectionUtil.load(request);
         form.selectedCartItemIds = selectedIds;
-        
+        form.quantityOverrides = CheckoutSelectionUtil.loadQuantityOverride(request);
+
         CheckoutService.CheckoutResult result = checkoutService.checkout(form);
 
         if (!result.success) {
@@ -154,6 +164,9 @@ public class CheckoutServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/cart");
                 return;
             }
+            // Hiển thị lại đúng số lượng "Mua ngay" (nếu có) khi form checkout bị
+            // forward lại do lỗi validate/hết hàng..., giống hệt doGet().
+            applyQuantityOverrides(items, form.quantityOverrides);
             BigDecimal cartTotal = items.stream()
                     .map(CartItem::getLineTotal)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -200,6 +213,7 @@ public class CheckoutServlet extends HttpServlet {
                 return null;
             }
             CheckoutSelectionUtil.store(request, requestedIds);
+            storeQuantityOverrideFromRequest(request, requestedIds);
             return requestedIds;
         }
 
@@ -213,6 +227,53 @@ public class CheckoutServlet extends HttpServlet {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         CheckoutSelectionUtil.store(request, allIds);
         return allIds;
+    }
+
+    /**
+     * Đọc tham số buyNowQty từ nút "Mua ngay" ở product-detail.jsp và lưu
+     * thành override trong session. Chỉ áp dụng khi đúng 1 cartItemId được
+     * chọn (đúng chữ ký của "Mua ngay") - nếu khách tick nhiều sản phẩm ở
+     * cart.jsp rồi "Tiến hành thanh toán" (không có buyNowQty, hoặc chọn nhiều
+     * hơn 1 dòng) thì xoá override cũ để không lỡ áp nhầm số lượng của lần
+     * "Mua ngay" trước đó sang lần thanh toán này.
+     */
+    private void storeQuantityOverrideFromRequest(HttpServletRequest request, Set<Integer> requestedIds) {
+        String buyNowQtyParam = request.getParameter("buyNowQty");
+        if (requestedIds.size() == 1 && buyNowQtyParam != null) {
+            try {
+                int buyNowQty = Integer.parseInt(buyNowQtyParam.trim());
+                if (buyNowQty > 0) {
+                    Map<Integer, Integer> overrides = new HashMap<>();
+                    overrides.put(requestedIds.iterator().next(), buyNowQty);
+                    CheckoutSelectionUtil.storeQuantityOverride(request, overrides);
+                    return;
+                }
+            } catch (NumberFormatException ignored) {
+                // rơi xuống clear() bên dưới
+            }
+        }
+        CheckoutSelectionUtil.clearQuantityOverride(request);
+    }
+
+    /**
+     * Ép quantity hiển thị/tính tiền của từng CartItem về đúng số lượng
+     * "Mua ngay" đã chọn (nếu có override cho dòng đó) - không vượt quá số
+     * lượng thực tế đang có trong dòng giỏ hàng (phòng trường hợp giỏ hàng đã
+     * đổi từ lúc bấm "Mua ngay", vd khách mở 2 tab). Không đổi gì trong DB ở
+     * đây, chỉ mutate object CartItem trong bộ nhớ để hiển thị/tính tổng tiền
+     * đúng - CheckoutService.checkout() tự áp lại override này 1 lần nữa
+     * trước khi trừ kho/tạo đơn.
+     */
+    private void applyQuantityOverrides(List<CartItem> items, Map<Integer, Integer> overrides) {
+        if (overrides == null || overrides.isEmpty()) {
+            return;
+        }
+        for (CartItem item : items) {
+            Integer override = overrides.get(item.getCartItemId());
+            if (override != null && override > 0 && override < item.getQuantity()) {
+                item.setQuantity(override);
+            }
+        }
     }
 
     private void preventCaching(HttpServletResponse response) {

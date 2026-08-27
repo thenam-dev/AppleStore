@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpSession;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,6 +21,17 @@ import java.util.stream.Collectors;
 public final class CheckoutSelectionUtil {
 
     private static final String SESSION_KEY = "checkoutItemIds";
+
+    /**
+     * Số lượng "ghi đè" cho nút "Mua ngay" - map cartItemId -> số lượng thực
+     * sự muốn đặt ở lần thanh toán này, tách biệt với số lượng đang tồn trong
+     * dòng cart_items (dòng đó có thể đã bị cộng dồn thêm số lượng cũ có sẵn
+     * trong giỏ trước khi bấm "Mua ngay" - xem CartService.addToCart()). Chỉ
+     * áp dụng khi khách bấm "Mua ngay" (đúng 1 cartItemId kèm buyNowQty), lưu
+     * session cùng vòng đời với SESSION_KEY ở trên vì cùng lý do (đi qua nhiều
+     * servlet, có thể rời trang rồi quay lại).
+     */
+    private static final String SESSION_KEY_QTY_OVERRIDE = "checkoutQtyOverride";
 
     private CheckoutSelectionUtil() {
     }
@@ -64,6 +76,28 @@ public final class CheckoutSelectionUtil {
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.removeAttribute(SESSION_KEY);
+            session.removeAttribute(SESSION_KEY_QTY_OVERRIDE);
+        }
+    }
+
+    public static void storeQuantityOverride(HttpServletRequest request, Map<Integer, Integer> overrides) {
+        request.getSession().setAttribute(SESSION_KEY_QTY_OVERRIDE, overrides);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Map<Integer, Integer> loadQuantityOverride(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return null;
+        }
+        Object value = session.getAttribute(SESSION_KEY_QTY_OVERRIDE);
+        return value instanceof Map ? (Map<Integer, Integer>) value : null;
+    }
+
+    public static void clearQuantityOverride(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.removeAttribute(SESSION_KEY_QTY_OVERRIDE);
         }
     }
 }

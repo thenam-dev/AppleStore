@@ -82,6 +82,14 @@ public class CheckoutService {
         // Tập cart_item_id khách đã tick chọn ở cart.jsp để thanh toán - null/rỗng
         // nghĩa là thanh toán toàn bộ giỏ hàng (tương thích ngược).
         public Set<Integer> selectedCartItemIds;
+
+        // Override số lượng thực đặt cho nút "Mua ngay" (cartItemId -> số lượng),
+        // null/rỗng nghĩa là đặt đúng số lượng đang có trong dòng cart_items (hành
+        // vi cũ). Dòng cart_items của "Mua ngay" có thể đã bị CartService.addToCart()
+        // cộng dồn thêm số cũ có sẵn trong giỏ - override để chỉ đặt đúng phần khách
+        // vừa chọn ở trang sản phẩm, không phải toàn bộ dòng. Xem
+        // CheckoutServlet.storeQuantityOverrideFromRequest().
+        public Map<Integer, Integer> quantityOverrides;
     }
 
     /** 1 mã khuyến mãi đã áp dụng kèm số tiền được giảm tương ứng của riêng nó. */
@@ -166,6 +174,22 @@ public class CheckoutService {
                 result.success = false;
                 result.message = "Giỏ hàng đang trống";
                 return result;
+            }
+
+            // Áp override số lượng "Mua ngay" (nếu có) - PHẢI làm trước khi tính
+            // tồn kho/tổng tiền bên dưới vì mọi bước sau đều đọc cartItem.getQuantity().
+            // Nhớ lại số lượng GỐC của dòng cart_items (trước khi ép override) để
+            // biết còn dư bao nhiêu sau khi đặt hàng - dùng ở bước dọn giỏ hàng cuối
+            // hàm (chỉ trừ đúng phần đã đặt, không xoá sạch dòng nếu còn dư).
+            Map<Integer, Integer> originalQuantities = new HashMap<>();
+            if (form.quantityOverrides != null) {
+                for (CartItem cartItem : items) {
+                    Integer override = form.quantityOverrides.get(cartItem.getCartItemId());
+                    if (override != null && override > 0 && override < cartItem.getQuantity()) {
+                        originalQuantities.put(cartItem.getCartItemId(), cartItem.getQuantity());
+                        cartItem.setQuantity(override);
+                    }
+                }
             }
 
             // Kiểm tra sơ bộ tồn kho trước (best-effort, không khoá được xuyên suốt
@@ -286,9 +310,17 @@ public class CheckoutService {
 
             // Chỉ xoá đúng những dòng đã đặt (khách có thể chỉ tick chọn 1 phần giỏ
             // hàng) - KHÔNG xoá cả giỏ như trước, để các dòng chưa chọn vẫn còn lại.
+            // Riêng dòng có override (từ "Mua ngay", quantity đã bị ép thấp hơn số
+            // gốc trong giỏ) thì KHÔNG xoá cả dòng - chỉ trừ đúng phần đã đặt, giữ
+            // lại phần dư (originalQty - đã đặt) cho khách trong giỏ.
             int cartId = items.get(0).getCartId();
             for (CartItem cartItem : items) {
-                cartDAO.deleteCartItem(cartItem.getCartItemId(), cartId);
+                Integer originalQty = originalQuantities.get(cartItem.getCartItemId());
+                if (originalQty != null && originalQty > cartItem.getQuantity()) {
+                    cartDAO.updateQuantity(cartItem.getCartItemId(), cartId, originalQty - cartItem.getQuantity());
+                } else {
+                    cartDAO.deleteCartItem(cartItem.getCartItemId(), cartId);
+                }
             }
 
             result.success = true;

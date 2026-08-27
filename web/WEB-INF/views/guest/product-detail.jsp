@@ -721,6 +721,14 @@
                         // bộ giỏ hàng khách có sẵn) - gửi fromCart=1&cartItemId=<vừa thêm>, giống
                         // hệt cách cart.jsp gửi khi khách tick chọn sản phẩm rồi bấm "Tiến hành
                         // thanh toán" (xem CheckoutServlet.resolveSelectedIds()).
+                        //
+                        // Lưu ý: nếu variant này đã có sẵn số lượng khác trong giỏ, addToCart()
+                        // sẽ CỘNG DỒN vào cùng 1 dòng cart_items (xem CartDAO.upsertCartItem) -
+                        // cartItemId trả về là dòng đã cộng dồn, KHÔNG chỉ chứa đúng `quantity`
+                        // vừa chọn. Vì vậy phải gửi kèm buyNowQty=<quantity> để CheckoutServlet
+                        // biết đúng số lượng cần đặt cho lần "Mua ngay" này (ép override, không
+                        // dùng nguyên số lượng đã cộng dồn của cả dòng) - xem
+                        // CheckoutServlet.storeQuantityOverrideFromRequest()/applyQuantityOverrides().
                         function buyNow(variantId, quantity) {
                             return postAddToCart(variantId, quantity, 'buyNow').then(function (data) {
                                 if (!data) { return; }
@@ -734,7 +742,7 @@
                                     window.location.href = ctxPath + '/cart';
                                     return;
                                 }
-                                window.location.href = ctxPath + '/checkout?fromCart=1&cartItemId=' + encodeURIComponent(data.cartItemId);
+                                window.location.href = ctxPath + '/checkout?fromCart=1&cartItemId=' + encodeURIComponent(data.cartItemId) + '&buyNowQty=' + encodeURIComponent(quantity);
                             }).catch(function () {
                                 showToast('Không thể kết nối máy chủ, vui lòng thử lại', 'err');
                             });
