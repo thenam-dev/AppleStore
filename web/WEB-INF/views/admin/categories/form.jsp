@@ -24,10 +24,6 @@
   <div class="adm-main">
     <div class="adm-bar">
       <h2>${formModeLabel} danh mục</h2>
-      <div class="who">
-        <a class="btn ghost sm" href="${appPath}/admin/categories">Hủy</a>
-        <button class="btn sm" type="submit" form="categoryForm">${isEdit ? 'Lưu thay đổi' : 'Tạo danh mục'}</button>
-      </div>
     </div>
 
     <div class="adm-body">

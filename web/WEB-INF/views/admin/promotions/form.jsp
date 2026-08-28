@@ -23,10 +23,6 @@
                     <c:if test="${isEdit}">
                         <span class="mono" style="font-size:11px;color:var(--ash)">ID #${promo.promoId}</span>
                     </c:if>
-                    <div class="who">
-                        <a class="btn ghost sm" href="${appPath}/admin/promotions">Hủy</a>
-                        <button class="btn sm" type="submit" form="promoForm">${isEdit ? 'Lưu thay đổi' : 'Tạo khuyến mãi'}</button>
-                    </div>
                 </div>
 
                 <div class="adm-body">

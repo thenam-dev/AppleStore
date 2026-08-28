@@ -19,19 +19,11 @@
     <div class="adm-bar">
       <h2>Thông số kỹ thuật</h2>
       <span style="font-size:13px;color:var(--ash)"><c:out value="${product.name}" /></span>
-      <div class="who">
-        <a class="btn ghost sm" href="${appPath}/admin/products">Sản phẩm</a>
-        <a class="btn ghost sm" href="${appPath}/admin/products/edit?id=${product.productId}">Sửa sản phẩm</a>
-        <button class="btn sm" type="submit" form="specificationForm">Lưu thông số</button>
-      </div>
     </div>
 
     <div class="adm-body">
-      <nav class="crumb" aria-label="Breadcrumb">
-        <a href="${appPath}/admin/products">Sản phẩm</a><span>/</span>
-        <a href="${appPath}/admin/products/edit?id=${product.productId}"><c:out value="${product.name}" /></a><span>/</span>
-        <span style="color:var(--ink)">Thông số</span>
-      </nav>
+      <c:set var="breadcrumbSection" value="Thông số" scope="request" />
+      <jsp:include page="/WEB-INF/views/common/product-breadcrumb.jsp" />
 
       <jsp:include page="/WEB-INF/views/common/flash.jsp" />
 
@@ -71,6 +63,10 @@
           <div id="specification-empty" class="empty" style="display:none;margin-top:14px;padding:28px 12px">
             <h3>Chưa có thông số</h3>
             <p>Thêm dòng đầu tiên để mô tả sản phẩm.</p>
+          </div>
+          <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:16px">
+            <a class="btn ghost" href="${appPath}/admin/products">Hủy</a>
+            <button class="btn" type="submit">Lưu thông số</button>
           </div>
         </div>
       </form>

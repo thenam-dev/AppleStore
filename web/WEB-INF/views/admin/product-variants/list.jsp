@@ -23,6 +23,8 @@
     </div>
 
     <div class="adm-body">
+      <c:set var="breadcrumbSection" value="Biến thể" scope="request" />
+      <jsp:include page="/WEB-INF/views/common/product-breadcrumb.jsp" />
       <jsp:include page="/WEB-INF/views/common/flash.jsp" />
 
       <section class="stats">
@@ -52,8 +54,6 @@
         <div class="panel-head">
           <h3>Bảng biến thể</h3>
           <div class="r">
-            <a class="btn ghost sm" href="${appPath}/admin/products/edit?id=${managedProduct.productId}">Sửa sản phẩm</a>
-            <a class="btn ghost sm" href="${appPath}/admin/products">Sản phẩm</a>
             <a class="btn sm" href="${appPath}/admin/products/variants/edit?productId=${managedProduct.productId}"><svg width="15" height="15"><use href="#i-plus" /></svg>Thêm biến thể</a>
           </div>
         </div>
