@@ -284,6 +284,35 @@ public class UserDAO {
     }
 
     /**
+     * Tạo tài khoản nhân sự nội bộ và trả về user_id được sinh ra.
+     */
+    public int insertStaff(User user, String passwordHash) throws SQLException {
+        String sql = """
+                INSERT INTO users (full_name, email, password_hash, phone, role, status, is_email_verified, auth_provider)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'LOCAL')
+                """;
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, user.getFullName());
+            statement.setString(2, user.getEmail());
+            statement.setString(3, passwordHash);
+            statement.setString(4, emptyToNull(user.getPhone()));
+            statement.setString(5, user.getRole());
+            statement.setString(6, user.getStatus());
+            statement.setBoolean(7, user.isEmailVerified());
+            statement.executeUpdate();
+
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+                throw new SQLException("Không thể lấy ID tài khoản nhân sự vừa tạo.");
+            }
+        }
+    }
+
+    /**
      * Ghi nhận đăng nhập thành công và reset số lần đăng nhập sai.
      */
     public void recordLoginSuccess(int userId) throws SQLException {

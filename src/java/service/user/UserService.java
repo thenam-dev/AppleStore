@@ -3,6 +3,7 @@ package service.user;
 import config.AppConfig;
 import dao.user.UserDAO;
 import model.entity.user.User;
+import util.PasswordUtil;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -35,7 +36,7 @@ public class UserService {
             "status_asc"
     );
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{9,15}$");
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^0[0-9]{9}$");
 
     private final UserDAO userDAO;
 
@@ -268,6 +269,26 @@ public class UserService {
     }
 
     /**
+     * Tạo tài khoản nội bộ sau khi validate dữ liệu, mật khẩu và thông tin trùng lặp.
+     */
+    public int createStaffUser(User user, String password, String confirmPassword) throws SQLException {
+        normalizeUser(user);
+        validateNewInternalUser(user);
+        validateNewPassword(password, confirmPassword);
+
+        if (userDAO.existsByEmail(user.getEmail())) {
+            throw new IllegalArgumentException("Email đã được sử dụng.");
+        }
+
+        if (userDAO.existsByPhone(user.getPhone())) {
+            throw new IllegalArgumentException("Số điện thoại đã được sử dụng.");
+        }
+
+        user.setEmailVerified(true);
+        return userDAO.insertStaff(user, PasswordUtil.hash(password));
+    }
+
+    /**
      * Đổi trạng thái customer, không cập nhật thông tin cá nhân/role.
      */
     public void changeCustomerStatus(int userId, String status) throws SQLException {
@@ -379,6 +400,23 @@ public class UserService {
         if (user.getUserId() <= 0) {
             throw new IllegalArgumentException("ID người dùng không hợp lệ.");
         }
+        validateInternalUserFields(user);
+    }
+
+    /**
+     * Kiểm tra dữ liệu tài khoản nội bộ mới chưa có user_id.
+     */
+    private void validateNewInternalUser(User user) {
+        if (user.getUserId() != 0) {
+            throw new IllegalArgumentException("Dữ liệu tạo tài khoản không hợp lệ.");
+        }
+        validateInternalUserFields(user);
+    }
+
+    /**
+     * Kiểm tra các trường dùng chung của tài khoản nội bộ khi tạo và cập nhật.
+     */
+    private void validateInternalUserFields(User user) {
         if (user.getFullName().length() > 100) {
             throw new IllegalArgumentException("Họ tên không được vượt quá 100 ký tự.");
         }
@@ -386,13 +424,28 @@ public class UserService {
             throw new IllegalArgumentException("Email không hợp lệ.");
         }
         if (user.getPhone() != null && !PHONE_PATTERN.matcher(user.getPhone()).matches()) {
-            throw new IllegalArgumentException("Số điện thoại phải gồm 9 đến 15 chữ số.");
+            throw new IllegalArgumentException("Số điện thoại phải bắt đầu bằng số 0 và tổng 10 chữ số.");
         }
         if (!INTERNAL_ROLES.contains(user.getRole())) {
             throw new IllegalArgumentException("Vai trò nội bộ không hợp lệ.");
         }
         if (!ALLOWED_STATUSES.contains(user.getStatus())) {
             throw new IllegalArgumentException("Trạng thái không hợp lệ.");
+        }
+    }
+
+    /**
+     * Kiểm tra mật khẩu ban đầu của tài khoản nội bộ.
+     */
+    private void validateNewPassword(String password, String confirmPassword) {
+        if (password == null || password.length() < 8 || password.length() > 100) {
+            throw new IllegalArgumentException("Mật khẩu phải có từ 8 đến 100 ký tự.");
+        }
+        if (!password.matches(".*[A-Za-z].*") || !password.matches(".*\\d.*")) {
+            throw new IllegalArgumentException("Mật khẩu phải có cả chữ và số.");
+        }
+        if (!password.equals(confirmPassword)) {
+            throw new IllegalArgumentException("Xác nhận mật khẩu không khớp.");
         }
     }
 

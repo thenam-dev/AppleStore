@@ -33,6 +33,7 @@
           <h3>Danh sách tài khoản nội bộ</h3>
           <div class="r">
             <a class="btn ghost sm" href="${appPath}/admin/users">Đặt lại</a>
+            <a class="btn sm" href="${appPath}/admin/users/edit">Thêm nhân viên</a>
           </div>
         </div>
 
@@ -80,7 +81,16 @@
           </c:when>
           <c:otherwise>
             <div class="table-scroll">
-              <table class="table">
+              <table class="table users-table">
+                <colgroup>
+                  <col class="users-table__person-col">
+                  <col class="users-table__contact-col">
+                  <col class="users-table__role-col">
+                  <col class="users-table__status-col">
+                  <col class="users-table__verified-col">
+                  <col class="users-table__created-col">
+                  <col class="users-table__actions-col">
+                </colgroup>
                 <thead>
                   <tr>
                     <th>Nhân sự</th>
@@ -103,10 +113,10 @@
                     </c:choose>
                     <tr>
                       <td>
-                        <div style="display:flex;gap:9px;align-items:center">
+                        <div class="users-table__person">
                           <span class="av" style="width:28px;height:28px;font-size:11px"><c:out value="${userInitialsMap[user.userId]}" /></span>
-                          <div>
-                            <b><c:out value="${user.fullName}" /></b>
+                          <div class="users-table__person-info">
+                            <b class="users-table__name" title="${fn:escapeXml(user.fullName)}"><c:out value="${user.fullName}" /></b>
                             <div class="mono" style="font-size:11px;color:var(--ash)">#${user.userId}</div>
                           </div>
                         </div>
