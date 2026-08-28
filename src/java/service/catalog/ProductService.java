@@ -8,6 +8,7 @@ import model.entity.catalog.Category;
 import model.entity.catalog.Product;
 
 import java.sql.SQLException;
+import java.time.Year;
 import java.util.Collections;
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class ProductService {
     private static final String DEFAULT_BRAND = "Apple";
     private static final String DEFAULT_WARRANTY_PROVIDER = "Apple Viet Nam";
     private static final int MIN_RELEASE_YEAR = 1998;
-    private static final int MAX_RELEASE_YEAR = 2100;
+    private static final int MAX_RELEASE_YEAR = Year.now().getValue();
     private static final int MAX_NAME_LENGTH = 200;
     private static final int MAX_DESCRIPTION_LENGTH = 2000;
     private static final int MAX_BRAND_LENGTH = 50;
