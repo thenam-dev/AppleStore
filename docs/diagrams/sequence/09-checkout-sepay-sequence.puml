@@ -1,0 +1,52 @@
+@startuml
+title Checkout with SePay Sequence Diagram
+!theme plain
+autonumber
+actor Customer
+boundary "checkout.jsp" as CheckoutJSP
+control CheckoutServlet
+control CheckoutService
+database CartDAO
+database ProductVariantDAO
+database OrderDAO
+database PaymentDAO
+database MySQL
+participant "SePay QR Service" as SePayQR
+boundary "payment.jsp" as PaymentJSP
+
+Customer -> CheckoutJSP: Select bank transfer
+CheckoutJSP -> CheckoutServlet: POST /checkout (paymentMethod=CK)
+CheckoutServlet -> CheckoutService: validate(form)
+alt invalid data
+  CheckoutService --> CheckoutServlet: fieldErrors
+  CheckoutServlet -> CheckoutJSP: forward(errors)
+else valid data
+  CheckoutServlet -> CheckoutService: checkout(form)
+  CheckoutService -> CartDAO: findByCustomerId(customerId)
+  CartDAO -> MySQL: SELECT selected cart items
+  loop selected items
+    CheckoutService -> ProductVariantDAO: decreaseStockIfAvailable(variantId, quantity)
+    ProductVariantDAO -> MySQL: atomic stock UPDATE
+  end
+  alt out of stock
+    CheckoutService -> CheckoutService: compensate(orderId, decreasedStock)
+    CheckoutService --> CheckoutServlet: CheckoutResult(failure)
+    CheckoutServlet -> CheckoutJSP: forward(error)
+  else checkout success
+    CheckoutService -> OrderDAO: insert(order status=PENDING_PAYMENT, method=CK)
+    OrderDAO -> MySQL: INSERT orders
+    loop selected items
+      CheckoutService -> OrderDAO: insertOrderItem(orderId, cartItem)
+      CheckoutService -> OrderDAO: insertInventoryLog(...)
+    end
+    CheckoutService -> SePayQR: build QR URL(amount, "DH" + orderId)
+    SePayQR --> CheckoutService: qrCodeUrl
+    CheckoutService -> PaymentDAO: insertPending(orderId, amount, qrCodeUrl)
+    PaymentDAO -> MySQL: INSERT PaymentTransaction\nstatus=PENDING, expires_at=NOW()+15m
+    CheckoutService -> OrderDAO: insertStatusHistory(orderId, "PENDING_PAYMENT", ...)
+    CheckoutService -> CartDAO: deleteCartItem(...)
+    CheckoutService --> CheckoutServlet: CheckoutResult(success, orderId)
+    CheckoutServlet -> PaymentJSP: redirect /payment?orderId=...
+  end
+end
+@enduml

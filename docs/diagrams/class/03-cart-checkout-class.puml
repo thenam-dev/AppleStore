@@ -1,0 +1,76 @@
+@startuml
+title Cart and Checkout Class Diagram
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+hide empty members
+
+class CartServlet {
+  # doGet(request, response): void
+  # doPost(request, response): void
+}
+class CheckoutServlet {
+  # doGet(request, response): void
+  # doPost(request, response): void
+}
+class CartService {
+  + addToCart(customerId, variantId, quantity, addonId): Result
+  + updateQuantity(customerId, cartItemId, quantity): Result
+  + removeItem(customerId, cartItemId): Result
+  + getCartItems(customerId): List<CartItem>
+  + getCartItemCount(customerId): int
+  + filterBySelection(items, selectedIds): List<CartItem>
+}
+class CheckoutService {
+  + validate(form): Map<String,String>
+  + checkout(form): CheckoutResult
+  - compensate(orderId, decreasedStock): void
+  - buildQrUrl(amount, content): String
+}
+class CartDAO {
+  + getOrCreateCartId(customerId): int
+  + findCartIdByCustomerId(customerId): Optional<Integer>
+  + upsertCartItem(cartId, variantId, quantity, addonId): void
+  + updateQuantity(cartItemId, cartId, quantity): boolean
+  + deleteCartItem(cartItemId, cartId): boolean
+  + findByCustomerId(customerId): List<CartItem>
+}
+class ProductVariantDAO {
+  + findById(variantId): Optional<ProductVariant>
+  + decreaseStockIfAvailable(variantId, quantity): boolean
+  + increaseStock(variantId, quantity): void
+}
+class OrderDAO {
+  + insert(order): int
+  + insertOrderItem(orderId, cartItem): int
+  + insertInventoryLog(...): void
+  + insertStatusHistory(orderId, status, changedBy, note): void
+  + updateStatus(orderId, status): boolean
+}
+class PaymentDAO {
+  + insertPending(orderId, amount, qrCodeUrl): int
+}
+class Cart
+class CartItem
+class ProductVariant
+class Order
+class OrderItem
+class PaymentTransaction
+
+CartServlet --> CartService
+CheckoutServlet --> CartService
+CheckoutServlet --> CheckoutService
+CartService --> CartDAO
+CartService --> ProductVariantDAO
+CheckoutService --> CartDAO
+CheckoutService --> ProductVariantDAO
+CheckoutService --> OrderDAO
+CheckoutService --> PaymentDAO
+CartDAO --> Cart
+Cart "1" *-- "0..*" CartItem
+CartItem --> ProductVariant
+OrderDAO --> Order
+Order "1" *-- "1..*" OrderItem
+PaymentDAO --> PaymentTransaction
+Order "1" --> "0..*" PaymentTransaction
+@enduml

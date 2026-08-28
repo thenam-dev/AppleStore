@@ -1,0 +1,69 @@
+@startuml
+title Manage Product Catalog Sequence Diagram
+!theme plain
+autonumber
+actor "Shop Owner" as Admin
+boundary "categories/form.jsp or products/form.jsp" as JSP
+control CategoryUpdateServlet
+control ProductUpdateServlet
+control CategoryStatusServlet
+control ProductStatusServlet
+control CategoryService
+control ProductService
+database CategoryDAO
+database ProductDAO
+database MySQL
+
+Admin -> JSP: Submit catalog action
+alt Create category
+  JSP -> CategoryUpdateServlet: POST category without id
+  CategoryUpdateServlet -> CategoryService: createCategory(category)
+  CategoryService -> CategoryService: normalizeCategory(), validateCategory()
+  CategoryService -> CategoryDAO: existsByName(name)
+  CategoryService -> CategoryDAO: existsBySlug(slug)
+  CategoryDAO -> MySQL: uniqueness queries
+  alt duplicate name or slug
+    CategoryService --> CategoryUpdateServlet: IllegalArgumentException
+    CategoryUpdateServlet -> JSP: forward validation error
+  else valid category
+    CategoryService -> CategoryDAO: insert(category)
+    CategoryDAO -> MySQL: INSERT categories
+  end
+else Update category
+  JSP -> CategoryUpdateServlet: POST category with id
+  CategoryUpdateServlet -> CategoryService: updateCategory(category)
+  CategoryService -> CategoryDAO: existsByNameForOtherCategory(...)
+  CategoryService -> CategoryDAO: existsBySlugForOtherCategory(...)
+  CategoryService -> CategoryDAO: update(category)
+  CategoryDAO -> MySQL: UPDATE categories
+else Create product
+  JSP -> ProductUpdateServlet: POST product without id
+  ProductUpdateServlet -> ProductService: createProduct(product)
+  ProductService -> ProductService: normalizeProduct(), validateProduct()
+  ProductService -> ProductDAO: existsByName(name)
+  ProductService -> ProductDAO: existsByModelCode(modelCode)
+  ProductService -> ProductDAO: insert(product)
+  ProductDAO -> MySQL: INSERT products
+else Update product
+  JSP -> ProductUpdateServlet: POST product with id
+  ProductUpdateServlet -> ProductService: updateProduct(product)
+  ProductService -> ProductDAO: update(product)
+  ProductDAO -> MySQL: UPDATE products
+else Change category status
+  JSP -> CategoryStatusServlet: POST category status
+  CategoryStatusServlet -> CategoryService: changeCategoryStatus(categoryId, status)
+  CategoryService -> ProductDAO: countActiveByCategory(categoryId)
+  alt active products prevent deactivation
+    CategoryService --> CategoryStatusServlet: business error
+  else allowed
+    CategoryService -> CategoryDAO: update(category)
+    CategoryDAO -> MySQL: UPDATE is_active
+  end
+else Change product status
+  JSP -> ProductStatusServlet: POST product status
+  ProductStatusServlet -> ProductService: changeStatus(productId, status)
+  ProductService -> ProductService: validateProductStatusTransition(...)
+  ProductService -> ProductDAO: updateStatus(productId, status)
+  ProductDAO -> MySQL: UPDATE products.status
+end
+@enduml

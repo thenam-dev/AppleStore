@@ -1,0 +1,50 @@
+@startuml
+title Checkout with COD Sequence Diagram
+!theme plain
+autonumber
+actor Customer
+boundary "checkout.jsp" as CheckoutJSP
+control CheckoutServlet
+control CheckoutService
+database CartDAO
+database ProductVariantDAO
+database OrderDAO
+database MySQL
+boundary "order-success.jsp" as SuccessJSP
+
+Customer -> CheckoutJSP: Select address and COD
+CheckoutJSP -> CheckoutServlet: POST /checkout
+CheckoutServlet -> CheckoutService: validate(form)
+alt invalid checkout form
+  CheckoutService --> CheckoutServlet: fieldErrors
+  CheckoutServlet -> CheckoutJSP: forward(errors)
+else valid form
+  CheckoutServlet -> CheckoutService: checkout(form)
+  CheckoutService -> CartDAO: findByCustomerId(customerId)
+  CartDAO -> MySQL: SELECT selected cart items
+  loop each selected item
+    CheckoutService -> ProductVariantDAO: decreaseStockIfAvailable(variantId, quantity)
+    ProductVariantDAO -> MySQL: atomic stock UPDATE
+    alt out of stock
+      CheckoutService -> CheckoutService: compensate(orderId, decreasedStock)
+      CheckoutService --> CheckoutServlet: failure
+    end
+  end
+  CheckoutService -> OrderDAO: insert(order status=PENDING_PAYMENT, method=COD)
+  OrderDAO -> MySQL: INSERT orders
+  loop each checked-out item
+    CheckoutService -> OrderDAO: insertOrderItem(orderId, cartItem)
+    CheckoutService -> OrderDAO: insertInventoryLog(..., "SALE", ...)
+  end
+  CheckoutService -> OrderDAO: insertStatusHistory(orderId, "PENDING_PAYMENT", ...)
+  CheckoutService -> OrderDAO: updateStatus(orderId, "CONFIRMED")
+  CheckoutService -> OrderDAO: insertStatusHistory(orderId, "CONFIRMED", ...)
+  CheckoutService -> CartDAO: deleteCartItem(cartItemId, cartId)
+  CartDAO -> MySQL: DELETE checked-out cart items
+  note over CheckoutService,OrderDAO
+  COD does not create PaymentTransaction.
+  end note
+  CheckoutService --> CheckoutServlet: CheckoutResult(success, orderId)
+  CheckoutServlet -> SuccessJSP: redirect /order-success?orderId=orderId
+end
+@enduml

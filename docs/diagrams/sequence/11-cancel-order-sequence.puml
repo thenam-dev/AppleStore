@@ -1,0 +1,44 @@
+@startuml
+title Cancel Order Sequence Diagram
+!theme plain
+autonumber
+actor "Customer / Sales Staff" as Actor
+boundary "orders.jsp" as JSP
+control "CustomerOrdersServlet / StaffOrderStatusServlet" as Servlet
+control "OrderService / StaffOrderService" as Service
+database "OrderDAO / StaffOrderDAO" as OrderDAO
+database ProductVariantDAO
+database MySQL
+
+Actor -> JSP: Request cancellation
+JSP -> Servlet: POST cancel(orderId)
+alt Customer path
+  Servlet -> Service: cancelOrder(orderId, customerId)
+  Service -> OrderDAO: cancelOrderByCustomer(orderId, customerId)
+  OrderDAO -> MySQL: lock order and verify ownership/status
+else Staff path
+  Servlet -> Service: updateOrderStatus(orderId, "CANCELLED", staffId, role, note)
+  Service -> OrderDAO: updateStatusSecure(orderId, "CANCELLED", staffId, role)
+  OrderDAO -> MySQL: verify role/assignment/status
+  Service -> OrderDAO: cancelOrderAndRestoreStock(orderId, staffId, note)
+end
+alt unauthorized request
+  MySQL --> OrderDAO: no authorized row
+  Service --> Servlet: error
+  Servlet -> JSP: show unauthorized message
+else invalid status
+  MySQL --> OrderDAO: status cannot be cancelled
+  Service --> Servlet: error
+  Servlet -> JSP: show invalid-status message
+else allowed cancellation
+  OrderDAO -> MySQL: UPDATE orders SET status=CANCELLED
+  loop each order item
+    OrderDAO -> ProductVariantDAO: restore stock quantity
+    ProductVariantDAO -> MySQL: UPDATE product_variants stock
+    OrderDAO -> MySQL: INSERT inventory_logs
+  end
+  OrderDAO -> MySQL: INSERT order_status_history(CANCELLED)
+  Service --> Servlet: success
+  Servlet -> JSP: redirect with success message
+end
+@enduml

@@ -1,0 +1,38 @@
+@startuml
+title Browse and Search Products Sequence Diagram
+!theme plain
+autonumber
+actor "Guest / Customer" as User
+boundary "products-list.jsp" as JSP
+control ProductListServlet
+database ProductDAO
+database CategoryDAO
+database MySQL
+
+User -> JSP: Enter keyword, category, sort and page
+JSP -> ProductListServlet: GET /products?...filters
+ProductListServlet -> ProductListServlet: trimToNull(), normalizeProductSort(),\nmapToDaoSort(), parsePage()
+ProductListServlet -> ProductDAO: countAll(keyword, categoryId, "ACTIVE")
+ProductDAO -> MySQL: SELECT COUNT active products
+MySQL --> ProductDAO: totalItems
+ProductListServlet -> ProductListServlet: calculateTotalPages(totalItems, pageSize)
+ProductListServlet -> ProductDAO: findAll(keyword, categoryId, "ACTIVE",\ndaoSort, currentPage, pageSize)
+ProductDAO -> MySQL: SELECT paged active products
+MySQL --> ProductDAO: products
+ProductListServlet -> CategoryDAO: findAllActive()
+CategoryDAO -> MySQL: SELECT active categories
+MySQL --> CategoryDAO: categories
+alt products found
+  ProductListServlet -> JSP: forward(productList, categories, pagination)
+  JSP --> User: Display product list
+else empty result
+  ProductListServlet -> JSP: forward(empty list, categories, pagination)
+  JSP --> User: Display empty result
+else invalid parameter or SQL error
+  ProductListServlet -> JSP: showProductListFallback(error)
+end
+note over ProductListServlet,CategoryDAO
+The guest source uses ProductDAO and CategoryDAO directly;
+it does not call ProductService or CategoryService.
+end note
+@enduml

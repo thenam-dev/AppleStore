@@ -1,0 +1,40 @@
+@startuml
+title Register Sequence Diagram
+!theme plain
+autonumber
+actor Guest
+boundary "register.jsp" as JSP
+control RegisterServlet
+control AuthService
+database UserDAO
+control PasswordUtil
+database MySQL
+
+Guest -> JSP: Enter full name, email, phone,\npassword and confirmation
+JSP -> RegisterServlet: POST /register
+RegisterServlet -> AuthService: register(fullName, email, phone,\npassword, confirmPassword)
+AuthService -> AuthService: validateRegistration(...)
+alt validation error
+  AuthService --> RegisterServlet: RegisterResult(false, fieldErrors)
+  RegisterServlet -> JSP: forward(form, errors)
+else valid input
+  AuthService -> UserDAO: existsByEmail(email)
+  UserDAO -> MySQL: SELECT email existence
+  MySQL --> UserDAO: result
+  AuthService -> UserDAO: existsByPhone(phone)
+  UserDAO -> MySQL: SELECT phone existence
+  alt duplicate email or phone
+    UserDAO --> AuthService: true
+    AuthService --> RegisterServlet: RegisterResult(false, fieldErrors)
+    RegisterServlet -> JSP: forward(form, errors)
+  else unique account
+    AuthService -> PasswordUtil: hash(password)
+    PasswordUtil --> AuthService: passwordHash
+    AuthService -> UserDAO: insertCustomer(user, passwordHash)
+    UserDAO -> MySQL: INSERT CUSTOMER (status=ACTIVE)
+    MySQL --> UserDAO: userId
+    AuthService --> RegisterServlet: RegisterResult(true)
+    RegisterServlet -> Guest: redirect /login with successMsg
+  end
+end
+@enduml

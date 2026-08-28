@@ -1,0 +1,46 @@
+@startuml
+title Process Order Sequence Diagram
+!theme plain
+autonumber
+actor "Sales Staff" as Staff
+boundary "staff/orders.jsp" as JSP
+control StaffOrderStatusServlet
+control StaffOrderService
+database StaffOrderDAO
+database MySQL
+
+Staff -> JSP: View assigned orders
+JSP -> StaffOrderStatusServlet: POST status update
+StaffOrderStatusServlet -> StaffOrderService: updateOrderStatus(orderId, newStatus,\nstaffId, role, note)
+alt unauthorized
+  StaffOrderService -> StaffOrderDAO: updateStatusSecure(...)
+  StaffOrderDAO -> MySQL: verify assignment and role
+  MySQL --> StaffOrderDAO: false
+  StaffOrderService --> StaffOrderStatusServlet: IllegalArgumentException
+  StaffOrderStatusServlet -> JSP: redirect with error
+else CONFIRMED -> PREPARING
+  StaffOrderService -> StaffOrderDAO: updateStatusSecure(orderId, "PREPARING", staffId, role)
+  StaffOrderDAO -> MySQL: UPDATE order after transition check
+  alt invalid status
+    MySQL --> StaffOrderDAO: false
+    StaffOrderService --> StaffOrderStatusServlet: error
+  else packed
+    StaffOrderService -> StaffOrderDAO: assignSaleStaff(orderId, staffId)
+    StaffOrderService -> StaffOrderDAO: insertStatusHistory(orderId, "PREPARING", staffId, note)
+  end
+else PREPARING -> DISPATCHED
+  StaffOrderService -> StaffOrderDAO: findBestShipperId()
+  StaffOrderDAO -> MySQL: SELECT active DELIVERY staff
+  alt no active Delivery Staff
+    MySQL --> StaffOrderDAO: null
+    StaffOrderService --> StaffOrderStatusServlet: IllegalStateException
+    StaffOrderStatusServlet -> JSP: redirect with error
+  else shipper available
+    StaffOrderService -> StaffOrderDAO: assignDelivery(orderId, shipperId)
+    StaffOrderDAO -> MySQL: INSERT/UPDATE delivery assignment
+    StaffOrderService -> StaffOrderDAO: updateStatusSecure(orderId, "DISPATCHED", staffId, role)
+    StaffOrderService -> StaffOrderDAO: insertStatusHistory(orderId, "DISPATCHED", staffId, note)
+    StaffOrderStatusServlet -> JSP: redirect with success
+  end
+end
+@enduml

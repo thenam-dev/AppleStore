@@ -1,0 +1,68 @@
+@startuml
+title Manage Product Supporting Data Sequence Diagram
+!theme plain
+autonumber
+actor "Shop Owner" as Admin
+boundary "variant/specification/image JSP" as JSP
+control VariantUpdateServlet
+control VariantStatusServlet
+control ProductSpecificationUpdateServlet
+control ProductImageUploadServlet
+control ProductImagePrimaryServlet
+control ProductImageDeleteServlet
+control ProductVariantService
+control ProductSpecificationService
+control ProductImageService
+database ProductVariantDAO
+database ProductSpecificationDAO
+database ProductImageDAO
+control FileUploadUtil
+collections "Local Product Image Storage" as Storage
+database MySQL
+
+Admin -> JSP: Submit supporting-data action
+alt Manage variant
+  JSP -> VariantUpdateServlet: POST variant action
+  alt create
+    VariantUpdateServlet -> ProductVariantService: createVariant(variant)
+    ProductVariantService -> ProductVariantDAO: insert(variant)
+  else update
+    VariantUpdateServlet -> ProductVariantService: updateVariant(variant)
+    ProductVariantService -> ProductVariantDAO: update(variant)
+  else change status
+    VariantStatusServlet -> ProductVariantService: changeStatus(productId, variantId, active)
+    ProductVariantService -> ProductVariantDAO: updateStatus(productId, variantId, active)
+  end
+  ProductVariantDAO -> MySQL: INSERT / UPDATE product_variants
+else Replace specifications
+  JSP -> ProductSpecificationUpdateServlet: POST specification rows
+  ProductSpecificationUpdateServlet -> ProductSpecificationService: replaceSpecifications(productId, list)
+  ProductSpecificationService -> ProductSpecificationService: normalizeAndValidate(...)
+  ProductSpecificationService -> ProductSpecificationDAO: replaceByProductId(productId, list)
+  ProductSpecificationDAO -> MySQL: DELETE then INSERT specifications
+else Upload images
+  JSP -> ProductImageUploadServlet: multipart POST images
+  ProductImageUploadServlet -> ProductImageService: uploadImages(productId, parts)
+  ProductImageService -> FileUploadUtil: validateProductImage(part)
+  ProductImageService -> FileUploadUtil: saveProductImage(part)
+  FileUploadUtil -> Storage: write uploaded file
+  ProductImageService -> ProductImageDAO: insertBatch(images)
+  ProductImageDAO -> MySQL: INSERT product_images
+  alt database insert fails
+    ProductImageService -> FileUploadUtil: deleteUploadedFile(path)
+    FileUploadUtil -> Storage: remove compensated files
+  end
+else Set primary image
+  JSP -> ProductImagePrimaryServlet: POST productId, imageId
+  ProductImagePrimaryServlet -> ProductImageService: setPrimary(productId, imageId)
+  ProductImageService -> ProductImageDAO: setPrimary(productId, imageId)
+  ProductImageDAO -> MySQL: reset and set is_primary
+else Delete image
+  JSP -> ProductImageDeleteServlet: POST delete image
+  ProductImageDeleteServlet -> ProductImageService: deleteImage(productId, imageId)
+  ProductImageService -> ProductImageDAO: delete(imageId)
+  ProductImageDAO -> MySQL: DELETE product_images row
+  ProductImageService -> FileUploadUtil: deleteUploadedFile(filePath)
+  FileUploadUtil -> Storage: delete local file
+end
+@enduml

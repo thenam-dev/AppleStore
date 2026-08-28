@@ -1,0 +1,52 @@
+@startuml
+title View Product Details and Select Variant Sequence Diagram
+!theme plain
+autonumber
+actor "Guest / Customer" as User
+control ProductDetailServlet
+database ProductDAO
+database ProductVariantDAO
+control ProductImageService
+control ProductSpecificationService
+control ProductVariantAttributeService
+database ProductImageDAO
+database ProductSpecificationDAO
+database ReviewDAO
+database MySQL
+boundary "product-detail.jsp" as JSP
+
+User -> ProductDetailServlet: GET /product?id=productId
+ProductDetailServlet -> ProductDAO: findById(productId)
+ProductDAO -> MySQL: SELECT product
+alt product not found
+  MySQL --> ProductDAO: empty
+  ProductDetailServlet -> JSP: fallback("not found")
+else product inactive
+  MySQL --> ProductDAO: Product(status != ACTIVE)
+  ProductDetailServlet -> JSP: fallback("inactive")
+else active product
+  MySQL --> ProductDAO: Product
+  ProductDetailServlet -> ProductImageService: getImagesByProductId(productId)
+  ProductImageService -> ProductImageDAO: findByProductId(productId)
+  ProductImageDAO -> MySQL: SELECT images
+  ProductDetailServlet -> ProductVariantDAO: countByProduct(productId, null, "ACTIVE")
+  ProductVariantDAO -> MySQL: COUNT active variants
+  ProductDetailServlet -> ProductVariantDAO: findByProduct(..., "price_asc", 1, total)
+  ProductVariantDAO -> MySQL: SELECT active variants
+  ProductDetailServlet -> ProductSpecificationService: getSpecifications(productId)
+  ProductSpecificationService -> ProductSpecificationDAO: findByProductId(productId)
+  ProductSpecificationDAO -> MySQL: SELECT specifications
+  ProductDetailServlet -> ProductVariantAttributeService: getDefinitions(product)
+  ProductDetailServlet -> ReviewDAO: getReviewsByProductId(productId)
+  ReviewDAO -> MySQL: SELECT reviews
+  ProductDetailServlet -> ProductDetailServlet: pickDefaultVariant(variants)
+  ProductDetailServlet -> JSP: forward product, variants, images,\nspecifications, reviews and variantJson
+  User -> JSP: Select variant attributes
+  JSP -> JSP: Match variant in variantJson
+  alt selected variant out of stock
+    JSP --> User: Show out-of-stock state
+  else available variant
+    JSP --> User: Update price and stock
+  end
+end
+@enduml

@@ -1,0 +1,52 @@
+@startuml
+title Google Login Sequence Diagram
+!theme plain
+autonumber
+actor Guest
+participant "Web Browser" as Browser
+control GoogleLoginServlet
+participant "Google OAuth 2.0" as Google
+control GoogleCallbackServlet
+control AuthService
+database UserDAO
+database MySQL
+collections HttpSession
+
+Guest -> Browser: Choose Sign in with Google
+Browser -> GoogleLoginServlet: GET /auth/google-login
+GoogleLoginServlet -> Google: redirect authorization URL
+Guest -> Google: authenticate and consent
+alt cancelled login
+  Google -> GoogleCallbackServlet: callback without code
+  GoogleCallbackServlet -> Browser: forward login.jsp with error
+else authorization code returned
+  Google -> GoogleCallbackServlet: GET /googleCallback?code=...
+  GoogleCallbackServlet -> Google: exchangeCodeForToken(req, code)
+  Google --> GoogleCallbackServlet: access token
+  GoogleCallbackServlet -> Google: fetchGoogleUserProfile(token)
+  alt Google integration error
+    Google --> GoogleCallbackServlet: error / invalid response
+    GoogleCallbackServlet -> Browser: forward login.jsp with error
+  else profile returned
+    Google --> GoogleCallbackServlet: email, name, picture, id
+    GoogleCallbackServlet -> AuthService: processGoogleLogin(...)
+    AuthService -> UserDAO: findByEmail(email)
+    UserDAO -> MySQL: SELECT user
+    alt existing user
+      MySQL --> UserDAO: User
+      UserDAO --> AuthService: User
+    else new user
+      MySQL --> UserDAO: empty
+      AuthService -> UserDAO: insertGoogleCustomer(user)
+      UserDAO -> MySQL: INSERT CUSTOMER
+    end
+    AuthService --> GoogleCallbackServlet: LoginResult
+    alt success
+      GoogleCallbackServlet -> HttpSession: setAttribute(SESSION_USER, user)
+      GoogleCallbackServlet -> Browser: redirect /index.jsp
+    else account rejected
+      GoogleCallbackServlet -> Browser: forward login.jsp with error
+    end
+  end
+end
+@enduml

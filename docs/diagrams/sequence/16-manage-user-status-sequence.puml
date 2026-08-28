@@ -1,0 +1,55 @@
+@startuml
+title Manage User Account Status Sequence Diagram
+!theme plain
+autonumber
+actor "Shop Owner" as Admin
+boundary "staff/customer management JSP" as JSP
+control "UserUpdateServlet / UserStatusServlet / CustomerStatusServlet" as Servlet
+control UserService
+database UserDAO
+database MySQL
+
+Admin -> JSP: Submit account action
+JSP -> Servlet: POST account data/status
+alt Update staff account
+  Servlet -> UserService: updateStaffUser(user, actorUserId)
+  UserService -> UserDAO: findById(userId)
+  UserDAO -> MySQL: SELECT staff account
+  UserService -> UserService: validateInternalUser(user)
+  UserService -> UserDAO: existsByEmailForOtherUser(email, userId)
+  UserService -> UserDAO: existsByPhoneForOtherUser(phone, userId)
+  alt duplicate email or phone
+    UserService --> Servlet: validation error
+  else self-lock attempt
+    UserService -> UserService: validateSelfInternalUpdate(existing, updated, actorUserId)
+    UserService --> Servlet: business error
+  else last active Shop Owner
+    UserService -> UserDAO: countActiveAdmins()
+    UserDAO -> MySQL: COUNT active ADMIN users
+    UserService --> Servlet: business error
+  else valid update
+    UserService -> UserDAO: update(user)
+    UserDAO -> MySQL: UPDATE users
+    UserService --> Servlet: success
+  end
+else Change staff status
+  Servlet -> UserService: changeStaffStatus(userId, status, actorUserId)
+  UserService -> UserService: prevent self-lock and last active ADMIN
+  UserService -> UserDAO: updateStatus(userId, status)
+  UserDAO -> MySQL: UPDATE users.status
+else Change customer status
+  Servlet -> UserService: changeCustomerStatus(userId, status)
+  UserService -> UserDAO: findById(userId)
+  UserDAO -> MySQL: SELECT CUSTOMER
+  UserService -> UserDAO: countUnfinishedCustomerOrders(userId)
+  UserDAO -> MySQL: COUNT unfinished orders
+  alt customer has unfinished order
+    UserService --> Servlet: business error
+  else valid status change
+    UserService -> UserDAO: updateStatus(userId, status)
+    UserDAO -> MySQL: UPDATE users.status
+    UserService --> Servlet: success
+  end
+end
+Servlet -> JSP: redirect success or error
+@enduml
