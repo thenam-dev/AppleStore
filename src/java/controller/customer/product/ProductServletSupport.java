@@ -1,6 +1,8 @@
 package controller.customer.product;
 
 import jakarta.servlet.http.HttpServlet;
+import service.catalog.CategoryService;
+import service.catalog.ProductService;
 
 import java.util.Arrays;
 import java.util.List;
@@ -11,11 +13,17 @@ import java.util.List;
  * nhưng KHÔNG có filter theo status ACTIVE/INACTIVE (khách chỉ được thấy
  * sản phẩm ACTIVE, việc lọc ACTIVE phải làm ở tầng DAO/Service, không hỏi
  * status từ request như trang admin).
+ *
+ * Các servlet con PHẢI gọi qua productService/categoryService, không được
+ * đụng thẳng vào DAO (đúng cấu trúc controller -> service -> dao).
  */
 public abstract class ProductServletSupport extends HttpServlet {
 
     protected static final int DEFAULT_PAGE_SIZE = 8;
     protected static final int LOW_STOCK_THRESHOLD = 5;
+
+    protected final ProductService productService = new ProductService();
+    protected final CategoryService categoryService = new CategoryService();
 
     private static final List<String> ALLOWED_SORTS =
             Arrays.asList("featured", "newest", "best-selling", "price-asc", "price-desc");

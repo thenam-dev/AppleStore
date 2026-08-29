@@ -38,7 +38,7 @@ public class SepayWebhookServlet extends HttpServlet {
 
     private final PaymentService paymentService = new PaymentService();
 
-    /** Cho phép GET trả 200 rỗng để tự kiểm tra URL có tới được server không (không xử lý gì). */
+    /** Cho phép GET trả 200 rỗng để tự kiểm tra URL có tới được server không. */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         writeJson(response, HttpServletResponse.SC_OK, true, "SePay webhook endpoint is up");

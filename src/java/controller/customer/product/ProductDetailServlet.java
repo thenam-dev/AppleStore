@@ -1,8 +1,5 @@
 package controller.customer.product;
 
-import dao.catalog.ProductDAO;
-import dao.catalog.ProductVariantDAO;
-import dao.review.ReviewDAO;
 import model.entity.catalog.Product;
 import model.entity.catalog.ProductImage;
 import model.entity.catalog.ProductSpecification;
@@ -10,6 +7,8 @@ import model.entity.catalog.ProductVariant;
 import service.catalog.ProductImageService;
 import service.catalog.ProductSpecificationService;
 import service.catalog.ProductVariantAttributeService;
+import service.catalog.ProductVariantService;
+import service.review.ReviewService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Map;
 import java.util.LinkedHashMap;
@@ -33,17 +31,18 @@ import util.JsonUtil;
  * Trang chi tiết sản phẩm cho khách hàng (guest).
  * URL: /product?id={productId}
  *
- * Dùng lại nguyên các hàm đã có trong DAO, KHÔNG thêm hàm mới:
- *   - ProductDAO.findById(productId) -> Optional<Product>
+ * Controller chỉ gọi qua service (KHÔNG đụng thẳng DAO), service mới xuống DAO:
+ *   - ProductService.getProductById(productId)
  *       (hàm này KHÔNG lọc status, nên servlet tự kiểm tra status = ACTIVE
  *        sau khi lấy về, coi như không tìm thấy nếu sản phẩm đã INACTIVE)
- *   - ProductVariantDAO.countByProduct(productId, null, "ACTIVE")
- *     + ProductVariantDAO.findByProduct(productId, null, "ACTIVE", "price_asc", 1, total)
+ *   - ProductVariantService.countVariants(productId, null, "ACTIVE")
+ *     + ProductVariantService.getVariants(productId, null, "ACTIVE", "price_asc", 1, total)
  *       (không có hàm "lấy tất cả variant active" riêng, nên đếm trước rồi
  *        lấy đúng 1 trang bằng đúng tổng số đó)
- *   - ProductDAO.findAll(null, categoryId, "ACTIVE", "newest", 1, limit+1)
+ *   - ProductService.getProducts(null, categoryId, "ACTIVE", "newest", 1, limit+1)
  *       dùng để gợi ý sản phẩm liên quan (không có hàm loại trừ id hiện tại
- *       sẵn trong DAO, nên servlet tự lọc bỏ sản phẩm đang xem khỏi kết quả)
+ *       sẵn trong service, nên servlet tự lọc bỏ sản phẩm đang xem khỏi kết quả)
+ *   - ReviewService.getReviewsByProductId(productId)
  */
 @WebServlet(name = "GuestProductDetailServlet", urlPatterns = {"/product"})
 public class ProductDetailServlet extends ProductServletSupport {
@@ -51,12 +50,11 @@ public class ProductDetailServlet extends ProductServletSupport {
     private static final String ACTIVE_STATUS = "ACTIVE";
     private static final int RELATED_LIMIT = 4;
 
-    private final ProductDAO productDAO = new ProductDAO();
     private final ProductImageService productImageService = new ProductImageService();
     private final ProductSpecificationService productSpecificationService = new ProductSpecificationService();
-    private final ProductVariantDAO productVariantDAO = new ProductVariantDAO();
+    private final ProductVariantService productVariantService = new ProductVariantService();
     private final ProductVariantAttributeService productVariantAttributeService = new ProductVariantAttributeService();
-    private final ReviewDAO reviewDAO = new ReviewDAO(); // Thêm ReviewDAO
+    private final ReviewService reviewService = new ReviewService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -79,13 +77,19 @@ public class ProductDetailServlet extends ProductServletSupport {
             return;
         }
 
-        Optional<Product> productOpt = productDAO.findById(productId);
-        if (productOpt.isEmpty() || !ACTIVE_STATUS.equalsIgnoreCase(productOpt.get().getStatus())) {
+        Product product;
+        try {
+            product = productService.getProductById(productId);
+        } catch (IllegalArgumentException notFound) {
             showProductDetailFallback(request, response,
                     "Sản phẩm không tồn tại hoặc đã ngừng kinh doanh");
             return;
         }
-        Product product = productOpt.get();
+        if (!ACTIVE_STATUS.equalsIgnoreCase(product.getStatus())) {
+            showProductDetailFallback(request, response,
+                    "Sản phẩm không tồn tại hoặc đã ngừng kinh doanh");
+            return;
+        }
 
         List<ProductImage> productImages = productImageService.getImagesByProductId(productId);
         List<ProductVariant> variants = loadActiveVariants(productId);
@@ -96,7 +100,7 @@ public class ProductDetailServlet extends ProductServletSupport {
         List<Product> relatedProducts = findRelatedProducts(product);
 
         // Lấy danh sách đánh giá của sản phẩm này
-        List<Review> reviews = reviewDAO.getReviewsByProductId(productId);
+        List<Review> reviews = reviewService.getReviewsByProductId(productId);
         
         request.setAttribute("product", product);
         request.setAttribute("productImages", productImages);
@@ -156,16 +160,16 @@ public class ProductDetailServlet extends ProductServletSupport {
 
     /** Lấy toàn bộ variant active của sản phẩm: đếm trước rồi lấy đúng 1 trang bằng tổng đó. */
     private List<ProductVariant> loadActiveVariants(int productId) throws SQLException {
-        int total = productVariantDAO.countByProduct(productId, null, ACTIVE_STATUS);
+        int total = productVariantService.countVariants(productId, null, ACTIVE_STATUS);
         if (total <= 0) {
             return Collections.emptyList();
         }
-        return productVariantDAO.findByProduct(productId, null, ACTIVE_STATUS, "price_asc", 1, total);
+        return productVariantService.getVariants(productId, null, ACTIVE_STATUS, "price_asc", 1, total);
     }
 
-    /** Vài sản phẩm ACTIVE cùng danh mục, tự loại bỏ sản phẩm đang xem vì DAO chưa có tham số loại trừ id. */
+    /** Vài sản phẩm ACTIVE cùng danh mục, tự loại bỏ sản phẩm đang xem vì service chưa có tham số loại trừ id. */
     private List<Product> findRelatedProducts(Product product) throws SQLException {
-        List<Product> candidates = productDAO.findAll(
+        List<Product> candidates = productService.getProducts(
                 null, product.getCategoryId(), ACTIVE_STATUS, "newest", 1, RELATED_LIMIT + 1);
         List<Product> related = new ArrayList<>();
         for (Product p : candidates) {

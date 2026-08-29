@@ -38,7 +38,11 @@ public class ProductService {
             "price_asc",
             "price_desc",
             "stock_asc",
-            "stock_desc"
+            "stock_desc",
+            // Dùng cho sort "Nổi bật"/"Bán chạy" ở màn khách hàng (/products),
+            // xem ProductListServlet (customer).mapToDaoSort().
+            "featured_desc",
+            "sold_desc"
     );
 
     private final ProductDAO productDAO;

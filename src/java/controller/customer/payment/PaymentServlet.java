@@ -17,7 +17,6 @@ import java.sql.SQLException;
 
 /**
  * Controller mỏng: chỉ đọc request/response và điều phối PaymentService,
- * không tự gọi DAO hay chứa business rule (rule 2).
  */
 @WebServlet(name = "PaymentServlet", urlPatterns = {"/payment"})
 public class PaymentServlet extends HttpServlet {
@@ -28,7 +27,7 @@ public class PaymentServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Không cache trang thanh toán (bfcache) - đơn/giỏ hàng có thể đã đổi trạng
-        // thái ở server, không để trình duyệt hiện lại bản cũ khi bấm Back (rule 5).
+        // thái ở server, không để trình duyệt hiện lại bản cũ khi bấm Back.
         response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
         response.setHeader("Pragma", "no-cache");
         response.setDateHeader("Expires", 0);

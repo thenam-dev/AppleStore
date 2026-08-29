@@ -72,23 +72,13 @@ public class CheckoutService {
         public String notes;
         public String paymentMethod; // "CK" hoặc "COD"
 
-        // Các mã khuyến mãi đã áp dụng ở giỏ hàng, truyền từ CheckoutServlet.
-        // Hệ thống cho stack tối đa 1 mã MERCHANDISE + 1 mã SHIPPING cùng lúc
-        // (xem ApplyVoucherServlet) nên đây PHẢI là danh sách, không phải 1
-        // Promotion duy nhất - nếu chỉ giữ 1 mã thì mã còn lại sẽ không được
-        // ghi nhận used_count, dùng lại được vô hạn lần.
         public List<AppliedPromo> appliedPromos = new ArrayList<>();
 
         // Tập cart_item_id khách đã tick chọn ở cart.jsp để thanh toán - null/rỗng
         // nghĩa là thanh toán toàn bộ giỏ hàng (tương thích ngược).
         public Set<Integer> selectedCartItemIds;
 
-        // Override số lượng thực đặt cho nút "Mua ngay" (cartItemId -> số lượng),
-        // null/rỗng nghĩa là đặt đúng số lượng đang có trong dòng cart_items (hành
-        // vi cũ). Dòng cart_items của "Mua ngay" có thể đã bị CartService.addToCart()
-        // cộng dồn thêm số cũ có sẵn trong giỏ - override để chỉ đặt đúng phần khách
-        // vừa chọn ở trang sản phẩm, không phải toàn bộ dòng. Xem
-        // CheckoutServlet.storeQuantityOverrideFromRequest().
+        // Override số lượng thực đặt cho nút "Mua ngay"
         public Map<Integer, Integer> quantityOverrides;
     }
 

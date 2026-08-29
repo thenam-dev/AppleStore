@@ -1,7 +1,5 @@
 package controller.customer.product;
 
-import dao.catalog.CategoryDAO;
-import dao.catalog.ProductDAO;
 import model.entity.catalog.Category;
 import model.entity.catalog.Product;
 
@@ -19,12 +17,12 @@ import java.util.List;
  * Trang danh sách sản phẩm cho khách hàng (guest).
  * URL: /products?keyword=&categoryId=&sort=&page=
  *
- * Dùng lại nguyên các hàm đã có trong DAO, KHÔNG thêm hàm mới:
- *   - CategoryDAO.findAllActive()                     -> chỉ lấy danh mục đang bật
- *   - ProductDAO.countAll(keyword, categoryId, status) -> luôn truyền cứng status = "ACTIVE"
- *   - ProductDAO.findAll(keyword, categoryId, status, sort, page, pageSize)
+ * Controller chỉ gọi qua service (KHÔNG đụng thẳng DAO), service mới xuống DAO:
+ *   - CategoryService.getActiveCategories()                     -> chỉ lấy danh mục đang bật
+ *   - ProductService.countProducts(keyword, categoryId, status) -> luôn truyền cứng status = "ACTIVE"
+ *   - ProductService.getProducts(keyword, categoryId, status, sort, page, pageSize)
  *
- * LƯU Ý VỀ SORT: ProductDAO.resolveOrderBy() hỗ trợ các khoá:
+ * LƯU Ý VỀ SORT: ProductDAO.resolveOrderBy() (được ProductService gọi xuống) hỗ trợ các khoá:
  *   oldest, name_asc, name_desc, price_asc, price_desc, stock_asc, stock_desc,
  *   featured_desc (is_featured DESC), sold_desc (sold_quantity DESC)
  *   (mặc định khi không khớp/"newest": p.product_id DESC = mới nhất trước).
@@ -34,9 +32,6 @@ import java.util.List;
 public class ProductListServlet extends ProductServletSupport {
 
     private static final String ACTIVE_STATUS = "ACTIVE";
-
-    private final ProductDAO productDAO = new ProductDAO();
-    private final CategoryDAO categoryDAO = new CategoryDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -58,7 +53,7 @@ public class ProductListServlet extends ProductServletSupport {
         String daoSort = mapToDaoSort(uiSort);
         int pageSize = DEFAULT_PAGE_SIZE;
 
-        int totalItems = productDAO.countAll(keyword, categoryId, ACTIVE_STATUS);
+        int totalItems = productService.countProducts(keyword, categoryId, ACTIVE_STATUS);
         int totalPages = calculateTotalPages(totalItems, pageSize);
 
         int currentPage = parsePage(request.getParameter("page"));
@@ -67,8 +62,8 @@ public class ProductListServlet extends ProductServletSupport {
         }
 
         List<Product> productList =
-                productDAO.findAll(keyword, categoryId, ACTIVE_STATUS, daoSort, currentPage, pageSize);
-        List<Category> categories = categoryDAO.findAllActive();
+                productService.getProducts(keyword, categoryId, ACTIVE_STATUS, daoSort, currentPage, pageSize);
+        List<Category> categories = categoryService.getActiveCategories();
 
         request.setAttribute("productList", productList);
         request.setAttribute("categories", categories);
