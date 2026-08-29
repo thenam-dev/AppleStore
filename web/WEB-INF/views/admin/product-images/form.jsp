@@ -39,19 +39,11 @@
         <h2>Ảnh sản phẩm</h2>
         <span class="mono" style="font-size:11px;color:var(--ash)">${fn:escapeXml(product.name)} · ID ${product.productId}</span>
       </div>
-      <div class="who">
-        <a class="btn ghost sm" href="${appPath}/admin/products">Sản phẩm</a>
-        <a class="btn ghost sm" href="${appPath}/admin/products/edit?id=${product.productId}">Sửa thông tin</a>
-        <a class="btn ghost sm" href="${appPath}/admin/products/variants?productId=${product.productId}">Biến thể</a>
-        <a class="btn ghost sm" href="${appPath}/admin/products/specifications?productId=${product.productId}">Thông số</a>
-      </div>
     </div>
 
     <div class="adm-body">
-      <nav aria-label="Breadcrumb" style="margin-bottom:16px;font-size:13px;color:var(--ash)">
-        <a href="${appPath}/admin/products">Sản phẩm</a><span style="margin:0 8px">/</span>
-        <span>${fn:escapeXml(product.name)}</span><span style="margin:0 8px">/</span><strong style="color:var(--ink)">Ảnh</strong>
-      </nav>
+      <c:set var="breadcrumbSection" value="Ảnh" scope="request" />
+      <jsp:include page="/WEB-INF/views/common/product-breadcrumb.jsp" />
       <jsp:include page="/WEB-INF/views/common/flash.jsp" />
 
       <section class="panel">

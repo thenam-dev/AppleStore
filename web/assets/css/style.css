@@ -206,6 +206,22 @@ h1,h2,h3,h4{font-family:var(--display);font-weight:700;font-stretch:112%;margin:
 .table .num{font-family:var(--mono);font-size:12.5px}
 .row-actions{display:flex;gap:6px;justify-content:flex-end}
 
+/* Giữ cột thao tác của danh sách nhân sự luôn hiển thị khi tên rất dài. */
+.users-table{table-layout:fixed;min-width:1050px}
+.users-table__person-col{width:25%}
+.users-table__contact-col{width:20%}
+.users-table__role-col{width:13%}
+.users-table__status-col{width:13%}
+.users-table__verified-col{width:8%}
+.users-table__created-col{width:10%}
+.users-table__actions-col{width:140px}
+.users-table__person{display:flex;gap:9px;align-items:center;min-width:0}
+.users-table__person .av{flex:none}
+.users-table__person-info{min-width:0}
+.users-table__name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.users-table td:last-child,.users-table th:last-child{white-space:nowrap}
+.table-scroll{max-width:100%;overflow-x:auto}
+
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:16px 18px;border-bottom:1px solid var(--line);background:#FCFCFD}
 .toolbar .select{width:auto;min-width:150px}
 .search{position:relative;flex:1;min-width:220px;max-width:340px}

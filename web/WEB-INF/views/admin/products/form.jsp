@@ -23,14 +23,6 @@
       <c:if test="${isEdit}">
         <span class="mono" style="font-size:11px;color:var(--ash)">ID ${product.productId}</span>
       </c:if>
-      <div class="who">
-        <a class="btn ghost sm" href="${appPath}/admin/products">Hủy</a>
-        <c:if test="${isEdit}">
-          <a class="btn ghost sm" href="${appPath}/admin/products/variants?productId=${product.productId}">Biến thể</a>
-          <a class="btn ghost sm" href="${appPath}/admin/products/images?productId=${product.productId}">Ảnh</a>
-        </c:if>
-        <button class="btn sm" type="submit" form="productForm">${isEdit ? 'Lưu thay đổi' : 'Tạo sản phẩm'}</button>
-      </div>
     </div>
 
     <div class="adm-body">

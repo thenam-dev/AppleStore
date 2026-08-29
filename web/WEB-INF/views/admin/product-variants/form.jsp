@@ -25,11 +25,6 @@
     <div class="adm-bar">
       <h2>${formModeLabel} biến thể</h2>
       <span style="font-size:13px;color:var(--ash)"><c:out value="${managedProduct.name}" /></span>
-      <div class="who">
-        <a class="btn ghost sm" href="${appPath}/admin/products/variants?productId=${managedProduct.productId}">Hủy</a>
-        <a class="btn ghost sm" href="${appPath}/admin/products">Sản phẩm</a>
-        <button class="btn sm" type="submit" form="variantForm">${isEdit ? 'Lưu thay đổi' : 'Tạo biến thể'}</button>
-      </div>
     </div>
 
     <div class="adm-body">

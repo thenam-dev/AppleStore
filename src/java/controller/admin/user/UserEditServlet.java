@@ -12,13 +12,17 @@ import java.sql.SQLException;
 
 @WebServlet(name = "UserEditServlet", urlPatterns = {"/admin/users/edit"})
 public class UserEditServlet extends UserServletSupport {
-    /** Mở form chỉnh sửa thông tin người dùng theo tham số id. */
+    /** Mở form tạo mới hoặc chỉnh sửa tài khoản nội bộ dựa trên tham số id. */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            int userId = parseInt(request.getParameter("id"), "ID người dùng không hợp lệ.");
-            User user = userService.getStaffUserById(userId);
+            String userId = request.getParameter("id");
+            User user = createDefaultUser();
+
+            if (userId != null && !userId.isBlank()) {
+                user = userService.getStaffUserById(parseInt(userId, "ID người dùng không hợp lệ."));
+            }
 
             request.setAttribute("user", user);
             request.setAttribute("currentAdminId", getCurrentAdminId(request));

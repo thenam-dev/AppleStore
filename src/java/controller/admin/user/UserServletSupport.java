@@ -34,16 +34,28 @@ public abstract class UserServletSupport extends HttpServlet {
         request.setAttribute("sortOptions", buildSortOptions());
     }
 
-    /** Gom dữ liệu request thành entity User dùng cho cập nhật thông tin tài khoản. */
+    /** Gom dữ liệu request thành entity User dùng cho tạo mới hoặc cập nhật tài khoản. */
     protected User buildUserFromRequest(HttpServletRequest request) {
         User user = new User();
-        user.setUserId(parseInt(request.getParameter("userId"), "ID người dùng không hợp lệ."));
+        String userId = request.getParameter("userId");
+        user.setUserId(userId == null || userId.isBlank()
+                ? 0
+                : parseInt(userId, "ID người dùng không hợp lệ."));
         user.setFullName(request.getParameter("fullName"));
         user.setEmail(request.getParameter("email"));
         user.setPhone(request.getParameter("phone"));
         user.setRole(request.getParameter("role"));
         user.setStatus(request.getParameter("status"));
         user.setEmailVerified("on".equals(request.getParameter("emailVerified")));
+        return user;
+    }
+
+    /** Tạo dữ liệu mặc định cho form thêm mới nhân sự. */
+    protected User createDefaultUser() {
+        User user = new User();
+        user.setRole(config.AppConfig.ROLE_SALE_STAFF);
+        user.setStatus("ACTIVE");
+        user.setEmailVerified(true);
         return user;
     }
 
